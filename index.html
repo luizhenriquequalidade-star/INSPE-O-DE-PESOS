@@ -1401,22 +1401,50 @@
                 return;
             }
 
-            const dateData = { inspectors: {} };
+            const newDateData = { inspectors: {} };
             machines.forEach(m => {
                 const inspKey = m.inspector.trim() || 'SEM INSPETOR';
                 const prodKey = m.product.trim() || 'SEM PRODUTO';
-                if (!dateData.inspectors[inspKey]) {
-                    dateData.inspectors[inspKey] = { products: {} };
+                if (!newDateData.inspectors[inspKey]) {
+                    newDateData.inspectors[inspKey] = { products: {} };
                 }
-                if (!dateData.inspectors[inspKey].products[prodKey]) {
-                    dateData.inspectors[inspKey].products[prodKey] = [];
+                if (!newDateData.inspectors[inspKey].products[prodKey]) {
+                    newDateData.inspectors[inspKey].products[prodKey] = [];
                 }
-                dateData.inspectors[inspKey].products[prodKey].push(m);
+                newDateData.inspectors[inspKey].products[prodKey].push(m);
             });
 
             try {
-                await db.collection(COLLECTION_NAME).doc(date).set(dateData);
-                alert(`✅ Dados da data ${date} salvos com sucesso na coleção "${COLLECTION_NAME}"!`);
+                const docRef = db.collection(COLLECTION_NAME).doc(date);
+                const docSnap = await docRef.get();
+                
+                let finalData = { inspectors: {} };
+                
+                if (docSnap.exists) {
+                    // Preserva dados já existentes no banco
+                    finalData = docSnap.data();
+                    if (!finalData.inspectors) finalData.inspectors = {};
+                }
+                
+                // Mescla os novos dados com os existentes (acumula as inspeções)
+                for (const inspKey in newDateData.inspectors) {
+                    if (!finalData.inspectors[inspKey]) {
+                        finalData.inspectors[inspKey] = { products: {} };
+                    }
+                    for (const prodKey in newDateData.inspectors[inspKey].products) {
+                        if (!finalData.inspectors[inspKey].products[prodKey]) {
+                            finalData.inspectors[inspKey].products[prodKey] = [];
+                        }
+                        // Adiciona as novas máquinas ao array já existente
+                        finalData.inspectors[inspKey].products[prodKey] = 
+                            finalData.inspectors[inspKey].products[prodKey].concat(
+                                newDateData.inspectors[inspKey].products[prodKey]
+                            );
+                    }
+                }
+                
+                await docRef.set(finalData);
+                alert(`✅ Dados da data ${date} salvos com sucesso (acumulados)!`);
                 document.getElementById('history-date-input').value = date;
                 loadHistory();
             } catch (error) {
