@@ -1137,15 +1137,28 @@
             for (let i = 0; i < 10; i++) {
                 const row = (i < rowsData.length) ? rowsData[i] : {};
                 const display = i < cavityVal ? '' : 'none';
-                // Garantir que os valores sejam strings, convertendo números com ponto para vírgula
+
+                // ⚠️ CORREÇÃO: Garantir que os valores sejam formatados com PONTO para input type="number"
                 let v1 = (row && row.m1 !== undefined && row.m1 !== null && row.m1 !== '') ? row.m1 : '';
                 let v3 = (row && row.m3 !== undefined && row.m3 !== null && row.m3 !== '') ? row.m3 : '';
                 let v4 = (row && row.m4 !== undefined && row.m4 !== null && row.m4 !== '') ? row.m4 : '';
 
-                // Se for número, converter para string com vírgula (formato brasileiro)
-                if (typeof v1 === 'number') v1 = v1.toFixed(4).replace('.', ',');
-                if (typeof v3 === 'number') v3 = v3.toFixed(4).replace('.', ',');
-                if (typeof v4 === 'number') v4 = v4.toFixed(4).replace('.', ',');
+                // Converte números para string com ponto (formato aceito por inputs number no HTML)
+                if (typeof v1 === 'number') {
+                    v1 = v1.toFixed(4).replace('.', '.');
+                } else if (typeof v1 === 'string' && v1.includes(',')) {
+                    v1 = v1.replace(',', '.');
+                }
+                if (typeof v3 === 'number') {
+                    v3 = v3.toFixed(4).replace('.', '.');
+                } else if (typeof v3 === 'string' && v3.includes(',')) {
+                    v3 = v3.replace(',', '.');
+                }
+                if (typeof v4 === 'number') {
+                    v4 = v4.toFixed(4).replace('.', '.');
+                } else if (typeof v4 === 'string' && v4.includes(',')) {
+                    v4 = v4.replace(',', '.');
+                }
 
                 htmlRows += `
                     <tr class="data-row" style="display: ${display};">
@@ -1280,6 +1293,8 @@
             timeM3Input.addEventListener('change', () => updateTimeLabels(cardId));
             timeM4Input.addEventListener('change', () => updateTimeLabels(cardId));
 
+            // Aplica a cavidade carregada e atualiza estatísticas
+            handleCavityChange(cardId);
             updateStats(cardId);
         }
 
@@ -1702,11 +1717,18 @@
         async function loadDataToForm(date) {
             try {
                 const docSnap = await db.collection(COLLECTION_NAME).doc(date).get();
-                if (!docSnap.exists) return alert('Data não encontrada no Firebase.');
+                if (!docSnap.exists) {
+                    alert('Data não encontrada no Firebase.');
+                    return;
+                }
 
                 const dateData = docSnap.data();
-                if (!dateData.inspectors) return alert('Formato de dados inválido.');
+                if (!dateData.inspectors) {
+                    alert('Formato de dados inválido.');
+                    return;
+                }
 
+                // Extrai todas as máquinas do histórico
                 let machines = [];
                 Object.keys(dateData.inspectors).forEach(inspName => {
                     const products = dateData.inspectors[inspName].products;
@@ -1715,19 +1737,34 @@
                     });
                 });
 
+                if (machines.length === 0) {
+                    alert('Nenhuma máquina encontrada para esta data.');
+                    return;
+                }
+
+                // Limpa o container e recria os cards
                 const container = document.getElementById('machines-container');
                 container.innerHTML = '';
                 machineCounter = 0;
+
+                // Adiciona cada máquina carregada do histórico
                 machines.forEach(machine => {
                     addMachineCard(machine);
                 });
+
+                // Atualiza a data no campo de seleção
                 document.getElementById('selected-date').value = date;
+
+                // Feedback visual no histórico
                 document.getElementById('history-results').innerHTML =
-                    `<p style="color: #888; text-align: center; padding: 20px;">✅ Dados carregados no formulário para edição.</p>`;
-                alert('Dados carregados para edição! Você pode alterar e salvar novamente.');
+                    `<p style="color: #28a745; text-align: center; padding: 20px; font-weight: 600;">✅ ${machines.length} máquina(s) carregada(s) no formulário para edição.</p>`;
+
+                // Rola para o topo do formulário
+                document.getElementById('machines-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
             } catch (error) {
                 console.error('Erro ao carregar dados para edição:', error);
-                alert('❌ Erro ao carregar dados do Firebase.');
+                alert('❌ Erro ao carregar dados do Firebase. Verifique sua conexão e as regras de segurança.');
             }
         }
 
