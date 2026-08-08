@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inspeção - Dona Rita Embalagens</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Biblioteca para geração de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+    </script>
+    <style>
+        :root {
+            --primary-color: #241245;
+            --secondary-color: #3e2970;
+            --accent-color: #f47b20;
+            --gray-border: #d1d1d1;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --light-bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-dark: #1a1a2e;
+            --text-muted: #6c757d;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --transition: 0.2s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #241245 0%, #3e2970 100%);
+            color: white;
+            padding: 20px 28px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+            flex-wrap: wrap;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        header::after {
+            content: '';
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 120px;
+            height: 120px;
+            background: rgba(244, 123, 32, 0.15);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .logo-area h1 {
+            font-size: 26px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+        .logo-area span {
+            font-weight: 300;
+            font-size: 13px;
+            color: #c9b5ff;
+            position: relative;
+            z-index: 1;
+            display: block;
+            margin-top: 2px;
+        }
+        .header-info {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+        }
+        .header-info label {
+            font-weight: 500;
+            font-size: 14px;
+            color: #e0d8f5;
+        }
+        .header-info input[type="date"] {
+            padding: 10px 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #241245;
+            transition: var(--transition);
+            min-width: 160px;
+        }
+        .header-info input[type="date"]:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(244, 123, 32, 0.2);
+        }
+
+        .toolbar {
+            background: var(--card-bg);
+            padding: 16px 22px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid #eee;
+        }
+        .toolbar-left h3 {
+            font-size: 18px;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+        .toolbar-left small {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        .toolbar-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .btn:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        .btn:active {
+            transform: translateY(0);
+            filter: brightness(0.95);
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+        .btn-success {
+            background-color: var(--success);
+        }
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        .btn-accent {
+            background: linear-gradient(135deg, #f47b20, #e06910);
+            font-weight: 600;
+            box-shadow: 0 3px 10px rgba(244, 123, 32, 0.3);
+        }
+        .btn-accent:hover {
+            box-shadow: 0 6px 18px rgba(244, 123, 32, 0.4);
+            filter: brightness(1.05);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--secondary-color);
+            color: var(--secondary-color);
+        }
+        .btn-outline:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+        .btn-pdf {
+            background: #dc3545;
+            font-weight: 600;
+        }
+        .btn-pdf:hover {
+            background: #c82333;
+            box-shadow: 0 4px 14px rgba(220, 53, 69, 0.35);
+        }
+
+        #machines-container {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .machine-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 22px 24px;
+            box-shadow: var(--shadow-md);
+            border-top: 5px solid var(--secondary-color);
+            position: relative;
+            transition: var(--transition);
+        }
+        .machine-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        .machine-card .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+        .machine-card .card-number {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .machine-card .remove-btn {
+            background: #fefefe;
+            border: 1px solid #ddd;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #dc3545;
+            font-weight: 600;
+            font-size: 12px;
+            transition: var(--transition);
+        }
+        .machine-card .remove-btn:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .form-header {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
+        }
+        .input-group label {
+            display: block;
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 9px 10px;
+            border: 1.5px solid var(--gray-border);
+            border-radius: 5px;
+            font-size: 13px;
+            transition: var(--transition);
+            background: #fafbfc;
+        }
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(62, 41, 112, 0.08);
+            background: #fff;
+        }
+        .input-group input[type="number"]::-webkit-inner-spin-button,
+        .input-group input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .input-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .schedule-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 12px 16px;
+            background: #f8f7fc;
+            border-radius: 6px;
+            margin-bottom: 14px;
+            border: 1px dashed #d5cfe8;
+        }
+        .schedule-row .schedule-label {
+            font-weight: 700;
+            font-size: 12px;
+            color: #3e2970;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-right: 4px;
+        }
+        .schedule-row .schedule-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .schedule-row .schedule-item span {
+            font-weight: 600;
+            font-size: 13px;
+            color: #241245;
+            min-width: 28px;
+        }
+        .schedule-row input[type="time"] {
+            padding: 7px 10px;
+            border: 1.5px solid #d1d1d1;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 500;
+            background: #fff;
+            color: #241245;
+            transition: var(--transition);
+            width: 120px;
+        }
+        .schedule-row input[type="time"]:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(244, 123, 32, 0.1);
+        }
+
+        .tolerance-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .tolerance-box {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 13px;
+            flex: 1;
+            text-align: center;
+            min-width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .tolerance-box input {
+            width: 65px;
+            background: transparent;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            text-align: center;
+            padding: 2px;
+        }
+        .tolerance-box input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 3px;
+        }
+        .tolerance-min {
+            background-color: #fce4d6;
+            border: 1px solid #f4b084;
+            color: #d35400;
+        }
+        .tolerance-ideal {
+            background-color: #d9ead3;
+            border: 1px solid #a9d18e;
+            color: #1e7e34;
+        }
+        .tolerance-max {
+            background-color: #f4cccc;
+            border: 1px solid #ea9999;
+            color: #a61e1e;
+        }
+
+        .measurement-table-wrapper {
+            overflow-x: auto;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        table.measuring-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 500px;
+        }
+        table.measuring-table th,
+        table.measuring-table td {
+            border: 1px solid #e9ecef;
+            padding: 9px 6px;
+            text-align: center;
+        }
+        table.measuring-table thead th {
+            background-color: #f0edf7;
+            font-weight: 700;
+            color: #241245;
+            font-size: 12px;
+            letter-spacing: 0.3px;
+            position: sticky;
+            top: 0;
+        }
+        table.measuring-table tbody tr {
+            transition: background 0.15s;
+        }
+        table.measuring-table tbody tr:hover {
+            background: #fdfcff;
+        }
+        table.measuring-table td input {
+            width: 100%;
+            border: none;
+            text-align: center;
+            background: transparent;
+            font-size: 13px;
+            padding: 6px 4px;
+            border-radius: 3px;
+            transition: var(--transition);
+        }
+        table.measuring-table td input:focus {
+            outline: 2px solid var(--secondary-color);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(62, 41, 112, 0.06);
+        }
+        table.measuring-table td input[type="number"]::-webkit-inner-spin-button,
+        table.measuring-table td input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        table.measuring-table td input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .stat-row td {
+            font-weight: 700;
+            background-color: #fcfcfc;
+            font-size: 12px;
+            padding: 10px 6px;
+        }
+        .stat-row .min-val {
+            color: #d35400;
+        }
+        .stat-row .avg-val {
+            color: #1e7e34;
+            font-size: 13px;
+        }
+        .stat-row .max-val {
+            color: #a61e1e;
+        }
+
+        #history-section {
+            background: var(--card-bg);
+            padding: 20px 24px;
+            border-radius: var(--radius-lg);
+            margin-top: 40px;
+            box-shadow: var(--shadow-md);
+            border-top: 5px solid var(--accent-color);
+            display: none;
+        }
+        #history-section.visible {
+            display: block;
+            animation: fadeSlideIn 0.35s ease;
+        }
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        #history-section .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        #history-section .history-header h3 {
+            color: #241245;
+            font-size: 18px;
+        }
+        #history-results {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .inspector-group {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            background: #fafbfc;
+        }
+        .inspector-group .inspector-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #241245;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .inspector-group .inspector-title .badge {
+            background: var(--accent-color);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .product-subgroup {
+            margin-left: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #3e2970;
+            padding-left: 12px;
+        }
+        .product-subgroup .product-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #3e2970;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .history-item {
+            background: #fff;
+            padding: 13px 16px;
+            border-left: 4px solid var(--secondary-color);
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 6px;
+            transition: var(--transition);
+        }
+        .history-item:hover {
+            box-shadow: var(--shadow-sm);
+            border-left-color: var(--accent-color);
+        }
+
+        .dashboard-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        .dashboard-modal {
+            background: #fff;
+            border-radius: 16px;
+            width: 95%;
+            max-width: 1050px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: scaleIn 0.3s ease;
+            position: relative;
+        }
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.92);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        .dashboard-modal .dash-header {
+            background: linear-gradient(135deg, #241245, #3e2970);
+            color: #fff;
+            padding: 20px 28px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .dashboard-modal .dash-header h2 {
+            font-size: 22px;
+            letter-spacing: 0.5px;
+        }
+        .dashboard-modal .dash-header .close-dash {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #fff;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dashboard-modal .dash-header .close-dash:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: rotate(90deg);
+        }
+        .dashboard-modal .dash-body {
+            padding: 24px 28px 30px;
+        }
+        .dash-summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .dash-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            border: 1px solid #eee;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .dash-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+        .dash-card .dash-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        .dash-card .dash-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #241245;
+            line-height: 1;
+        }
+        .dash-card .dash-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        .dash-card.accent-border {
+            border-left: 4px solid var(--accent-color);
+        }
+        .dash-card.success-border {
+            border-left: 4px solid var(--success);
+        }
+        .dash-card.danger-border {
+            border-left: 4px solid var(--danger);
+        }
+        .dash-card.info-border {
+            border-left: 4px solid var(--info);
+        }
+
+        .dash-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #241245;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0edf7;
+            letter-spacing: 0.4px;
+        }
+        .dash-table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 24px;
+        }
+        .dash-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 700px;
+        }
+        .dash-table th,
+        .dash-table td {
+            padding: 11px 10px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        .dash-table thead th {
+            background: #f0edf7;
+            font-weight: 700;
+            color: #241245;
+            font-size: 11px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+        .dash-table tbody tr:hover {
+            background: #fdfcff;
+        }
+        .dash-table .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 11px;
+            letter-spacing: 0.3px;
+        }
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .bar-chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .bar-chart-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .bar-chart-label {
+            min-width: 90px;
+            font-weight: 600;
+            font-size: 12px;
+            color: #241245;
+            text-align: right;
+        }
+        .bar-chart-track {
+            flex: 1;
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 26px;
+            overflow: hidden;
+            position: relative;
+        }
+        .bar-chart-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.6s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-weight: 700;
+            font-size: 11px;
+            color: #fff;
+            min-width: 50px;
+            background: linear-gradient(90deg, #3e2970, #5a3f9e);
+        }
+        .bar-chart-fill.warning-fill {
+            background: linear-gradient(90deg, #f47b20, #f59e4b);
+        }
+        .bar-chart-fill.danger-fill {
+            background: linear-gradient(90deg, #dc3545, #e85d6b);
+        }
+        .bar-chart-fill.success-fill {
+            background: linear-gradient(90deg, #28a745, #48c964);
+        }
+
+        .close-history-btn {
+            background: transparent;
+            border: 1px solid #ccc;
+            padding: 6px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+            transition: var(--transition);
+        }
+        .close-history-btn:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        /* Estilos para o relatório PDF (usados na div temporária) */
+        .pdf-report {
+            background: #fff;
+            padding: 30px;
+            font-family: 'Roboto', sans-serif;
+            color: #1a1a2e;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .pdf-report .pdf-header {
+            text-align: center;
+            border-bottom: 3px solid #241245;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+        .pdf-report .pdf-header h1 {
+            font-size: 24px;
+            color: #241245;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .pdf-report .pdf-header .pdf-date {
+            font-size: 15px;
+            color: #555;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        .pdf-report .pdf-inspector-section {
+            margin-bottom: 28px;
+            page-break-inside: avoid;
+        }
+        .pdf-report .pdf-inspector-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #3e2970;
+            background: #f0edf7;
+            padding: 10px 16px;
+            border-radius: 6px;
+            margin-bottom: 14px;
+            border-left: 5px solid #f47b20;
+        }
+        .pdf-report .pdf-product-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #241245;
+            margin-bottom: 10px;
+            margin-top: 12px;
+            padding-left: 8px;
+            border-left: 3px solid #3e2970;
+            text-transform: uppercase;
+        }
+        .pdf-report table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-bottom: 16px;
+            page-break-inside: avoid;
+        }
+        .pdf-report table th,
+        .pdf-report table td {
+            border: 1px solid #ccc;
+            padding: 7px 5px;
+            text-align: center;
+        }
+        .pdf-report table thead th {
+            background: #241245;
+            color: #fff;
+            font-weight: 600;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .pdf-report table tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .pdf-report .pdf-summary {
+            background: #f8f7fc;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: space-around;
+        }
+        .pdf-report .pdf-summary-item {
+            text-align: center;
+        }
+        .pdf-report .pdf-summary-item .pdf-summary-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #241245;
+        }
+        .pdf-report .pdf-summary-item .pdf-summary-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .pdf-report .status-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 10px;
+            letter-spacing: 0.3px;
+        }
+        .pdf-report .status-pill.approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        .pdf-report .status-pill.rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        @media (max-width: 768px) {
+            .header-info {
+                flex-direction: column;
+                width: 100%;
+                margin-top: 10px;
+            }
+            .header-info input {
+                width: 100%;
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .toolbar-buttons {
+                justify-content: stretch;
+            }
+            .toolbar-buttons .btn {
+                flex: 1;
+                justify-content: center;
+            }
+            .tolerance-row {
+                flex-direction: column;
+            }
+            .form-header {
+                grid-template-columns: 1fr 1fr;
+            }
+            .schedule-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .dash-summary-cards {
+                grid-template-columns: 1fr 1fr;
+            }
+            .bar-chart-label {
+                min-width: 60px;
+                font-size: 10px;
+            }
+        }
+        @media (max-width: 480px) {
+            .form-header {
+                grid-template-columns: 1fr;
+            }
+            .dash-summary-cards {
+                grid-template-columns: 1fr;
+            }
+            .dash-table {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo-area">
+            <h1>Dona Rita Embalagens</h1>
+            <span>Sistema de Controle de Qualidade</span>
+        </div>
+        <div class="header-info">
+            <label>📅 Data da Inspeção:</label>
+            <input type="date" id="selected-date">
+        </div>
+    </header>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <h3>📋 Inspeção de Peso</h3>
+            <small>Preencha os dados abaixo para cada máquina</small>
+        </div>
+        <div class="toolbar-buttons">
+            <button class="btn btn-accent" onclick="openDashboard()" title="Ver dashboard do dia">📊 Dashboard do Dia</button>
+            <button class="btn btn-pdf" onclick="downloadPDF()" title="Baixar relatório em PDF">📄 Baixar PDF</button>
+            <button class="btn btn-success" onclick="addMachineCard()">➕ Adicionar Máquina</button>
+            <button class="btn btn-primary" onclick="saveDailyData()">💾 Salvar Histórico do Dia</button>
+        </div>
+    </div>
+
+    <!-- CONTAINER DAS MÁQUINAS -->
+    <div id="machines-container">
+        <!-- As máquinas serão inseridas aqui via JavaScript -->
+    </div>
+
+    <!-- HISTÓRICO E CONSULTA (OCULTO POR PADRÃO) -->
+    <div id="history-section">
+        <div class="history-header">
+            <h3>📂 Histórico de Inspeções</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <input type="date" id="history-date-input" style="padding: 9px 12px; border: 1.5px solid #ccc; border-radius: 6px; font-weight: 500;">
+                <button class="btn" onclick="loadHistory()">🔍 Consultar</button>
+                <button class="btn btn-danger" onclick="clearHistory()">🗑️ Limpar Base</button>
+                <button class="close-history-btn" onclick="hideHistory()" title="Fechar histórico">✕ Fechar</button>
+            </div>
+        </div>
+        <div id="history-results">
+            <p style="color: #888; text-align: center; padding: 20px;">Selecione uma data e clique em consultar para ver o histórico.</p>
+        </div>
+    </div>
+
+    <!-- MODAL DO DASHBOARD (injetado dinamicamente) -->
+    <div id="dashboard-modal-container"></div>
+
+    <!-- Container oculto para geração de PDF -->
+    <div id="pdf-generation-container" style="position: absolute; left: -9999px; top: 0; width: 900px;"></div>
+
+    <script>
+        // Obtém a data atual e seta nos campos
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('selected-date').value = today;
+        document.getElementById('history-date-input').value = today;
+
+        let machineCounter = 0;
+
+        // ===================== FUNÇÃO PARA ADICIONAR CARD DE MÁQUINA =====================
+        function addMachineCard(machineData = null) {
+            const container = document.getElementById('machines-container');
+            const cardId = `machine-${++machineCounter}`;
+
+            // Dados gerais (com fallback)
+            const mName = machineData ? machineData.machine : '';
+            const inspector = machineData ? machineData.inspector : '';
+            const product = machineData ? machineData.product : '';
+            const turn = machineData ? machineData.turn : '';
+            const status = machineData ? machineData.status : '';
+            const tolMin = machineData ? machineData.tolMin : '23,51';
+            const tolMid = machineData ? machineData.tolMid : '24,51';
+            const tolMax = machineData ? machineData.tolMax : '25,11';
+            const cavityVal = machineData ? machineData.cavity : 10;
+            const cycleVal = machineData ? machineData.cycle : '';
+            const collaboratorVal = machineData ? machineData.collaborator : '';
+            const timeM1 = machineData ? machineData.timeM1 : '14:00';
+            const timeM3 = machineData ? machineData.timeM3 : '18:00';
+            const timeM4 = machineData ? machineData.timeM4 : '20:30';
+
+            // Geração das linhas da tabela
+            let htmlRows = '';
+            for (let i = 0; i < 10; i++) {
+                const row = machineData ? machineData.rows[i] : {};
+                const display = i < cavityVal ? '' : 'none';
+                const v1 = (row && row.m1 !== undefined && row.m1 !== null && row.m1 !== '') ? row.m1 : '';
+                const v3 = (row && row.m3 !== undefined && row.m3 !== null && row.m3 !== '') ? row.m3 : '';
+                const v4 = (row && row.m4 !== undefined && row.m4 !== null && row.m4 !== '') ? row.m4 : '';
+                htmlRows += `
+                    <tr class="data-row" style="display: ${display};">
+                        <td><strong>${i + 1}</strong></td>
+                        <td><input type="number" step="any" class="m1-val" value="${v1}" placeholder="-"></td>
+                        <td><input type="number" step="any" class="m3-val" value="${v3}" placeholder="-"></td>
+                        <td><input type="number" step="any" class="m4-val" value="${v4}" placeholder="-"></td>
+                    </tr>
+                `;
+            }
+
+            // Estrutura HTML do Card
+            const cardHTML = `
+                <div class="machine-card" id="${cardId}">
+                    <div class="card-header-row">
+                        <span class="card-number">Máquina #${machineCounter}</span>
+                        <button class="remove-btn" onclick="removeMachine('${cardId}')">✖ Remover</button>
+                    </div>
+
+                    <!-- Dados Gerais -->
+                    <div class="form-header">
+                        <div class="input-group">
+                            <label>👤 Inspetor</label>
+                            <input type="text" class="inspector" value="${inspector}" placeholder="Ex: MARILHA">
+                        </div>
+                        <div class="input-group">
+                            <label>🏭 Máquina</label>
+                            <input type="text" class="machine-name" value="${mName}" placeholder="Ex: 790/2">
+                        </div>
+                        <div class="input-group">
+                            <label>📦 Cód. Produto</label>
+                            <input type="text" class="product-code" value="${product}" placeholder="Ex: DG50 BASE">
+                        </div>
+                        <div class="input-group">
+                            <label>🔄 Turno</label>
+                            <select class="turn">
+                                <option value="T1" ${turn=='T1'?'selected':''}>T1</option>
+                                <option value="T2" ${turn=='T2'?'selected':''}>T2</option>
+                                <option value="T3" ${turn=='T3'?'selected':''}>T3</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>✅ Status</label>
+                            <select class="status">
+                                <option value="APROVADO" ${status=='APROVADO'?'selected':''}>APROVADO</option>
+                                <option value="REPROVADO" ${status=='REPROVADO'?'selected':''}>REPROVADO</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>🔢 Cavidade (QTD)</label>
+                            <input type="number" class="cavity-input" value="${cavityVal}" placeholder="Ex: 5">
+                        </div>
+                        <div class="input-group">
+                            <label>⚡ Ciclo (Veloc.)</label>
+                            <input type="text" class="cycle-input" value="${cycleVal}" placeholder="Ex: 25.0">
+                        </div>
+                        <div class="input-group">
+                            <label>🧑 Colaborador</label>
+                            <input type="text" class="collaborator-input" value="${collaboratorVal}" placeholder="Ex: 03">
+                        </div>
+                    </div>
+
+                    <!-- Horários das Pesagens -->
+                    <div class="schedule-row">
+                        <span class="schedule-label">🕐 Horários das Pesagens:</span>
+                        <div class="schedule-item">
+                            <span>M1:</span>
+                            <input type="time" class="time-m1" value="${timeM1}">
+                        </div>
+                        <div class="schedule-item">
+                            <span>M3:</span>
+                            <input type="time" class="time-m3" value="${timeM3}">
+                        </div>
+                        <div class="schedule-item">
+                            <span>M4:</span>
+                            <input type="time" class="time-m4" value="${timeM4}">
+                        </div>
+                    </div>
+
+                    <!-- Tolerância -->
+                    <div class="tolerance-row">
+                        <div class="tolerance-box tolerance-min">🔻 Mín: <input type="text" class="tol-min" value="${tolMin}"></div>
+                        <div class="tolerance-box tolerance-ideal">🎯 Ideal: <input type="text" class="tol-mid" value="${tolMid}"></div>
+                        <div class="tolerance-box tolerance-max">🔺 Máx: <input type="text" class="tol-max" value="${tolMax}"></div>
+                    </div>
+
+                    <!-- Tabela de Medição -->
+                    <div class="measurement-table-wrapper">
+                        <table class="measuring-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 45px;">QTD</th>
+                                    <th>M1-<span class="time-label-m1">${timeM1}</span></th>
+                                    <th>M3-<span class="time-label-m3">${timeM3}</span></th>
+                                    <th>M4-<span class="time-label-m4">${timeM4}</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${htmlRows}
+                            </tbody>
+                            <tfoot>
+                                <tr class="stat-row">
+                                    <td>MÍNIMO</td>
+                                    <td class="min-val" id="${cardId}-min-m1">0,00</td>
+                                    <td class="min-val" id="${cardId}-min-m3">0,00</td>
+                                    <td class="min-val" id="${cardId}-min-m4">0,00</td>
+                                </tr>
+                                <tr class="stat-row">
+                                    <td>MÉDIA</td>
+                                    <td class="avg-val" id="${cardId}-avg-m1">0,00</td>
+                                    <td class="avg-val" id="${cardId}-avg-m3">0,00</td>
+                                    <td class="avg-val" id="${cardId}-avg-m4">0,00</td>
+                                </tr>
+                                <tr class="stat-row">
+                                    <td>MÁXIMO</td>
+                                    <td class="max-val" id="${cardId}-max-m1">0,00</td>
+                                    <td class="max-val" id="${cardId}-max-m3">0,00</td>
+                                    <td class="max-val" id="${cardId}-max-m4">0,00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('beforeend', cardHTML);
+
+            // Configura eventos
+            const cardElement = document.getElementById(cardId);
+
+            // Eventos nos inputs de medição
+            const measurementInputs = cardElement.querySelectorAll('.data-row .m1-val, .data-row .m3-val, .data-row .m4-val');
+            measurementInputs.forEach(input => {
+                input.addEventListener('input', () => updateStats(cardId));
+            });
+
+            // Evento para mudança de cavidade
+            const cavityInput = cardElement.querySelector('.cavity-input');
+            cavityInput.addEventListener('input', () => handleCavityChange(cardId));
+
+            // Eventos para mudança de horários (atualiza labels da tabela)
+            const timeM1Input = cardElement.querySelector('.time-m1');
+            const timeM3Input = cardElement.querySelector('.time-m3');
+            const timeM4Input = cardElement.querySelector('.time-m4');
+            timeM1Input.addEventListener('change', () => updateTimeLabels(cardId));
+            timeM3Input.addEventListener('change', () => updateTimeLabels(cardId));
+            timeM4Input.addEventListener('change', () => updateTimeLabels(cardId));
+
+            // Atualiza estatísticas iniciais
+            updateStats(cardId);
+        }
+
+        // ===================== REMOVER MÁQUINA =====================
+        function removeMachine(id) {
+            if (confirm('Tem certeza que deseja remover esta máquina da lista atual?')) {
+                const card = document.getElementById(id);
+                if (card) card.remove();
+            }
+        }
+
+        // ===================== ATUALIZAR LABELS DE HORÁRIO NA TABELA =====================
+        function updateTimeLabels(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            const timeM1 = card.querySelector('.time-m1').value || '14:00';
+            const timeM3 = card.querySelector('.time-m3').value || '18:00';
+            const timeM4 = card.querySelector('.time-m4').value || '20:30';
+            const labelM1 = card.querySelector('.time-label-m1');
+            const labelM3 = card.querySelector('.time-label-m3');
+            const labelM4 = card.querySelector('.time-label-m4');
+            if (labelM1) labelM1.textContent = timeM1;
+            if (labelM3) labelM3.textContent = timeM3;
+            if (labelM4) labelM4.textContent = timeM4;
+        }
+
+        // ===================== FILTRAR LINHAS POR CAVIDADE =====================
+        function handleCavityChange(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            const cavityInput = card.querySelector('.cavity-input');
+            let cavity = parseInt(cavityInput.value);
+            if (isNaN(cavity)) return;
+            if (cavity < 1) cavity = 1;
+            cavityInput.value = cavity;
+
+            const rows = card.querySelectorAll('.data-row');
+            rows.forEach((row, index) => {
+                if (index < cavity) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                    row.querySelector('.m1-val').value = '';
+                    row.querySelector('.m3-val').value = '';
+                    row.querySelector('.m4-val').value = '';
+                }
+            });
+            updateStats(cardId);
+        }
+
+        // ===================== CÁLCULO DE ESTATÍSTICAS =====================
+        function updateStats(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            const rows = card.querySelectorAll('.data-row');
+            const m1Values = [],
+                m3Values = [],
+                m4Values = [];
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    const v1 = parseFloat(row.querySelector('.m1-val').value.replace(',', '.'));
+                    const v3 = parseFloat(row.querySelector('.m3-val').value.replace(',', '.'));
+                    const v4 = parseFloat(row.querySelector('.m4-val').value.replace(',', '.'));
+                    if (!isNaN(v1) && row.querySelector('.m1-val').value.trim() !== '') m1Values.push(v1);
+                    if (!isNaN(v3) && row.querySelector('.m3-val').value.trim() !== '') m3Values.push(v3);
+                    if (!isNaN(v4) && row.querySelector('.m4-val').value.trim() !== '') m4Values.push(v4);
+                }
+            });
+
+            const calc = (arr) => {
+                if (arr.length === 0) return { min: 0, avg: 0, max: 0 };
+                return {
+                    min: Math.min(...arr),
+                    avg: arr.reduce((a, b) => a + b, 0) / arr.length,
+                    max: Math.max(...arr)
+                };
+            };
+
+            const m1m = calc(m1Values);
+            const m3m = calc(m3Values);
+            const m4m = calc(m4Values);
+
+            const setEl = (suffix, metrics) => {
+                const minEl = document.getElementById(`${cardId}-min-${suffix}`);
+                const avgEl = document.getElementById(`${cardId}-avg-${suffix}`);
+                const maxEl = document.getElementById(`${cardId}-max-${suffix}`);
+                if (minEl) minEl.textContent = metrics.min.toFixed(2).replace('.', ',');
+                if (avgEl) avgEl.textContent = metrics.avg.toFixed(2).replace('.', ',');
+                if (maxEl) maxEl.textContent = metrics.max.toFixed(2).replace('.', ',');
+            };
+
+            setEl('m1', m1m);
+            setEl('m3', m3m);
+            setEl('m4', m4m);
+        }
+
+        // ===================== COLETAR DADOS DO FORMULÁRIO (retorna array de máquinas) =====================
+        function collectFormData() {
+            const cards = document.querySelectorAll('.machine-card');
+            const machines = [];
+            cards.forEach(card => {
+                const rows = card.querySelectorAll('.data-row');
+                const machineData = {
+                    machine: card.querySelector('.machine-name').value,
+                    inspector: card.querySelector('.inspector').value,
+                    product: card.querySelector('.product-code').value,
+                    turn: card.querySelector('.turn').value,
+                    status: card.querySelector('.status').value,
+                    cavity: parseInt(card.querySelector('.cavity-input').value) || 10,
+                    cycle: card.querySelector('.cycle-input').value,
+                    collaborator: card.querySelector('.collaborator-input').value,
+                    timeM1: card.querySelector('.time-m1').value || '14:00',
+                    timeM3: card.querySelector('.time-m3').value || '18:00',
+                    timeM4: card.querySelector('.time-m4').value || '20:30',
+                    tolMin: card.querySelector('.tol-min').value,
+                    tolMid: card.querySelector('.tol-mid').value,
+                    tolMax: card.querySelector('.tol-max').value,
+                    totalAverage: 0,
+                    rows: []
+                };
+
+                let totalSum = 0;
+                let totalCount = 0;
+                rows.forEach(row => {
+                    if (row.style.display !== 'none') {
+                        const m1Raw = row.querySelector('.m1-val').value.replace(',', '.');
+                        const m3Raw = row.querySelector('.m3-val').value.replace(',', '.');
+                        const m4Raw = row.querySelector('.m4-val').value.replace(',', '.');
+                        const m1 = parseFloat(m1Raw);
+                        const m3 = parseFloat(m3Raw);
+                        const m4 = parseFloat(m4Raw);
+                        const rowData = {
+                            m1: !isNaN(m1) && m1Raw.trim() !== '' ? m1 : '',
+                            m3: !isNaN(m3) && m3Raw.trim() !== '' ? m3 : '',
+                            m4: !isNaN(m4) && m4Raw.trim() !== '' ? m4 : ''
+                        };
+                        if (!isNaN(m1) && m1Raw.trim() !== '') { totalSum += m1;
+                            totalCount++; }
+                        if (!isNaN(m3) && m3Raw.trim() !== '') { totalSum += m3;
+                            totalCount++; }
+                        if (!isNaN(m4) && m4Raw.trim() !== '') { totalSum += m4;
+                            totalCount++; }
+                        machineData.rows.push(rowData);
+                    }
+                });
+                machineData.totalAverage = totalCount > 0 ? totalSum / totalCount : 0;
+                machines.push(machineData);
+            });
+            return machines;
+        }
+
+        // ===================== SALVAR DADOS DO DIA (organizado por inspetor e produto) =====================
+        function saveDailyData() {
+            const date = document.getElementById('selected-date').value;
+            const machines = collectFormData();
+            if (machines.length === 0) {
+                alert('Adicione pelo menos uma máquina antes de salvar.');
+                return;
+            }
+
+            const history = JSON.parse(localStorage.getItem('donaRitaHistory') || '{}');
+
+            // Nova estrutura: history[date] = { inspectors: { "NOME": { products: { "PROD": [machines] } } } }
+            const dateData = { inspectors: {} };
+
+            machines.forEach(m => {
+                const inspKey = m.inspector.trim() || 'SEM INSPETOR';
+                const prodKey = m.product.trim() || 'SEM PRODUTO';
+
+                if (!dateData.inspectors[inspKey]) {
+                    dateData.inspectors[inspKey] = { products: {} };
+                }
+                if (!dateData.inspectors[inspKey].products[prodKey]) {
+                    dateData.inspectors[inspKey].products[prodKey] = [];
+                }
+                dateData.inspectors[inspKey].products[prodKey].push(m);
+            });
+
+            history[date] = dateData;
+            localStorage.setItem('donaRitaHistory', JSON.stringify(history));
+            alert(`✅ Dados da data ${date} salvos com sucesso! (Organizado por inspetor e produto)`);
+            document.getElementById('history-date-input').value = date;
+            loadHistory();
+        }
+
+        // ===================== CONSULTAR HISTÓRICO (agrupado por inspetor e produto) =====================
+        function loadHistory() {
+            const date = document.getElementById('history-date-input').value;
+            const history = JSON.parse(localStorage.getItem('donaRitaHistory') || '{}');
+            const resultsDiv = document.getElementById('history-results');
+            const historySection = document.getElementById('history-section');
+            resultsDiv.innerHTML = '';
+
+            const rawDateData = history[date];
+            if (!rawDateData) {
+                resultsDiv.innerHTML =
+                    `<p style="color: #888; text-align: center; padding: 20px;">📭 Nenhum dado encontrado para a data <strong>${date}</strong>.</p>`;
+                historySection.classList.add('visible');
+                return;
+            }
+
+            // Converte formato antigo (array de machines) para novo formato, se necessário
+            let dateData;
+            if (rawDateData.inspectors) {
+                // Já está no novo formato
+                dateData = rawDateData;
+            } else if (Array.isArray(rawDateData.machines)) {
+                // Formato antigo: converter
+                dateData = { inspectors: {} };
+                rawDateData.machines.forEach(m => {
+                    const inspKey = m.inspector.trim() || 'SEM INSPETOR';
+                    const prodKey = m.product.trim() || 'SEM PRODUTO';
+                    if (!dateData.inspectors[inspKey]) dateData.inspectors[inspKey] = { products: {} };
+                    if (!dateData.inspectors[inspKey].products[prodKey]) dateData.inspectors[inspKey]
+                        .products[prodKey] = [];
+                    dateData.inspectors[inspKey].products[prodKey].push(m);
+                });
+                // Atualiza o localStorage para o novo formato
+                history[date] = dateData;
+                localStorage.setItem('donaRitaHistory', JSON.stringify(history));
+            } else {
+                resultsDiv.innerHTML =
+                    `<p style="color: #888; text-align: center; padding: 20px;">📭 Nenhum dado encontrado para a data <strong>${date}</strong>.</p>`;
+                historySection.classList.add('visible');
+                return;
+            }
+
+            // Título
+            const title = document.createElement('h3');
+            title.textContent = `📅 Inspeções do dia ${date}`;
+            title.style.marginBottom = '12px';
+            title.style.color = '#241245';
+            resultsDiv.appendChild(title);
+
+            const inspectors = dateData.inspectors;
+            const inspectorNames = Object.keys(inspectors).sort();
+
+            if (inspectorNames.length === 0) {
+                resultsDiv.innerHTML +=
+                    `<p style="color: #888; text-align: center; padding: 20px;">📭 Nenhum dado encontrado.</p>`;
+                historySection.classList.add('visible');
+                return;
+            }
+
+            inspectorNames.forEach(inspName => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'inspector-group';
+
+                // Contar total de máquinas deste inspetor
+                let totalMachinesInsp = 0;
+                const products = inspectors[inspName].products;
+                Object.values(products).forEach(arr => { totalMachinesInsp += arr.length; });
+
+                const headerGroup = document.createElement('div');
+                headerGroup.className = 'inspector-title';
+                headerGroup.innerHTML =
+                    `👤 ${inspName} <span class="badge">${totalMachinesInsp} máquina(s)</span>`;
+                groupDiv.appendChild(headerGroup);
+
+                // Para cada produto deste inspetor
+                const productKeys = Object.keys(products).sort();
+                productKeys.forEach(prodKey => {
+                    const prodSubDiv = document.createElement('div');
+                    prodSubDiv.className = 'product-subgroup';
+                    const prodTitle = document.createElement('div');
+                    prodTitle.className = 'product-title';
+                    prodTitle.textContent = `📦 ${prodKey}`;
+                    prodSubDiv.appendChild(prodTitle);
+
+                    products[prodKey].forEach(m => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'history-item';
+                        itemDiv.innerHTML = `
+                            <div>
+                                <strong>🏭 Máquina:</strong> ${m.machine}<br>
+                                <small>🔄 Turno: ${m.turn} | 🔢 Cavidade: ${m.cavity} | ⚡ Ciclo: ${m.cycle || '-'} | 🧑 Colaborador: ${m.collaborator || '-'}</small><br>
+                                <small>🕐 Horários: M1=${m.timeM1 || '14:00'} | M3=${m.timeM3 || '18:00'} | M4=${m.timeM4 || '20:30'}</small>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-size: 12px; color: #888;">Média Geral:</span>
+                                <span style="font-size: 18px; font-weight: 700; color: #3e2970; display:block;">
+                                    ${m.totalAverage > 0 ? m.totalAverage.toFixed(3).replace('.', ',') : 'Sem dados'}
+                                </span>
+                                <span style="font-size: 11px; color: ${m.status==='APROVADO'?'#28a745':'#dc3545'}; font-weight:600;">
+                                    ${m.status}
+                                </span>
+                            </div>
+                        `;
+                        prodSubDiv.appendChild(itemDiv);
+                    });
+                    groupDiv.appendChild(prodSubDiv);
+                });
+                resultsDiv.appendChild(groupDiv);
+            });
+
+            // Botão para carregar no formulário
+            const loadFormBtn = document.createElement('button');
+            loadFormBtn.className = 'btn btn-success';
+            loadFormBtn.textContent = '🔄 Carregar estes dados para editar';
+            loadFormBtn.style.marginTop = '16px';
+            loadFormBtn.onclick = () => loadDataToForm(date);
+            const btnDiv = document.createElement('div');
+            btnDiv.style.textAlign = 'center';
+            btnDiv.style.marginTop = '10px';
+            btnDiv.appendChild(loadFormBtn);
+            resultsDiv.appendChild(btnDiv);
+
+            historySection.classList.add('visible');
+            historySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ===================== OCULTAR HISTÓRICO =====================
+        function hideHistory() {
+            const historySection = document.getElementById('history-section');
+            historySection.classList.remove('visible');
+        }
+
+        // ===================== CARREGAR DADOS DO HISTÓRICO NO FORMULÁRIO =====================
+        function loadDataToForm(date) {
+            const history = JSON.parse(localStorage.getItem('donaRitaHistory') || '{}');
+            const rawDateData = history[date];
+            if (!rawDateData) return alert('Data não encontrada.');
+
+            let machines = [];
+            if (rawDateData.inspectors) {
+                // Novo formato: achatar
+                const inspectors = rawDateData.inspectors;
+                Object.keys(inspectors).forEach(inspName => {
+                    const products = inspectors[inspName].products;
+                    Object.keys(products).forEach(prodKey => {
+                        products[prodKey].forEach(m => machines.push(m));
+                    });
+                });
+            } else if (Array.isArray(rawDateData.machines)) {
+                // Formato antigo
+                machines = rawDateData.machines;
+            } else {
+                return alert('Formato de dados desconhecido.');
+            }
+
+            const container = document.getElementById('machines-container');
+            container.innerHTML = '';
+            machineCounter = 0;
+            machines.forEach(machine => {
+                addMachineCard(machine);
+            });
+            document.getElementById('selected-date').value = date;
+            document.getElementById('history-results').innerHTML =
+                `<p style="color: #888; text-align: center; padding: 20px;">✅ Dados carregados no formulário para edição.</p>`;
+            alert('Dados carregados para edição! Você pode alterar e salvar novamente.');
+        }
+
+        // ===================== LIMPAR BASE DE DADOS =====================
+        function clearHistory() {
+            if (confirm('⚠️ Isso apagará todo o histórico de todas as datas. Tem certeza?')) {
+                localStorage.removeItem('donaRitaHistory');
+                document.getElementById('history-results').innerHTML =
+                    `<p style="color: #888; text-align: center; padding: 20px;">🗑️ Histórico limpo com sucesso.</p>`;
+                document.getElementById('history-section').classList.add('visible');
+            }
+        }
+
+        // ===================== DOWNLOAD PDF =====================
+        function downloadPDF() {
+            const date = document.getElementById('selected-date').value;
+            const history = JSON.parse(localStorage.getItem('donaRitaHistory') || '{}');
+            const rawDateData = history[date];
+
+            let machines = [];
+            let sourceLabel = '';
+
+            if (rawDateData) {
+                // Tentar obter do histórico
+                if (rawDateData.inspectors) {
+                    const inspectors = rawDateData.inspectors;
+                    Object.keys(inspectors).forEach(inspName => {
+                        const products = inspectors[inspName].products;
+                        Object.keys(products).forEach(prodKey => {
+                            products[prodKey].forEach(m => machines.push(m));
+                        });
+                    });
+                    sourceLabel = `Dados salvos do histórico (${date})`;
+                } else if (Array.isArray(rawDateData.machines)) {
+                    machines = rawDateData.machines;
+                    sourceLabel = `Dados salvos do histórico (${date})`;
+                }
+            }
+
+            if (machines.length === 0) {
+                // Nenhum dado no histórico, usar dados atuais do formulário
+                const formMachines = collectFormData();
+                if (formMachines.length === 0) {
+                    alert(
+                        '⚠️ Nenhum dado encontrado. Preencha o formulário com pelo menos uma máquina ou salve os dados primeiro.'
+                        );
+                    return;
+                }
+                machines = formMachines;
+                sourceLabel = `Dados atuais do formulário (não salvos) - Data: ${date}`;
+                if (!confirm(
+                        `Não há dados salvos para a data ${date}. Deseja gerar o PDF com os dados atuais do formulário?`)
+                    ) {
+                    return;
+                }
+            }
+
+            // Agrupar por inspetor e produto para o relatório
+            const grouped = {};
+            machines.forEach(m => {
+                const inspKey = m.inspector.trim() || 'SEM INSPETOR';
+                const prodKey = m.product.trim() || 'SEM PRODUTO';
+                if (!grouped[inspKey]) grouped[inspKey] = {};
+                if (!grouped[inspKey][prodKey]) grouped[inspKey][prodKey] = [];
+                grouped[inspKey][prodKey].push(m);
+            });
+
+            // Construir HTML do relatório
+            let reportHTML = `
+            <div class="pdf-report">
+                <div class="pdf-header">
+                    <h1>📊 Relatório de Inspeção de Peso</h1>
+                    <div class="pdf-date">📅 Data: ${date.split('-').reverse().join('/')}</div>
+                    <div style="font-size:11px;color:#888;margin-top:4px;">${sourceLabel}</div>
+                </div>
+            `;
+
+            // Resumo geral
+            const totalMachines = machines.length;
+            const approved = machines.filter(m => m.status === 'APROVADO').length;
+            const rejected = machines.filter(m => m.status === 'REPROVADO').length;
+            let allMeasurements = [];
+            machines.forEach(m => {
+                m.rows.forEach(r => {
+                    if (r.m1 !== '' && !isNaN(parseFloat(r.m1))) allMeasurements.push(parseFloat(r
+                        .m1));
+                    if (r.m3 !== '' && !isNaN(parseFloat(r.m3))) allMeasurements.push(parseFloat(r
+                        .m3));
+                    if (r.m4 !== '' && !isNaN(parseFloat(r.m4))) allMeasurements.push(parseFloat(r
+                        .m4));
+                });
+            });
+            const totalMeas = allMeasurements.length;
+            const overallAvg = totalMeas > 0 ? allMeasurements.reduce((a, b) => a + b, 0) / totalMeas : 0;
+
+            reportHTML += `
+                <div class="pdf-summary">
+                    <div class="pdf-summary-item">
+                        <div class="pdf-summary-value">${totalMachines}</div>
+                        <div class="pdf-summary-label">🏭 Máquinas</div>
+                    </div>
+                    <div class="pdf-summary-item">
+                        <div class="pdf-summary-value" style="color:#28a745;">${approved}</div>
+                        <div class="pdf-summary-label">✅ Aprovadas</div>
+                    </div>
+                    <div class="pdf-summary-item">
+                        <div class="pdf-summary-value" style="color:#dc3545;">${rejected}</div>
+                        <div class="pdf-summary-label">❌ Reprovadas</div>
+                    </div>
+                    <div class="pdf-summary-item">
+                        <div class="pdf-summary-value">${totalMeas}</div>
+                        <div class="pdf-summary-label">📐 Medições Totais</div>
+                    </div>
+                    <div class="pdf-summary-item">
+                        <div class="pdf-summary-value">${overallAvg.toFixed(4).replace('.', ',')}</div>
+                        <div class="pdf-summary-label">📈 Média Geral</div>
+                    </div>
+                </div>
+            `;
+
+            // Para cada inspetor
+            const inspNames = Object.keys(grouped).sort();
+            inspNames.forEach(inspName => {
+                reportHTML += `
+                <div class="pdf-inspector-section">
+                    <div class="pdf-inspector-title">👤 Inspetor: ${inspName}</div>
+                `;
+
+                const products = grouped[inspName];
+                const prodKeys = Object.keys(products).sort();
+                prodKeys.forEach(prodKey => {
+                    const prodMachines = products[prodKey];
+                    reportHTML += `
+                    <div class="pdf-product-title">📦 Produto: ${prodKey} (${prodMachines.length} máquina(s))</div>
+                    <div class="dash-table-wrapper" style="margin-bottom:12px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>🏭 Máquina</th>
+                                    <th>🔄 Turno</th>
+                                    <th>🔢 Cav.</th>
+                                    <th>⚡ Ciclo</th>
+                                    <th>🧑 Colab.</th>
+                                    <th>🕐 M1</th>
+                                    <th>🕐 M3</th>
+                                    <th>🕐 M4</th>
+                                    <th>📊 Média M1</th>
+                                    <th>📊 Média M3</th>
+                                    <th>📊 Média M4</th>
+                                    <th>📈 Média Geral</th>
+                                    <th>✅ Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    prodMachines.forEach(m => {
+                        // Calcular médias por horário
+                        const m1vals = m.rows.filter(r => r.m1 !== '').map(r => parseFloat(r
+                            .m1));
+                        const m3vals = m.rows.filter(r => r.m3 !== '').map(r => parseFloat(r
+                            .m3));
+                        const m4vals = m.rows.filter(r => r.m4 !== '').map(r => parseFloat(r
+                            .m4));
+                        const avgM1 = m1vals.length > 0 ? m1vals.reduce((a, b) => a + b, 0) / m1vals
+                            .length : 0;
+                        const avgM3 = m3vals.length > 0 ? m3vals.reduce((a, b) => a + b, 0) / m3vals
+                            .length : 0;
+                        const avgM4 = m4vals.length > 0 ? m4vals.reduce((a, b) => a + b, 0) / m4vals
+                            .length : 0;
+                        const statusClass = m.status === 'APROVADO' ? 'approved' : 'rejected';
+
+                        reportHTML += `
+                            <tr>
+                                <td><strong>${m.machine}</strong></td>
+                                <td>${m.turn}</td>
+                                <td>${m.cavity}</td>
+                                <td>${m.cycle || '-'}</td>
+                                <td>${m.collaborator || '-'}</td>
+                                <td>${m.timeM1 || '14:00'}</td>
+                                <td>${m.timeM3 || '18:00'}</td>
+                                <td>${m.timeM4 || '20:30'}</td>
+                                <td>${avgM1 > 0 ? avgM1.toFixed(4).replace('.', ',') : '—'}</td>
+                                <td>${avgM3 > 0 ? avgM3.toFixed(4).replace('.', ',') : '—'}</td>
+                                <td>${avgM4 > 0 ? avgM4.toFixed(4).replace('.', ',') : '—'}</td>
+                                <td><strong>${m.totalAverage > 0 ? m.totalAverage.toFixed(4).replace('.', ',') : '—'}</strong></td>
+                                <td><span class="status-pill ${statusClass}">${m.status}</span></td>
+                            </tr>
+                        `;
+                    });
+
+                    reportHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                    `;
+
+                    // Tabela detalhada de pesos por máquina
+                    prodMachines.forEach(m => {
+                        reportHTML += `
+                        <div style="margin-bottom:10px;">
+                            <strong style="font-size:12px;">🔍 Detalhamento: ${m.machine} (${m.product})</strong>
+                            <table style="font-size:10px;">
+                                <thead>
+                                    <tr>
+                                        <th>Cav.</th>
+                                        <th>Peso M1 (${m.timeM1 || '14:00'})</th>
+                                        <th>Peso M3 (${m.timeM3 || '18:00'})</th>
+                                        <th>Peso M4 (${m.timeM4 || '20:30'})</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        m.rows.forEach((r, idx) => {
+                            if (idx < m.cavity) {
+                                reportHTML += `
+                                    <tr>
+                                        <td>${idx + 1}</td>
+                                        <td>${r.m1 !== '' ? parseFloat(r.m1).toFixed(4).replace('.', ',') : '—'}</td>
+                                        <td>${r.m3 !== '' ? parseFloat(r.m3).toFixed(4).replace('.', ',') : '—'}</td>
+                                        <td>${r.m4 !== '' ? parseFloat(r.m4).toFixed(4).replace('.', ',') : '—'}</td>
+                                    </tr>
+                                `;
+                            }
+                        });
+                        reportHTML += `
+                                </tbody>
+                            </table>
+                            <div style="font-size:10px;color:#888;margin-top:2px;">
+                                🔻 Tolerâncias: Mín=${m.tolMin} | Ideal=${m.tolMid} | Máx=${m.tolMax}
+                            </div>
+                        </div>
+                        `;
+                    });
+                });
+
+                reportHTML += `</div>`; // fecha pdf-inspector-section
+            });
+
+            reportHTML += `
+                <div style="text-align:center;margin-top:20px;font-size:10px;color:#aaa;">
+                    Relatório gerado pelo Sistema de Inspeção Dona Rita Embalagens
+                </div>
+            </div>
+            `;
+
+            // Injetar HTML no container oculto e gerar PDF
+            const pdfContainer = document.getElementById('pdf-generation-container');
+            pdfContainer.innerHTML = reportHTML;
+
+            // Aguardar renderização e gerar PDF
+            setTimeout(() => {
+                const element = pdfContainer.querySelector('.pdf-report');
+                const opt = {
+                    margin: [8, 6, 8, 6],
+                    filename: `Relatorio_Inspecao_${date}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        letterRendering: true
+                    },
+                    jsPDF: {
+                        unit: 'mm',
+                        format: 'a4',
+                        orientation: 'portrait'
+                    },
+                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                };
+
+                html2pdf().set(opt).from(element).save().then(() => {
+                    // Limpar o container após gerar
+                    pdfContainer.innerHTML = '';
+                }).catch(err => {
+                    console.error('Erro ao gerar PDF:', err);
+                    alert('❌ Ocorreu um erro ao gerar o PDF. Tente novamente.');
+                    pdfContainer.innerHTML = '';
+                });
+            }, 400);
+        }
+
+        // ===================== DASHBOARD DO DIA =====================
+        function openDashboard() {
+            const cards = document.querySelectorAll('.machine-card');
+            if (cards.length === 0) {
+                alert('⚠️ Nenhuma máquina no formulário. Adicione pelo menos uma máquina para gerar o dashboard.');
+                return;
+            }
+
+            const machinesData = [];
+            cards.forEach(card => {
+                const rows = card.querySelectorAll('.data-row');
+                const allValues = [];
+                const m1Vals = [],
+                    m3Vals = [],
+                    m4Vals = [];
+                rows.forEach(row => {
+                    if (row.style.display !== 'none') {
+                        const v1 = parseFloat(row.querySelector('.m1-val').value.replace(',', '.'));
+                        const v3 = parseFloat(row.querySelector('.m3-val').value.replace(',', '.'));
+                        const v4 = parseFloat(row.querySelector('.m4-val').value.replace(',', '.'));
+                        if (!isNaN(v1) && row.querySelector('.m1-val').value.trim() !== '') { allValues.push(
+                            v1);
+                            m1Vals.push(v1); }
+                        if (!isNaN(v3) && row.querySelector('.m3-val').value.trim() !== '') { allValues.push(
+                            v3);
+                            m3Vals.push(v3); }
+                        if (!isNaN(v4) && row.querySelector('.m4-val').value.trim() !== '') { allValues.push(
+                            v4);
+                            m4Vals.push(v4); }
+                    }
+                });
+                const avgAll = allValues.length > 0 ? allValues.reduce((a, b) => a + b, 0) / allValues.length : 0;
+                const avgM1 = m1Vals.length > 0 ? m1Vals.reduce((a, b) => a + b, 0) / m1Vals.length : 0;
+                const avgM3 = m3Vals.length > 0 ? m3Vals.reduce((a, b) => a + b, 0) / m3Vals.length : 0;
+                const avgM4 = m4Vals.length > 0 ? m4Vals.reduce((a, b) => a + b, 0) / m4Vals.length : 0;
+
+                machinesData.push({
+                    machine: card.querySelector('.machine-name').value || 'N/I',
+                    inspector: card.querySelector('.inspector').value || 'N/I',
+                    product: card.querySelector('.product-code').value || 'N/I',
+                    turn: card.querySelector('.turn').value || 'N/I',
+                    status: card.querySelector('.status').value || 'N/I',
+                    cavity: parseInt(card.querySelector('.cavity-input').value) || 10,
+                    tolMin: parseFloat(card.querySelector('.tol-min').value.replace(',', '.')) || 0,
+                    tolMax: parseFloat(card.querySelector('.tol-max').value.replace(',', '.')) || 100,
+                    tolMid: parseFloat(card.querySelector('.tol-mid').value.replace(',', '.')) || 0,
+                    avgAll,
+                    avgM1,
+                    avgM3,
+                    avgM4,
+                    timeM1: card.querySelector('.time-m1').value || '14:00',
+                    timeM3: card.querySelector('.time-m3').value || '18:00',
+                    timeM4: card.querySelector('.time-m4').value || '20:30',
+                    totalMeasurements: allValues.length,
+                });
+            });
+
+            const totalMachines = machinesData.length;
+            const approved = machinesData.filter(m => m.status === 'APROVADO').length;
+            const rejected = machinesData.filter(m => m.status === 'REPROVADO').length;
+            const totalMeasurementsAll = machinesData.reduce((sum, m) => sum + m.totalMeasurements, 0);
+
+            const getBarClass = (avg, tolMin, tolMax, tolMid) => {
+                if (avg <= 0) return '';
+                if (tolMid > 0) {
+                    const deviation = Math.abs(avg - tolMid) / tolMid;
+                    if (deviation < 0.03) return 'success-fill';
+                    if (deviation < 0.08) return 'warning-fill';
+                    return 'danger-fill';
+                }
+                if (avg < tolMin || avg > tolMax) return 'danger-fill';
+                const range = tolMax - tolMin;
+                const midPoint = (tolMin + tolMax) / 2;
+                const dev = Math.abs(avg - midPoint) / (range / 2);
+                if (dev < 0.3) return 'success-fill';
+                if (dev < 0.7) return 'warning-fill';
+                return 'danger-fill';
+            };
+
+            let dashHTML = `
+            <div class="dashboard-overlay" id="dashboard-overlay" onclick="closeDashboard(event)">
+                <div class="dashboard-modal" onclick="event.stopPropagation()">
+                    <div class="dash-header">
+                        <h2>📊 Dashboard do Dia</h2>
+                        <button class="close-dash" onclick="closeDashboard()" title="Fechar">✕</button>
+                    </div>
+                    <div class="dash-body">
+                        <p style="color:#888;margin-bottom:18px;font-size:13px;">📅 <strong>${document.getElementById('selected-date').value}</strong> | Dados atuais do formulário</p>
+
+                        <div class="dash-summary-cards">
+                            <div class="dash-card info-border">
+                                <div class="dash-icon">🏭</div>
+                                <div class="dash-value">${totalMachines}</div>
+                                <div class="dash-label">Máquinas</div>
+                            </div>
+                            <div class="dash-card success-border">
+                                <div class="dash-icon">✅</div>
+                                <div class="dash-value">${approved}</div>
+                                <div class="dash-label">Aprovadas</div>
+                            </div>
+                            <div class="dash-card danger-border">
+                                <div class="dash-icon">❌</div>
+                                <div class="dash-value">${rejected}</div>
+                                <div class="dash-label">Reprovadas</div>
+                            </div>
+                            <div class="dash-card accent-border">
+                                <div class="dash-icon">📐</div>
+                                <div class="dash-value">${totalMeasurementsAll}</div>
+                                <div class="dash-label">Medições Totais</div>
+                            </div>
+                        </div>
+
+                        <div class="dash-section-title">📈 Médias por Máquina</div>
+                        <div class="bar-chart-container">
+            `;
+
+            machinesData.forEach(m => {
+                const barWidth = m.tolMax > 0 ? Math.min((m.avgAll / m.tolMax) * 100, 100) : (m.avgAll > 0 ?
+                    50 : 0);
+                const barClass = getBarClass(m.avgAll, m.tolMin, m.tolMax, m.tolMid);
+                dashHTML += `
+                    <div class="bar-chart-row">
+                        <div class="bar-chart-label">${m.machine}</div>
+                        <div class="bar-chart-track">
+                            <div class="bar-chart-fill ${barClass}" style="width: ${Math.max(barWidth, 3)}%;">
+                                ${m.avgAll > 0 ? m.avgAll.toFixed(3).replace('.', ',') : '—'}
+                            </div>
+                        </div>
+                        <span style="font-size:11px;color:#888;min-width:50px;text-align:left;">${m.status}</span>
+                    </div>
+                `;
+            });
+
+            dashHTML += `
+                        </div>
+
+                        <div class="dash-section-title">📋 Detalhamento Completo</div>
+                        <div class="dash-table-wrapper">
+                            <table class="dash-table">
+                                <thead>
+                                    <tr>
+                                        <th>Máquina</th>
+                                        <th>Inspetor</th>
+                                        <th>Produto</th>
+                                        <th>Turno</th>
+                                        <th>Cav.</th>
+                                        <th>Média M1</th>
+                                        <th>Média M3</th>
+                                        <th>Média M4</th>
+                                        <th>Média Geral</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+
+            machinesData.forEach(m => {
+                const statusClass = m.status === 'APROVADO' ? 'status-approved' : 'status-rejected';
+                dashHTML += `
+                    <tr>
+                        <td><strong>${m.machine}</strong></td>
+                        <td>${m.inspector}</td>
+                        <td>${m.product}</td>
+                        <td>${m.turn}</td>
+                        <td>${m.cavity}</td>
+                        <td>${m.avgM1 > 0 ? m.avgM1.toFixed(3).replace('.', ',') : '—'}</td>
+                        <td>${m.avgM3 > 0 ? m.avgM3.toFixed(3).replace('.', ',') : '—'}</td>
+                        <td>${m.avgM4 > 0 ? m.avgM4.toFixed(3).replace('.', ',') : '—'}</td>
+                        <td><strong>${m.avgAll > 0 ? m.avgAll.toFixed(3).replace('.', ',') : '—'}</strong></td>
+                        <td><span class="status-badge ${statusClass}">${m.status}</span></td>
+                    </tr>
+                `;
+            });
+
+            dashHTML += `
+                                </tbody>
+                            </table>
+                        </div>
+                        <p style="text-align:center;color:#aaa;font-size:11px;margin-top:10px;">🕐 Horários: M1, M3, M4 conforme configurado em cada máquina</p>
+                    </div>
+                </div>
+            </div>
+            `;
+
+            const modalContainer = document.getElementById('dashboard-modal-container');
+            modalContainer.innerHTML = dashHTML;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDashboard(event) {
+            if (event && event.target !== document.getElementById('dashboard-overlay')) return;
+            const modalContainer = document.getElementById('dashboard-modal-container');
+            modalContainer.innerHTML = '';
+            document.body.style.overflow = '';
+        }
+
+        // ===================== INICIALIZAÇÃO =====================
+        window.onload = function() {
+            addMachineCard();
+            if (!localStorage.getItem('donaRitaHistory')) {
+                const card = document.querySelector('.machine-card');
+                if (card) {
+                    card.querySelector('.machine-name').value = '790/2';
+                    card.querySelector('.inspector').value = 'MARILHA';
+                    card.querySelector('.product-code').value = 'DG50 BASE QUADRADA';
+                    const rows = card.querySelectorAll('.data-row');
+                    rows.forEach(row => {
+                        row.querySelector('.m1-val').value = (Math.random() * 0.02 + 0.004).toFixed(4);
+                        row.querySelector('.m3-val').value = (Math.random() * 0.02 + 0.004).toFixed(4);
+                        row.querySelector('.m4-val').value = (Math.random() * 0.02 + 0.004).toFixed(4);
+                    });
+                    updateStats(card.id);
+                }
+            }
+            document.getElementById('history-section').classList.remove('visible');
+        };
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('dashboard-overlay');
+                if (overlay) {
+                    closeDashboard();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
