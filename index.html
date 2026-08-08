@@ -120,6 +120,11 @@
             border-color: var(--accent-color);
             box-shadow: 0 0 0 3px rgba(244, 123, 32, 0.2);
         }
+        .header-info input[type="date"]:disabled {
+            background: #e9ecef;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
 
         .toolbar {
             background: var(--card-bg);
@@ -208,6 +213,15 @@
         .btn-pdf:hover {
             background: #c82333;
             box-shadow: 0 4px 14px rgba(220, 53, 69, 0.35);
+        }
+        .btn-warning {
+            background: #f0ad4e;
+            color: #212529;
+            font-weight: 600;
+        }
+        .btn-warning:hover {
+            background: #ec971f;
+            box-shadow: 0 4px 12px rgba(240, 173, 78, 0.4);
         }
 
         #machines-container {
@@ -1037,10 +1051,12 @@
             <small>Preencha os dados abaixo para cada máquina</small>
         </div>
         <div class="toolbar-buttons">
+            <button class="btn btn-outline" onclick="resetForm()" title="Nova inspeção (limpa formulário)">🆕 Nova Inspeção</button>
             <button class="btn btn-accent" onclick="openDashboard()" title="Ver dashboard do dia">📊 Dashboard do Dia</button>
             <button class="btn btn-pdf" onclick="downloadPDF()" title="Baixar relatório em PDF">📄 Baixar PDF</button>
             <button class="btn btn-success" onclick="addMachineCard()">➕ Adicionar Máquina</button>
-            <button class="btn btn-primary" onclick="saveDailyData()">💾 Salvar Histórico do Dia</button>
+            <button id="btn-save-daily" class="btn btn-primary" onclick="saveDailyData()">💾 Salvar Histórico do Dia</button>
+            <button id="btn-save-edits" class="btn btn-warning" onclick="saveEdits()" style="display:none;">💾 Salvar Alterações</button>
         </div>
     </div>
 
@@ -1103,6 +1119,7 @@
         document.getElementById('history-date-input').value = today;
 
         let machineCounter = 0;
+        let loadedDate = null; // Armazena a data que foi carregada para edição
 
         // ===================== FUNÇÃO PARA ESCAPAR ASPAS SIMPLES =====================
         function escapeQuotes(str) {
@@ -1427,7 +1444,6 @@
                         const m3 = parseFloat(m3Raw);
                         const m4 = parseFloat(m4Raw);
 
-                        // Salvar valores como número (ou string vazia) para o Firebase
                         const rowData = {
                             m1: (!isNaN(m1) && m1Raw.trim() !== '') ? m1 : '',
                             m3: (!isNaN(m3) && m3Raw.trim() !== '') ? m3 : '',
@@ -1449,7 +1465,7 @@
             return machines;
         }
 
-        // ===================== SALVAR DADOS DO DIA NO FIRESTORE (coleção "historico") =====================
+        // ===================== SALVAR DADOS DO DIA NO FIRESTORE (ACUMULAR) =====================
         async function saveDailyData() {
             const date = document.getElementById('selected-date').value;
             const machines = collectFormData();
@@ -1478,7 +1494,6 @@
                 let finalData = { inspectors: {} };
 
                 if (docSnap.exists) {
-                    // Preserva dados já existentes no banco
                     finalData = docSnap.data();
                     if (!finalData.inspectors) finalData.inspectors = {};
                 }
@@ -1492,7 +1507,6 @@
                         if (!finalData.inspectors[inspKey].products[prodKey]) {
                             finalData.inspectors[inspKey].products[prodKey] = [];
                         }
-                        // Adiciona as novas máquinas ao array já existente
                         finalData.inspectors[inspKey].products[prodKey] =
                             finalData.inspectors[inspKey].products[prodKey].concat(
                                 newDateData.inspectors[inspKey].products[prodKey]
@@ -1507,6 +1521,64 @@
             } catch (error) {
                 console.error('Erro ao salvar no Firebase:', error);
                 alert('❌ Erro ao salvar no Firebase. Verifique se as regras permitem acesso à coleção "historico".');
+            }
+        }
+
+        // ===================== SALVAR ALTERAÇÕES (SOBRESCREVER DADOS DA DATA CARREGADA) =====================
+        async function saveEdits() {
+            if (!loadedDate) {
+                alert('Nenhuma edição carregada. Use "Carregar dados para editar" no histórico primeiro.');
+                return;
+            }
+
+            if (!confirm(`⚠️ Isso substituirá TODOS os dados da data ${loadedDate} pelos dados atuais do formulário. Deseja continuar?`)) {
+                return;
+            }
+
+            const machines = collectFormData();
+            if (machines.length === 0) {
+                alert('Adicione pelo menos uma máquina antes de salvar.');
+                return;
+            }
+
+            const newDateData = { inspectors: {} };
+            machines.forEach(m => {
+                const inspKey = m.inspector.trim() || 'SEM INSPETOR';
+                const prodKey = m.product.trim() || 'SEM PRODUTO';
+                if (!newDateData.inspectors[inspKey]) {
+                    newDateData.inspectors[inspKey] = { products: {} };
+                }
+                if (!newDateData.inspectors[inspKey].products[prodKey]) {
+                    newDateData.inspectors[inspKey].products[prodKey] = [];
+                }
+                newDateData.inspectors[inspKey].products[prodKey].push(m);
+            });
+
+            try {
+                // Sobrescreve completamente o documento da data carregada
+                await db.collection(COLLECTION_NAME).doc(loadedDate).set(newDateData);
+                alert(`✅ Alterações salvas com sucesso para ${loadedDate}!`);
+                document.getElementById('history-date-input').value = loadedDate;
+                loadHistory();
+            } catch (error) {
+                console.error('Erro ao salvar alterações:', error);
+                alert('❌ Erro ao salvar alterações no Firebase.');
+            }
+        }
+
+        // ===================== RESETAR FORMULÁRIO (NOVA INSPEÇÃO) =====================
+        function resetForm() {
+            if (confirm('Isso limpará todos os dados do formulário. Deseja continuar?')) {
+                document.getElementById('machines-container').innerHTML = '';
+                machineCounter = 0;
+                loadedDate = null;
+                document.getElementById('selected-date').disabled = false;
+                document.getElementById('selected-date').value = today;
+                document.getElementById('btn-save-daily').style.display = 'inline-flex';
+                document.getElementById('btn-save-edits').style.display = 'none';
+                addMachineCard(); // Adiciona uma máquina vazia para começar
+                document.getElementById('history-results').innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Selecione uma data e clique em consultar para ver o histórico.</p>';
+                document.getElementById('history-section').classList.remove('visible');
             }
         }
 
@@ -1583,7 +1655,6 @@
                                     3).replace('.', ',') : m.totalAverage) :
                                 'Sem dados';
 
-                            // Escapa aspas simples para uso no onclick
                             const safeInspName = escapeQuotes(inspName);
                             const safeProdKey = escapeQuotes(prodKey);
 
@@ -1638,7 +1709,6 @@
 
         // ===================== EXCLUIR ITEM INDIVIDUAL DO HISTÓRICO =====================
         async function deleteHistoryItem(date, inspName, prodKey, machineIndex) {
-            // Solicita a senha antes de excluir
             const senha = prompt('🔒 Digite a senha para excluir este item:');
             if (senha !== SENHA_EXCLUSAO) {
                 alert('❌ Senha incorreta! Exclusão cancelada.');
@@ -1671,18 +1741,14 @@
                     return;
                 }
 
-                // Remove o item do array
                 machinesArray.splice(machineIndex, 1);
 
-                // Se o array ficou vazio, remove a chave do produto
                 if (machinesArray.length === 0) {
                     delete data.inspectors[inspName].products[prodKey];
 
-                    // Se não há mais produtos para este inspetor, remove o inspetor
                     if (Object.keys(data.inspectors[inspName].products).length === 0) {
                         delete data.inspectors[inspName];
 
-                        // Se não há mais inspetores, remove o documento inteiro
                         if (Object.keys(data.inspectors).length === 0) {
                             await docRef.delete();
                             alert('✅ Item excluído com sucesso! O documento ficou vazio e foi removido.');
@@ -1694,11 +1760,8 @@
                     }
                 }
 
-                // Salva o documento atualizado
                 await docRef.set(data);
                 alert('✅ Item excluído com sucesso!');
-
-                // Recarrega o histórico para refletir as mudanças
                 await loadHistory();
 
             } catch (error) {
@@ -1713,7 +1776,7 @@
             historySection.classList.remove('visible');
         }
 
-        // ===================== CARREGAR DADOS DO HISTÓRICO NO FORMULÁRIO =====================
+        // ===================== CARREGAR DADOS DO HISTÓRICO NO FORMULÁRIO (MODO EDIÇÃO) =====================
         async function loadDataToForm(date) {
             try {
                 const docSnap = await db.collection(COLLECTION_NAME).doc(date).get();
@@ -1752,12 +1815,16 @@
                     addMachineCard(machine);
                 });
 
-                // Atualiza a data no campo de seleção
+                // Configura o modo de edição
+                loadedDate = date;
                 document.getElementById('selected-date').value = date;
+                document.getElementById('selected-date').disabled = true; // Impede troca de data durante edição
+                document.getElementById('btn-save-daily').style.display = 'none'; // Esconde o botão de merge
+                document.getElementById('btn-save-edits').style.display = 'inline-flex'; // Mostra o botão de salvar alterações
 
                 // Feedback visual no histórico
                 document.getElementById('history-results').innerHTML =
-                    `<p style="color: #28a745; text-align: center; padding: 20px; font-weight: 600;">✅ ${machines.length} máquina(s) carregada(s) no formulário para edição.</p>`;
+                    `<p style="color: #28a745; text-align: center; padding: 20px; font-weight: 600;">✅ ${machines.length} máquina(s) carregada(s) no formulário para edição. Use "Salvar Alterações" para sobrescrever os dados ou "Nova Inspeção" para recomeçar.</p>`;
 
                 // Rola para o topo do formulário
                 document.getElementById('machines-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1770,7 +1837,6 @@
 
         // ===================== LIMPAR BASE DE DADOS NO FIRESTORE (COM SENHA) =====================
         async function clearHistory() {
-            // Solicita a senha antes de limpar a base
             const senha = prompt('🔒 Digite a senha para limpar TODA a base de dados:');
             if (senha !== SENHA_EXCLUSAO) {
                 alert('❌ Senha incorreta! Operação cancelada.');
@@ -2256,6 +2322,9 @@
         window.onload = function() {
             addMachineCard();
             document.getElementById('history-section').classList.remove('visible');
+            document.getElementById('btn-save-edits').style.display = 'none';
+            document.getElementById('btn-save-daily').style.display = 'inline-flex';
+            document.getElementById('selected-date').disabled = false;
         };
 
         document.addEventListener('keydown', function(e) {
