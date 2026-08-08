@@ -2165,6 +2165,8 @@
                     turn: card.querySelector('.turn').value || 'N/I',
                     status: card.querySelector('.status').value || 'N/I',
                     cavity: parseInt(card.querySelector('.cavity-input').value) || 10,
+                    cycle: card.querySelector('.cycle-input').value || '',
+                    collaborator: card.querySelector('.collaborator-input').value || '',
                     tolMin: parseFloat(card.querySelector('.tol-min').value.replace(',', '.')) || 0,
                     tolMax: parseFloat(card.querySelector('.tol-max').value.replace(',', '.')) || 100,
                     tolMid: parseFloat(card.querySelector('.tol-mid').value.replace(',', '.')) || 0,
@@ -2268,6 +2270,8 @@
                                         <th>Produto</th>
                                         <th>Turno</th>
                                         <th>Cav.</th>
+                                        <th>⚡ Ciclo</th>
+                                        <th>🧑 Colab.</th>
                                         <th>Média M1</th>
                                         <th>Média M3</th>
                                         <th>Média M4</th>
@@ -2287,6 +2291,8 @@
                         <td>${m.product}</td>
                         <td>${m.turn}</td>
                         <td>${m.cavity}</td>
+                        <td>${m.cycle || '-'}</td>
+                        <td>${m.collaborator || '-'}</td>
                         <td>${m.avgM1 > 0 ? m.avgM1.toFixed(3).replace('.', ',') : '—'}</td>
                         <td>${m.avgM3 > 0 ? m.avgM3.toFixed(3).replace('.', ',') : '—'}</td>
                         <td>${m.avgM4 > 0 ? m.avgM4.toFixed(3).replace('.', ',') : '—'}</td>
