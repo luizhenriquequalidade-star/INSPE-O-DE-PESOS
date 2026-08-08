@@ -1056,7 +1056,13 @@
         // Inicializa o Firebase (Firestore)
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const COLLECTION_NAME = "inspecoes";
+
+        // ⚠️ IMPORTANTE: Altere as regras do Firebase para permitir a coleção "historico":
+        // Adicione no console do Firebase:
+        // match /historico/{document=**} {
+        //   allow read, write: if true;
+        // }
+        const COLLECTION_NAME = "historico";
 
         // Obtém a data atual e seta nos campos
         const today = new Date().toISOString().split('T')[0];
@@ -1386,7 +1392,7 @@
             return machines;
         }
 
-        // ===================== SALVAR DADOS DO DIA NO FIRESTORE =====================
+        // ===================== SALVAR DADOS DO DIA NO FIRESTORE (coleção "historico") =====================
         async function saveDailyData() {
             const date = document.getElementById('selected-date').value;
             const machines = collectFormData();
@@ -1409,14 +1415,13 @@
             });
 
             try {
-                // Salva no Firestore – a coleção "inspecoes" é criada automaticamente aqui
                 await db.collection(COLLECTION_NAME).doc(date).set(dateData);
-                alert(`✅ Dados da data ${date} salvos com sucesso no Firebase!`);
+                alert(`✅ Dados da data ${date} salvos com sucesso na coleção "${COLLECTION_NAME}"!`);
                 document.getElementById('history-date-input').value = date;
                 loadHistory();
             } catch (error) {
                 console.error('Erro ao salvar no Firebase:', error);
-                alert('❌ Erro ao salvar no Firebase. Verifique sua conexão e tente novamente.');
+                alert('❌ Erro ao salvar no Firebase. Verifique se as regras permitem acesso à coleção "historico".');
             }
         }
 
@@ -1439,7 +1444,6 @@
 
                 const dateData = docSnap.data();
 
-                // Se não houver a estrutura esperada
                 if (!dateData.inspectors) {
                     resultsDiv.innerHTML =
                         `<p style="color: #888; text-align: center; padding: 20px;">📭 Nenhum dado encontrado para a data <strong>${date}</strong>.</p>`;
@@ -1447,7 +1451,6 @@
                     return;
                 }
 
-                // Título
                 const title = document.createElement('h3');
                 title.textContent = `📅 Inspeções do dia ${date}`;
                 title.style.marginBottom = '12px';
@@ -1490,7 +1493,6 @@
                         products[prodKey].forEach(m => {
                             const itemDiv = document.createElement('div');
                             itemDiv.className = 'history-item';
-                            // Garantir que totalAverage seja exibido corretamente
                             const avgDisplay = (m.totalAverage && m.totalAverage > 0) ? 
                                 (typeof m.totalAverage === 'number' ? m.totalAverage.toFixed(3).replace('.', ',') : m.totalAverage) 
                                 : 'Sem dados';
@@ -1535,7 +1537,7 @@
             } catch (error) {
                 console.error('Erro ao carregar histórico:', error);
                 resultsDiv.innerHTML =
-                    `<p style="color: #dc3545; text-align: center; padding: 20px;">❌ Erro ao carregar dados do Firebase. Verifique sua conexão.</p>`;
+                    `<p style="color: #dc3545; text-align: center; padding: 20px;">❌ Erro ao carregar dados do Firebase. Verifique sua conexão e as regras de segurança.</p>`;
                 historySection.classList.add('visible');
             }
         }
@@ -1590,7 +1592,6 @@
                         document.getElementById('history-section').classList.add('visible');
                         return;
                     }
-                    // Deleta todos os documentos em lote
                     const batch = db.batch();
                     snapshot.forEach(doc => {
                         batch.delete(doc.ref);
@@ -1612,7 +1613,6 @@
             let machines = [];
             let sourceLabel = '';
 
-            // Tenta buscar do Firestore primeiro
             try {
                 const docSnap = await db.collection(COLLECTION_NAME).doc(date).get();
                 if (docSnap.exists) {
@@ -1631,25 +1631,19 @@
                 console.error('Erro ao buscar dados para PDF:', error);
             }
 
-            // Se não encontrou no Firestore, usa os dados atuais do formulário
             if (machines.length === 0) {
                 const formMachines = collectFormData();
                 if (formMachines.length === 0) {
-                    alert(
-                        '⚠️ Nenhum dado encontrado. Preencha o formulário com pelo menos uma máquina ou salve os dados primeiro.'
-                        );
+                    alert('⚠️ Nenhum dado encontrado. Preencha o formulário com pelo menos uma máquina ou salve os dados primeiro.');
                     return;
                 }
                 machines = formMachines;
                 sourceLabel = `Dados atuais do formulário (não salvos) - Data: ${date}`;
-                if (!confirm(
-                        `Não há dados salvos para a data ${date}. Deseja gerar o PDF com os dados atuais do formulário?`)
-                    ) {
+                if (!confirm(`Não há dados salvos para a data ${date}. Deseja gerar o PDF com os dados atuais do formulário?`)) {
                     return;
                 }
             }
 
-            // Agrupar por inspetor e produto para o relatório
             const grouped = {};
             machines.forEach(m => {
                 const inspKey = m.inspector.trim() || 'SEM INSPETOR';
@@ -1659,7 +1653,6 @@
                 grouped[inspKey][prodKey].push(m);
             });
 
-            // Construir HTML do relatório
             let reportHTML = `
             <div class="pdf-report">
                 <div class="pdf-header">
@@ -1750,12 +1743,9 @@
                         const m1vals = rows.filter(r => r.m1 !== '').map(r => parseFloat(r.m1));
                         const m3vals = rows.filter(r => r.m3 !== '').map(r => parseFloat(r.m3));
                         const m4vals = rows.filter(r => r.m4 !== '').map(r => parseFloat(r.m4));
-                        const avgM1 = m1vals.length > 0 ? m1vals.reduce((a, b) => a + b, 0) / m1vals
-                            .length : 0;
-                        const avgM3 = m3vals.length > 0 ? m3vals.reduce((a, b) => a + b, 0) / m3vals
-                            .length : 0;
-                        const avgM4 = m4vals.length > 0 ? m4vals.reduce((a, b) => a + b, 0) / m4vals
-                            .length : 0;
+                        const avgM1 = m1vals.length > 0 ? m1vals.reduce((a, b) => a + b, 0) / m1vals.length : 0;
+                        const avgM3 = m3vals.length > 0 ? m3vals.reduce((a, b) => a + b, 0) / m3vals.length : 0;
+                        const avgM4 = m4vals.length > 0 ? m4vals.reduce((a, b) => a + b, 0) / m4vals.length : 0;
                         const statusClass = m.status === 'APROVADO' ? 'approved' : 'rejected';
 
                         reportHTML += `
@@ -1884,15 +1874,9 @@
                         const v1 = parseFloat(row.querySelector('.m1-val').value.replace(',', '.'));
                         const v3 = parseFloat(row.querySelector('.m3-val').value.replace(',', '.'));
                         const v4 = parseFloat(row.querySelector('.m4-val').value.replace(',', '.'));
-                        if (!isNaN(v1) && row.querySelector('.m1-val').value.trim() !== '') { allValues.push(
-                            v1);
-                            m1Vals.push(v1); }
-                        if (!isNaN(v3) && row.querySelector('.m3-val').value.trim() !== '') { allValues.push(
-                            v3);
-                            m3Vals.push(v3); }
-                        if (!isNaN(v4) && row.querySelector('.m4-val').value.trim() !== '') { allValues.push(
-                            v4);
-                            m4Vals.push(v4); }
+                        if (!isNaN(v1) && row.querySelector('.m1-val').value.trim() !== '') { allValues.push(v1); m1Vals.push(v1); }
+                        if (!isNaN(v3) && row.querySelector('.m3-val').value.trim() !== '') { allValues.push(v3); m3Vals.push(v3); }
+                        if (!isNaN(v4) && row.querySelector('.m4-val').value.trim() !== '') { allValues.push(v4); m4Vals.push(v4); }
                     }
                 });
                 const avgAll = allValues.length > 0 ? allValues.reduce((a, b) => a + b, 0) / allValues.length : 0;
@@ -1981,8 +1965,7 @@
             `;
 
             machinesData.forEach(m => {
-                const barWidth = m.tolMax > 0 ? Math.min((m.avgAll / m.tolMax) * 100, 100) : (m.avgAll > 0 ?
-                    50 : 0);
+                const barWidth = m.tolMax > 0 ? Math.min((m.avgAll / m.tolMax) * 100, 100) : (m.avgAll > 0 ? 50 : 0);
                 const barClass = getBarClass(m.avgAll, m.tolMin, m.tolMax, m.tolMid);
                 dashHTML += `
                     <div class="bar-chart-row">
@@ -2062,7 +2045,6 @@
 
         // ===================== INICIALIZAÇÃO =====================
         window.onload = function() {
-            // Inicia com um card vazio
             addMachineCard();
             document.getElementById('history-section').classList.remove('visible');
         };
