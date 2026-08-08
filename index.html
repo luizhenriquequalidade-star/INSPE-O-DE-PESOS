@@ -6,10 +6,13 @@
     <title>Sistema de Inspeção - Dona Rita Embalagens</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Firebase Compat (CDN) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js">
+    </script>
     <!-- Biblioteca para geração de PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+    </script>
     <style>
         :root {
             --primary-color: #241245;
@@ -565,6 +568,33 @@
             box-shadow: var(--shadow-sm);
             border-left-color: var(--accent-color);
         }
+        .history-item .item-content {
+            flex: 1;
+            min-width: 200px;
+        }
+        .history-item .item-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            min-width: 100px;
+        }
+        .btn-delete-item {
+            background: #fff;
+            border: 1px solid #dc3545;
+            color: #dc3545;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 11px;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .btn-delete-item:hover {
+            background: #dc3545;
+            color: #fff;
+        }
 
         .dashboard-overlay {
             position: fixed;
@@ -1064,12 +1094,21 @@
         // }
         const COLLECTION_NAME = "historico";
 
+        // Senha para exclusões
+        const SENHA_EXCLUSAO = "130499";
+
         // Obtém a data atual e seta nos campos
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('selected-date').value = today;
         document.getElementById('history-date-input').value = today;
 
         let machineCounter = 0;
+
+        // ===================== FUNÇÃO PARA ESCAPAR ASPAS SIMPLES =====================
+        function escapeQuotes(str) {
+            if (!str) return '';
+            return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
 
         // ===================== FUNÇÃO PARA ADICIONAR CARD DE MÁQUINA =====================
         function addMachineCard(machineData = null) {
@@ -1102,7 +1141,7 @@
                 let v1 = (row && row.m1 !== undefined && row.m1 !== null && row.m1 !== '') ? row.m1 : '';
                 let v3 = (row && row.m3 !== undefined && row.m3 !== null && row.m3 !== '') ? row.m3 : '';
                 let v4 = (row && row.m4 !== undefined && row.m4 !== null && row.m4 !== '') ? row.m4 : '';
-                
+
                 // Se for número, converter para string com vírgula (formato brasileiro)
                 if (typeof v1 === 'number') v1 = v1.toFixed(4).replace('.', ',');
                 if (typeof v3 === 'number') v3 = v3.toFixed(4).replace('.', ',');
@@ -1372,17 +1411,20 @@
                         const m1 = parseFloat(m1Raw);
                         const m3 = parseFloat(m3Raw);
                         const m4 = parseFloat(m4Raw);
-                        
+
                         // Salvar valores como número (ou string vazia) para o Firebase
                         const rowData = {
                             m1: (!isNaN(m1) && m1Raw.trim() !== '') ? m1 : '',
                             m3: (!isNaN(m3) && m3Raw.trim() !== '') ? m3 : '',
                             m4: (!isNaN(m4) && m4Raw.trim() !== '') ? m4 : ''
                         };
-                        
-                        if (!isNaN(m1) && m1Raw.trim() !== '') { totalSum += m1; totalCount++; }
-                        if (!isNaN(m3) && m3Raw.trim() !== '') { totalSum += m3; totalCount++; }
-                        if (!isNaN(m4) && m4Raw.trim() !== '') { totalSum += m4; totalCount++; }
+
+                        if (!isNaN(m1) && m1Raw.trim() !== '') { totalSum += m1;
+                            totalCount++; }
+                        if (!isNaN(m3) && m3Raw.trim() !== '') { totalSum += m3;
+                            totalCount++; }
+                        if (!isNaN(m4) && m4Raw.trim() !== '') { totalSum += m4;
+                            totalCount++; }
                         machineData.rows.push(rowData);
                     }
                 });
@@ -1417,15 +1459,15 @@
             try {
                 const docRef = db.collection(COLLECTION_NAME).doc(date);
                 const docSnap = await docRef.get();
-                
+
                 let finalData = { inspectors: {} };
-                
+
                 if (docSnap.exists) {
                     // Preserva dados já existentes no banco
                     finalData = docSnap.data();
                     if (!finalData.inspectors) finalData.inspectors = {};
                 }
-                
+
                 // Mescla os novos dados com os existentes (acumula as inspeções)
                 for (const inspKey in newDateData.inspectors) {
                     if (!finalData.inspectors[inspKey]) {
@@ -1436,13 +1478,13 @@
                             finalData.inspectors[inspKey].products[prodKey] = [];
                         }
                         // Adiciona as novas máquinas ao array já existente
-                        finalData.inspectors[inspKey].products[prodKey] = 
+                        finalData.inspectors[inspKey].products[prodKey] =
                             finalData.inspectors[inspKey].products[prodKey].concat(
                                 newDateData.inspectors[inspKey].products[prodKey]
                             );
                     }
                 }
-                
+
                 await docRef.set(finalData);
                 alert(`✅ Dados da data ${date} salvos com sucesso (acumulados)!`);
                 document.getElementById('history-date-input').value = date;
@@ -1518,26 +1560,35 @@
                         prodTitle.textContent = `📦 ${prodKey}`;
                         prodSubDiv.appendChild(prodTitle);
 
-                        products[prodKey].forEach(m => {
+                        products[prodKey].forEach((m, machineIndex) => {
                             const itemDiv = document.createElement('div');
                             itemDiv.className = 'history-item';
-                            const avgDisplay = (m.totalAverage && m.totalAverage > 0) ? 
-                                (typeof m.totalAverage === 'number' ? m.totalAverage.toFixed(3).replace('.', ',') : m.totalAverage) 
-                                : 'Sem dados';
+                            const avgDisplay = (m.totalAverage && m.totalAverage > 0) ?
+                                (typeof m.totalAverage === 'number' ? m.totalAverage.toFixed(
+                                    3).replace('.', ',') : m.totalAverage) :
+                                'Sem dados';
+
+                            // Escapa aspas simples para uso no onclick
+                            const safeInspName = escapeQuotes(inspName);
+                            const safeProdKey = escapeQuotes(prodKey);
+
                             itemDiv.innerHTML = `
-                                <div>
+                                <div class="item-content">
                                     <strong>🏭 Máquina:</strong> ${m.machine}<br>
                                     <small>🔄 Turno: ${m.turn} | 🔢 Cavidade: ${m.cavity} | ⚡ Ciclo: ${m.cycle || '-'} | 🧑 Colaborador: ${m.collaborator || '-'}</small><br>
                                     <small>🕐 Horários: M1=${m.timeM1 || '14:00'} | M3=${m.timeM3 || '18:00'} | M4=${m.timeM4 || '20:30'}</small>
                                 </div>
-                                <div style="text-align: right;">
+                                <div class="item-actions">
                                     <span style="font-size: 12px; color: #888;">Média Geral:</span>
-                                    <span style="font-size: 18px; font-weight: 700; color: #3e2970; display:block;">
+                                    <span style="font-size: 18px; font-weight: 700; color: #3e2970;">
                                         ${avgDisplay}
                                     </span>
                                     <span style="font-size: 11px; color: ${m.status==='APROVADO'?'#28a745':'#dc3545'}; font-weight:600;">
                                         ${m.status}
                                     </span>
+                                    <button class="btn-delete-item" onclick="deleteHistoryItem('${date}', '${safeInspName}', '${safeProdKey}', ${machineIndex})" title="Excluir este item">
+                                        🗑️ Excluir
+                                    </button>
                                 </div>
                             `;
                             prodSubDiv.appendChild(itemDiv);
@@ -1567,6 +1618,77 @@
                 resultsDiv.innerHTML =
                     `<p style="color: #dc3545; text-align: center; padding: 20px;">❌ Erro ao carregar dados do Firebase. Verifique sua conexão e as regras de segurança.</p>`;
                 historySection.classList.add('visible');
+            }
+        }
+
+        // ===================== EXCLUIR ITEM INDIVIDUAL DO HISTÓRICO =====================
+        async function deleteHistoryItem(date, inspName, prodKey, machineIndex) {
+            // Solicita a senha antes de excluir
+            const senha = prompt('🔒 Digite a senha para excluir este item:');
+            if (senha !== SENHA_EXCLUSAO) {
+                alert('❌ Senha incorreta! Exclusão cancelada.');
+                return;
+            }
+
+            if (!confirm(`⚠️ Tem certeza que deseja excluir esta máquina do histórico?\n\nData: ${date}\nInspetor: ${inspName}\nProduto: ${prodKey}\nÍndice: ${machineIndex + 1}`)) {
+                return;
+            }
+
+            try {
+                const docRef = db.collection(COLLECTION_NAME).doc(date);
+                const docSnap = await docRef.get();
+
+                if (!docSnap.exists) {
+                    alert('❌ Documento não encontrado no Firebase.');
+                    return;
+                }
+
+                const data = docSnap.data();
+                if (!data.inspectors || !data.inspectors[inspName] || !data.inspectors[inspName].products[prodKey]) {
+                    alert('❌ Item não encontrado na estrutura de dados.');
+                    return;
+                }
+
+                const machinesArray = data.inspectors[inspName].products[prodKey];
+
+                if (machineIndex < 0 || machineIndex >= machinesArray.length) {
+                    alert('❌ Índice do item inválido.');
+                    return;
+                }
+
+                // Remove o item do array
+                machinesArray.splice(machineIndex, 1);
+
+                // Se o array ficou vazio, remove a chave do produto
+                if (machinesArray.length === 0) {
+                    delete data.inspectors[inspName].products[prodKey];
+
+                    // Se não há mais produtos para este inspetor, remove o inspetor
+                    if (Object.keys(data.inspectors[inspName].products).length === 0) {
+                        delete data.inspectors[inspName];
+
+                        // Se não há mais inspetores, remove o documento inteiro
+                        if (Object.keys(data.inspectors).length === 0) {
+                            await docRef.delete();
+                            alert('✅ Item excluído com sucesso! O documento ficou vazio e foi removido.');
+                            document.getElementById('history-results').innerHTML =
+                                `<p style="color: #888; text-align: center; padding: 20px;">📭 Nenhum dado encontrado para a data <strong>${date}</strong>.</p>`;
+                            document.getElementById('history-section').classList.add('visible');
+                            return;
+                        }
+                    }
+                }
+
+                // Salva o documento atualizado
+                await docRef.set(data);
+                alert('✅ Item excluído com sucesso!');
+
+                // Recarrega o histórico para refletir as mudanças
+                await loadHistory();
+
+            } catch (error) {
+                console.error('Erro ao excluir item do histórico:', error);
+                alert('❌ Erro ao excluir item no Firebase. Verifique sua conexão e as regras de segurança.');
             }
         }
 
@@ -1609,8 +1731,15 @@
             }
         }
 
-        // ===================== LIMPAR BASE DE DADOS NO FIRESTORE =====================
+        // ===================== LIMPAR BASE DE DADOS NO FIRESTORE (COM SENHA) =====================
         async function clearHistory() {
+            // Solicita a senha antes de limpar a base
+            const senha = prompt('🔒 Digite a senha para limpar TODA a base de dados:');
+            if (senha !== SENHA_EXCLUSAO) {
+                alert('❌ Senha incorreta! Operação cancelada.');
+                return;
+            }
+
             if (confirm('⚠️ Isso apagará TODO o histórico de TODAS as datas no Firebase. Tem certeza?')) {
                 try {
                     const snapshot = await db.collection(COLLECTION_NAME).get();
@@ -1662,12 +1791,14 @@
             if (machines.length === 0) {
                 const formMachines = collectFormData();
                 if (formMachines.length === 0) {
-                    alert('⚠️ Nenhum dado encontrado. Preencha o formulário com pelo menos uma máquina ou salve os dados primeiro.');
+                    alert(
+                        '⚠️ Nenhum dado encontrado. Preencha o formulário com pelo menos uma máquina ou salve os dados primeiro.');
                     return;
                 }
                 machines = formMachines;
                 sourceLabel = `Dados atuais do formulário (não salvos) - Data: ${date}`;
-                if (!confirm(`Não há dados salvos para a data ${date}. Deseja gerar o PDF com os dados atuais do formulário?`)) {
+                if (!confirm(
+                        `Não há dados salvos para a data ${date}. Deseja gerar o PDF com os dados atuais do formulário?`)) {
                     return;
                 }
             }
@@ -1697,9 +1828,12 @@
             machines.forEach(m => {
                 if (m.rows) {
                     m.rows.forEach(r => {
-                        if (r.m1 !== '' && !isNaN(parseFloat(r.m1))) allMeasurements.push(parseFloat(r.m1));
-                        if (r.m3 !== '' && !isNaN(parseFloat(r.m3))) allMeasurements.push(parseFloat(r.m3));
-                        if (r.m4 !== '' && !isNaN(parseFloat(r.m4))) allMeasurements.push(parseFloat(r.m4));
+                        if (r.m1 !== '' && !isNaN(parseFloat(r.m1))) allMeasurements.push(parseFloat(r
+                            .m1));
+                        if (r.m3 !== '' && !isNaN(parseFloat(r.m3))) allMeasurements.push(parseFloat(r
+                            .m3));
+                        if (r.m4 !== '' && !isNaN(parseFloat(r.m4))) allMeasurements.push(parseFloat(r
+                            .m4));
                     });
                 }
             });
@@ -1771,9 +1905,12 @@
                         const m1vals = rows.filter(r => r.m1 !== '').map(r => parseFloat(r.m1));
                         const m3vals = rows.filter(r => r.m3 !== '').map(r => parseFloat(r.m3));
                         const m4vals = rows.filter(r => r.m4 !== '').map(r => parseFloat(r.m4));
-                        const avgM1 = m1vals.length > 0 ? m1vals.reduce((a, b) => a + b, 0) / m1vals.length : 0;
-                        const avgM3 = m3vals.length > 0 ? m3vals.reduce((a, b) => a + b, 0) / m3vals.length : 0;
-                        const avgM4 = m4vals.length > 0 ? m4vals.reduce((a, b) => a + b, 0) / m4vals.length : 0;
+                        const avgM1 = m1vals.length > 0 ? m1vals.reduce((a, b) => a + b, 0) /
+                            m1vals.length : 0;
+                        const avgM3 = m3vals.length > 0 ? m3vals.reduce((a, b) => a + b, 0) /
+                            m3vals.length : 0;
+                        const avgM4 = m4vals.length > 0 ? m4vals.reduce((a, b) => a + b, 0) /
+                            m4vals.length : 0;
                         const statusClass = m.status === 'APROVADO' ? 'approved' : 'rejected';
 
                         reportHTML += `
@@ -1902,9 +2039,15 @@
                         const v1 = parseFloat(row.querySelector('.m1-val').value.replace(',', '.'));
                         const v3 = parseFloat(row.querySelector('.m3-val').value.replace(',', '.'));
                         const v4 = parseFloat(row.querySelector('.m4-val').value.replace(',', '.'));
-                        if (!isNaN(v1) && row.querySelector('.m1-val').value.trim() !== '') { allValues.push(v1); m1Vals.push(v1); }
-                        if (!isNaN(v3) && row.querySelector('.m3-val').value.trim() !== '') { allValues.push(v3); m3Vals.push(v3); }
-                        if (!isNaN(v4) && row.querySelector('.m4-val').value.trim() !== '') { allValues.push(v4); m4Vals.push(v4); }
+                        if (!isNaN(v1) && row.querySelector('.m1-val').value.trim() !== '') { allValues.push(
+                            v1);
+                            m1Vals.push(v1); }
+                        if (!isNaN(v3) && row.querySelector('.m3-val').value.trim() !== '') { allValues.push(
+                            v3);
+                            m3Vals.push(v3); }
+                        if (!isNaN(v4) && row.querySelector('.m4-val').value.trim() !== '') { allValues.push(
+                            v4);
+                            m4Vals.push(v4); }
                     }
                 });
                 const avgAll = allValues.length > 0 ? allValues.reduce((a, b) => a + b, 0) / allValues.length : 0;
@@ -1993,7 +2136,8 @@
             `;
 
             machinesData.forEach(m => {
-                const barWidth = m.tolMax > 0 ? Math.min((m.avgAll / m.tolMax) * 100, 100) : (m.avgAll > 0 ? 50 : 0);
+                const barWidth = m.tolMax > 0 ? Math.min((m.avgAll / m.tolMax) * 100, 100) : (m.avgAll > 0 ? 50 :
+                    0);
                 const barClass = getBarClass(m.avgAll, m.tolMin, m.tolMax, m.tolMid);
                 dashHTML += `
                     <div class="bar-chart-row">
