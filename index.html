@@ -542,6 +542,7 @@
             gap: 8px;
             padding-bottom: 8px;
             border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
         }
         .inspector-group .inspector-title .badge {
             background: var(--accent-color);
@@ -550,6 +551,24 @@
             border-radius: 20px;
             font-size: 11px;
             font-weight: 500;
+        }
+        .inspector-group .inspector-title .btn-load-inspector {
+            margin-left: auto;
+            background: #3e2970;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .inspector-group .inspector-title .btn-load-inspector:hover {
+            background: #241245;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
         }
         .product-subgroup {
             margin-left: 12px;
@@ -1057,8 +1076,12 @@
             <button class="btn btn-success" onclick="addMachineCard()">➕ Adicionar Máquina</button>
             <button id="btn-save-daily" class="btn btn-primary" onclick="saveDailyData()">💾 Salvar Histórico do Dia</button>
             <button id="btn-save-edits" class="btn btn-warning" onclick="saveEdits()" style="display:none;">💾 Salvar Alterações</button>
+            <button id="btn-toggle-history" class="btn btn-outline" onclick="toggleHistory()">📂 Histórico</button>
         </div>
     </div>
+
+    <!-- DATALIST PARA INSPETORES -->
+    <datalist id="inspector-list"></datalist>
 
     <!-- CONTAINER DAS MÁQUINAS -->
     <div id="machines-container">
@@ -1121,10 +1144,56 @@
         let machineCounter = 0;
         let loadedDate = null; // Armazena a data que foi carregada para edição
 
+        // Conjunto de nomes de inspetores para o datalist
+        let inspectorNamesSet = new Set();
+
         // ===================== FUNÇÃO PARA ESCAPAR ASPAS SIMPLES =====================
         function escapeQuotes(str) {
             if (!str) return '';
             return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
+        // ===================== ATUALIZAR DATALIST DE INSPETORES =====================
+        async function loadInspectorNames() {
+            try {
+                const snapshot = await db.collection(COLLECTION_NAME).get();
+                inspectorNamesSet.clear();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.inspectors) {
+                        Object.keys(data.inspectors).forEach(name => {
+                            if (name && name.trim() !== 'SEM INSPETOR') {
+                                inspectorNamesSet.add(name.trim());
+                            }
+                        });
+                    }
+                });
+                updateInspectorDatalist();
+            } catch (error) {
+                console.error('Erro ao carregar nomes de inspetores:', error);
+            }
+        }
+
+        function updateInspectorDatalist() {
+            const datalist = document.getElementById('inspector-list');
+            if (!datalist) return;
+            datalist.innerHTML = '';
+            const sortedNames = Array.from(inspectorNamesSet).sort((a, b) => a.localeCompare(b));
+            sortedNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+        }
+
+        function addInspectorNameToSet(name) {
+            if (name && name.trim() !== '' && name.trim() !== 'SEM INSPETOR') {
+                const trimmed = name.trim();
+                if (!inspectorNamesSet.has(trimmed)) {
+                    inspectorNamesSet.add(trimmed);
+                    updateInspectorDatalist();
+                }
+            }
         }
 
         // ===================== FUNÇÃO PARA ADICIONAR CARD DE MÁQUINA =====================
@@ -1196,7 +1265,7 @@
                     <div class="form-header">
                         <div class="input-group">
                             <label>👤 Inspetor</label>
-                            <input type="text" class="inspector" value="${inspector}" placeholder="Ex: MARILHA">
+                            <input type="text" class="inspector" value="${inspector}" placeholder="Ex: MARILHA" list="inspector-list" autocomplete="off">
                         </div>
                         <div class="input-group">
                             <label>🏭 Máquina</label>
@@ -1309,6 +1378,14 @@
             timeM1Input.addEventListener('change', () => updateTimeLabels(cardId));
             timeM3Input.addEventListener('change', () => updateTimeLabels(cardId));
             timeM4Input.addEventListener('change', () => updateTimeLabels(cardId));
+
+            // Adiciona listener para salvar nome do inspetor no datalist ao sair do campo
+            const inspectorInput = cardElement.querySelector('.inspector');
+            if (inspectorInput) {
+                inspectorInput.addEventListener('blur', function() {
+                    addInspectorNameToSet(this.value);
+                });
+            }
 
             // Aplica a cavidade carregada e atualiza estatísticas
             handleCavityChange(cardId);
@@ -1474,6 +1551,9 @@
                 return;
             }
 
+            // Atualiza o datalist com os inspetores atuais
+            machines.forEach(m => addInspectorNameToSet(m.inspector));
+
             const newDateData = { inspectors: {} };
             machines.forEach(m => {
                 const inspKey = m.inspector.trim() || 'SEM INSPETOR';
@@ -1517,6 +1597,7 @@
                 await docRef.set(finalData);
                 alert(`✅ Dados da data ${date} salvos com sucesso (acumulados)!`);
                 document.getElementById('history-date-input').value = date;
+                await loadInspectorNames(); // recarrega a lista de inspetores
                 loadHistory();
             } catch (error) {
                 console.error('Erro ao salvar no Firebase:', error);
@@ -1531,7 +1612,9 @@
                 return;
             }
 
-            if (!confirm(`⚠️ Isso substituirá TODOS os dados da data ${loadedDate} pelos dados atuais do formulário. Deseja continuar?`)) {
+            if (!confirm(
+                    `⚠️ Isso substituirá TODOS os dados da data ${loadedDate} pelos dados atuais do formulário. Deseja continuar?`
+                    )) {
                 return;
             }
 
@@ -1540,6 +1623,9 @@
                 alert('Adicione pelo menos uma máquina antes de salvar.');
                 return;
             }
+
+            // Atualiza o datalist com os inspetores atuais
+            machines.forEach(m => addInspectorNameToSet(m.inspector));
 
             const newDateData = { inspectors: {} };
             machines.forEach(m => {
@@ -1559,6 +1645,7 @@
                 await db.collection(COLLECTION_NAME).doc(loadedDate).set(newDateData);
                 alert(`✅ Alterações salvas com sucesso para ${loadedDate}!`);
                 document.getElementById('history-date-input').value = loadedDate;
+                await loadInspectorNames(); // recarrega a lista de inspetores
                 loadHistory();
             } catch (error) {
                 console.error('Erro ao salvar alterações:', error);
@@ -1577,9 +1664,36 @@
                 document.getElementById('btn-save-daily').style.display = 'inline-flex';
                 document.getElementById('btn-save-edits').style.display = 'none';
                 addMachineCard(); // Adiciona uma máquina vazia para começar
-                document.getElementById('history-results').innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Selecione uma data e clique em consultar para ver o histórico.</p>';
+                document.getElementById('history-results').innerHTML =
+                    '<p style="color: #888; text-align: center; padding: 20px;">Selecione uma data e clique em consultar para ver o histórico.</p>';
                 document.getElementById('history-section').classList.remove('visible');
             }
+        }
+
+        // ===================== TOGGLE HISTÓRICO (MOSTRAR/OCULTAR) =====================
+        function toggleHistory() {
+            const historySection = document.getElementById('history-section');
+            if (historySection.classList.contains('visible')) {
+                hideHistory();
+            } else {
+                showHistory();
+            }
+        }
+
+        function showHistory() {
+            const historySection = document.getElementById('history-section');
+            historySection.classList.add('visible');
+            historySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Se não houver resultados, mantém a mensagem padrão
+            if (!document.getElementById('history-results').innerHTML.trim() ||
+                document.getElementById('history-results').innerHTML.includes('Selecione uma data')) {
+                // ok, mantém
+            }
+        }
+
+        function hideHistory() {
+            const historySection = document.getElementById('history-section');
+            historySection.classList.remove('visible');
         }
 
         // ===================== CONSULTAR HISTÓRICO NO FIRESTORE =====================
@@ -1634,8 +1748,13 @@
 
                     const headerGroup = document.createElement('div');
                     headerGroup.className = 'inspector-title';
+                    const safeInspName = escapeQuotes(inspName);
+
                     headerGroup.innerHTML =
-                        `👤 ${inspName} <span class="badge">${totalMachinesInsp} máquina(s)</span>`;
+                        `<span>👤 ${inspName} <span class="badge">${totalMachinesInsp} máquina(s)</span></span>
+                         <button class="btn-load-inspector" onclick="loadInspectorToForm('${date}', '${safeInspName}')" title="Carregar apenas as máquinas deste inspetor">
+                            📥 Carregar este inspetor
+                         </button>`;
                     groupDiv.appendChild(headerGroup);
 
                     const productKeys = Object.keys(products).sort();
@@ -1655,7 +1774,6 @@
                                     3).replace('.', ',') : m.totalAverage) :
                                 'Sem dados';
 
-                            const safeInspName = escapeQuotes(inspName);
                             const safeProdKey = escapeQuotes(prodKey);
 
                             itemDiv.innerHTML = `
@@ -1684,10 +1802,10 @@
                     resultsDiv.appendChild(groupDiv);
                 });
 
-                // Botão para carregar no formulário
+                // Botão para carregar TODOS no formulário
                 const loadFormBtn = document.createElement('button');
                 loadFormBtn.className = 'btn btn-success';
-                loadFormBtn.textContent = '🔄 Carregar estes dados para editar';
+                loadFormBtn.textContent = '🔄 Carregar todos os dados para editar';
                 loadFormBtn.style.marginTop = '16px';
                 loadFormBtn.onclick = () => loadDataToForm(date);
                 const btnDiv = document.createElement('div');
@@ -1715,7 +1833,9 @@
                 return;
             }
 
-            if (!confirm(`⚠️ Tem certeza que deseja excluir esta máquina do histórico?\n\nData: ${date}\nInspetor: ${inspName}\nProduto: ${prodKey}\nÍndice: ${machineIndex + 1}`)) {
+            if (!confirm(
+                    `⚠️ Tem certeza que deseja excluir esta máquina do histórico?\n\nData: ${date}\nInspetor: ${inspName}\nProduto: ${prodKey}\nÍndice: ${machineIndex + 1}`
+                    )) {
                 return;
             }
 
@@ -1755,6 +1875,7 @@
                             document.getElementById('history-results').innerHTML =
                                 `<p style="color: #888; text-align: center; padding: 20px;">📭 Nenhum dado encontrado para a data <strong>${date}</strong>.</p>`;
                             document.getElementById('history-section').classList.add('visible');
+                            await loadInspectorNames();
                             return;
                         }
                     }
@@ -1762,18 +1883,13 @@
 
                 await docRef.set(data);
                 alert('✅ Item excluído com sucesso!');
+                await loadInspectorNames();
                 await loadHistory();
 
             } catch (error) {
                 console.error('Erro ao excluir item do histórico:', error);
                 alert('❌ Erro ao excluir item no Firebase. Verifique sua conexão e as regras de segurança.');
             }
-        }
-
-        // ===================== OCULTAR HISTÓRICO =====================
-        function hideHistory() {
-            const historySection = document.getElementById('history-section');
-            historySection.classList.remove('visible');
         }
 
         // ===================== CARREGAR DADOS DO HISTÓRICO NO FORMULÁRIO (MODO EDIÇÃO) =====================
@@ -1835,6 +1951,59 @@
             }
         }
 
+        // ===================== CARREGAR APENAS UM INSPETOR ESPECÍFICO =====================
+        async function loadInspectorToForm(date, inspName) {
+            try {
+                const docSnap = await db.collection(COLLECTION_NAME).doc(date).get();
+                if (!docSnap.exists) {
+                    alert('Data não encontrada no Firebase.');
+                    return;
+                }
+
+                const dateData = docSnap.data();
+                if (!dateData.inspectors || !dateData.inspectors[inspName]) {
+                    alert(`Inspetor "${inspName}" não encontrado para esta data.`);
+                    return;
+                }
+
+                const products = dateData.inspectors[inspName].products;
+                let machines = [];
+                Object.keys(products).forEach(prodKey => {
+                    products[prodKey].forEach(m => machines.push(m));
+                });
+
+                if (machines.length === 0) {
+                    alert('Nenhuma máquina encontrada para este inspetor.');
+                    return;
+                }
+
+                // Limpa o container e recria os cards
+                const container = document.getElementById('machines-container');
+                container.innerHTML = '';
+                machineCounter = 0;
+
+                machines.forEach(machine => {
+                    addMachineCard(machine);
+                });
+
+                // Configura o modo de edição
+                loadedDate = date;
+                document.getElementById('selected-date').value = date;
+                document.getElementById('selected-date').disabled = true;
+                document.getElementById('btn-save-daily').style.display = 'none';
+                document.getElementById('btn-save-edits').style.display = 'inline-flex';
+
+                document.getElementById('history-results').innerHTML =
+                    `<p style="color: #28a745; text-align: center; padding: 20px; font-weight: 600;">✅ ${machines.length} máquina(s) do inspetor "${inspName}" carregada(s) no formulário para edição.</p>`;
+
+                document.getElementById('machines-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            } catch (error) {
+                console.error('Erro ao carregar inspetor específico:', error);
+                alert('❌ Erro ao carregar dados do Firebase.');
+            }
+        }
+
         // ===================== LIMPAR BASE DE DADOS NO FIRESTORE (COM SENHA) =====================
         async function clearHistory() {
             const senha = prompt('🔒 Digite a senha para limpar TODA a base de dados:');
@@ -1860,6 +2029,7 @@
                     document.getElementById('history-results').innerHTML =
                         `<p style="color: #888; text-align: center; padding: 20px;">🗑️ Histórico limpo com sucesso (${snapshot.size} registros removidos).</p>`;
                     document.getElementById('history-section').classList.add('visible');
+                    await loadInspectorNames(); // atualiza datalist
                 } catch (error) {
                     console.error('Erro ao limpar histórico:', error);
                     alert('❌ Erro ao limpar histórico no Firebase.');
@@ -2331,6 +2501,7 @@
             document.getElementById('btn-save-edits').style.display = 'none';
             document.getElementById('btn-save-daily').style.display = 'inline-flex';
             document.getElementById('selected-date').disabled = false;
+            loadInspectorNames(); // carrega a lista de inspetores para o datalist
         };
 
         document.addEventListener('keydown', function(e) {
