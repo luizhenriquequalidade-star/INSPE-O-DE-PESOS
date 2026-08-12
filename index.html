@@ -7,8 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --primary-color: #241245;
@@ -614,12 +613,8 @@
             -webkit-backdrop-filter: blur(2px);
         }
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         .dashboard-modal {
             background: #fff;
@@ -633,14 +628,8 @@
             position: relative;
         }
         @keyframes scaleIn {
-            from {
-                transform: scale(0.92);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
         .dashboard-modal .dash-header {
             background: linear-gradient(135deg, #241245, #3e2970);
@@ -1663,7 +1652,7 @@
             const senha = prompt('🔒 Digite a senha para excluir este item:');
             if (senha !== SENHA_EXCLUSAO) { alert('❌ Senha incorreta!'); return; }
             if (!confirm(`⚠️ Excluir máquina do histórico?\nData: ${date}\nInspetor: ${inspName}\nProduto: ${prodKey}`))
-        return;
+                return;
             try {
                 const docRef = db.collection(COLLECTION_NAME).doc(date);
                 const docSnap = await docRef.get();
@@ -1972,6 +1961,27 @@
             document.getElementById('dashboard-modal-container').innerHTML = '';
             document.body.style.overflow = '';
         }
+
+        // Função para navegação com Enter: pula para o próximo input na mesma coluna (linha de baixo)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const target = e.target;
+                if (target && target.classList && (target.classList.contains('m1-val') || target.classList.contains('m3-val') || target.classList.contains('m4-val'))) {
+                    e.preventDefault();
+                    const currentRow = target.closest('tr');
+                    if (!currentRow) return;
+                    const allRows = Array.from(currentRow.parentElement.querySelectorAll('tr.data-row')).filter(row => row.style.display !== 'none');
+                    const currentIndex = allRows.indexOf(currentRow);
+                    if (currentIndex === -1) return;
+                    const columnClass = target.classList.contains('m1-val') ? 'm1-val' : (target.classList.contains('m3-val') ? 'm3-val' : 'm4-val');
+                    const nextRow = allRows[currentIndex + 1];
+                    if (nextRow) {
+                        const nextInput = nextRow.querySelector('.' + columnClass);
+                        if (nextInput) nextInput.focus();
+                    }
+                }
+            }
+        });
 
         window.onload = function() {
             addMachineCard();
