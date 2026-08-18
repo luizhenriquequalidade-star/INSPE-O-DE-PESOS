@@ -296,6 +296,38 @@
         .input-group input[type="number"] {
             -moz-appearance: textfield;
         }
+        .problem-area {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            padding: 12px;
+            background: #fdf8f5;
+            border-radius: 6px;
+            border: 1px dashed #f4b084;
+        }
+        .problem-area .input-group {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 0;
+        }
+        .problem-area textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1.5px solid var(--gray-border);
+            border-radius: 5px;
+            font-size: 13px;
+            resize: vertical;
+            font-family: 'Roboto', sans-serif;
+            background: #fafbfc;
+            min-height: 60px;
+        }
+        .problem-area textarea:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(62, 41, 112, 0.08);
+            background: #fff;
+        }
         .schedule-row {
             display: flex;
             gap: 16px;
@@ -745,6 +777,7 @@
             padding: 11px 10px;
             text-align: center;
             border-bottom: 1px solid #eee;
+            vertical-align: top;
         }
         .dash-table thead th {
             background: #f0edf7;
@@ -763,6 +796,7 @@
             font-weight: 600;
             font-size: 11px;
             letter-spacing: 0.3px;
+            display: inline-block;
         }
         .status-approved {
             background: #d4edda;
@@ -820,6 +854,33 @@
         }
         .bar-chart-fill.success-fill {
             background: linear-gradient(90deg, #28a745, #48c964);
+        }
+        .problem-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .problem-item {
+            background: #fdf8f5;
+            border-left: 4px solid #dc3545;
+            padding: 12px 16px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .problem-item strong {
+            font-size: 14px;
+            color: #241245;
+            min-width: 100px;
+        }
+        .problem-item span {
+            flex: 1;
+            color: #721c24;
+            font-weight: 500;
+            font-size: 13px;
         }
         .close-history-btn {
             background: transparent;
@@ -980,6 +1041,9 @@
                 flex-direction: column;
                 align-items: stretch;
             }
+            .problem-area {
+                flex-direction: column;
+            }
             .dash-summary-cards {
                 grid-template-columns: 1fr 1fr;
             }
@@ -1075,7 +1139,18 @@
         let inspectorNamesSet = new Set();
         let hasUnsavedChanges = false;
 
-        // Codifica string para uso seguro em atributos HTML
+        // Escape para atributos HTML e conteúdo
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // Codifica string para uso seguro em atributos HTML (para onclick com parâmetros)
         function escapeAttr(str) {
             return encodeURIComponent(str || '');
         }
@@ -1141,6 +1216,8 @@
             const timeM1 = machineData ? (machineData.timeM1 || '14:00') : '14:00';
             const timeM3 = machineData ? (machineData.timeM3 || '18:00') : '18:00';
             const timeM4 = machineData ? (machineData.timeM4 || '20:30') : '20:30';
+            const motivoAusencia = machineData ? (machineData.motivoAusencia || '') : '';
+            const problema = machineData ? (machineData.problema || '') : '';
 
             let htmlRows = '';
             for (let i = 0; i < 10; i++) {
@@ -1176,15 +1253,15 @@
                     <div class="form-header">
                         <div class="input-group">
                             <label>👤 Inspetor</label>
-                            <input type="text" class="inspector" value="${inspector.replace(/'/g, '&#39;')}" placeholder="Ex: MARILHA" list="inspector-list" autocomplete="off">
+                            <input type="text" class="inspector" value="${escapeHtml(inspector)}" placeholder="Ex: MARILHA" list="inspector-list" autocomplete="off">
                         </div>
                         <div class="input-group">
                             <label>🏭 Máquina</label>
-                            <input type="text" class="machine-name" value="${mName.replace(/'/g, '&#39;')}" placeholder="Ex: 790/2">
+                            <input type="text" class="machine-name" value="${escapeHtml(mName)}" placeholder="Ex: 790/2">
                         </div>
                         <div class="input-group">
                             <label>📦 Cód. Produto</label>
-                            <input type="text" class="product-code" value="${product.replace(/'/g, '&#39;')}" placeholder="Ex: DG50 BASE">
+                            <input type="text" class="product-code" value="${escapeHtml(product)}" placeholder="Ex: DG50 BASE">
                         </div>
                         <div class="input-group">
                             <label>🔄 Turno</label>
@@ -1207,11 +1284,21 @@
                         </div>
                         <div class="input-group">
                             <label>⚡ Ciclo (Veloc.)</label>
-                            <input type="text" class="cycle-input" value="${cycleVal}" placeholder="Ex: 25.0">
+                            <input type="text" class="cycle-input" value="${escapeHtml(cycleVal)}" placeholder="Ex: 25.0">
                         </div>
                         <div class="input-group">
                             <label>🧑 Colaborador</label>
-                            <input type="text" class="collaborator-input" value="${collaboratorVal}" placeholder="Ex: 03">
+                            <input type="text" class="collaborator-input" value="${escapeHtml(collaboratorVal)}" placeholder="Ex: 03">
+                        </div>
+                    </div>
+                    <div class="problem-area">
+                        <div class="input-group">
+                            <label>📝 Motivo ausência de peso (se aplicável)</label>
+                            <input type="text" class="motivo-ausencia" value="${escapeHtml(motivoAusencia)}" placeholder="Ex: Não houve pesagem por...">
+                        </div>
+                        <div class="input-group">
+                            <label>⚠️ Problema detectado (descrição)</label>
+                            <textarea class="problema" rows="2" placeholder="Descreva o problema...">${escapeHtml(problema)}</textarea>
                         </div>
                     </div>
                     <div class="schedule-row">
@@ -1221,9 +1308,9 @@
                         <div class="schedule-item"><span>M4:</span><input type="time" class="time-m4" value="${timeM4}"></div>
                     </div>
                     <div class="tolerance-row">
-                        <div class="tolerance-box tolerance-min">🔻 Mín: <input type="text" class="tol-min" value="${tolMin}"></div>
-                        <div class="tolerance-box tolerance-ideal">🎯 Ideal: <input type="text" class="tol-mid" value="${tolMid}"></div>
-                        <div class="tolerance-box tolerance-max">🔺 Máx: <input type="text" class="tol-max" value="${tolMax}"></div>
+                        <div class="tolerance-box tolerance-min">🔻 Mín: <input type="text" class="tol-min" value="${escapeHtml(tolMin)}"></div>
+                        <div class="tolerance-box tolerance-ideal">🎯 Ideal: <input type="text" class="tol-mid" value="${escapeHtml(tolMid)}"></div>
+                        <div class="tolerance-box tolerance-max">🔺 Máx: <input type="text" class="tol-max" value="${escapeHtml(tolMax)}"></div>
                     </div>
                     <div class="measurement-table-wrapper">
                         <table class="measuring-table">
@@ -1257,6 +1344,8 @@
             cardElement.querySelector('.time-m1').addEventListener('change', () => updateTimeLabels(cardId));
             cardElement.querySelector('.time-m3').addEventListener('change', () => updateTimeLabels(cardId));
             cardElement.querySelector('.time-m4').addEventListener('change', () => updateTimeLabels(cardId));
+            cardElement.querySelector('.motivo-ausencia').addEventListener('input', () => { hasUnsavedChanges = true; });
+            cardElement.querySelector('.problema').addEventListener('input', () => { hasUnsavedChanges = true; });
             const inspectorInput = cardElement.querySelector('.inspector');
             if (inspectorInput) {
                 inspectorInput.addEventListener('blur', function() { addInspectorNameToSet(this.value); });
@@ -1356,6 +1445,8 @@
                     tolMin: card.querySelector('.tol-min').value,
                     tolMid: card.querySelector('.tol-mid').value,
                     tolMax: card.querySelector('.tol-max').value,
+                    motivoAusencia: card.querySelector('.motivo-ausencia').value.trim(),
+                    problema: card.querySelector('.problema').value.trim(),
                     totalAverage: 0,
                     rows: []
                 };
@@ -1389,15 +1480,14 @@
             return machines;
         }
 
-        // Mescla evitando duplicação: se já existe máquina com mesmo nome no mesmo inspetor/produto, substitui
         function mergeMachineArrays(existingArr, newArr) {
             const merged = [...existingArr];
             newArr.forEach(newMachine => {
                 const idx = merged.findIndex(m => m.machine === newMachine.machine);
                 if (idx !== -1) {
-                    merged[idx] = newMachine; // substitui
+                    merged[idx] = newMachine;
                 } else {
-                    merged.push(newMachine); // adiciona
+                    merged.push(newMachine);
                 }
             });
             return merged;
@@ -1409,7 +1499,6 @@
             if (machines.length === 0) { alert('Adicione pelo menos uma máquina antes de salvar.'); return; }
             machines.forEach(m => addInspectorNameToSet(m.inspector));
 
-            // Dados do formulário atual agrupados
             const newDateData = { inspectors: {} };
             machines.forEach(m => {
                 const inspKey = m.inspector.trim() || 'SEM INSPETOR';
@@ -1429,7 +1518,6 @@
                     if (!finalData.inspectors) finalData.inspectors = {};
                 }
 
-                // Mescla inteligente: para cada inspetor/produto, faz merge evitando duplicatas
                 for (const inspKey in newDateData.inspectors) {
                     if (!finalData.inspectors[inspKey]) finalData.inspectors[inspKey] = { products: {} };
                     for (const prodKey in newDateData.inspectors[inspKey].products) {
@@ -1486,7 +1574,6 @@
                     if (!finalData.inspectors) finalData.inspectors = {};
                 }
 
-                // Substitui apenas os inspetores/produtos que estão no formulário, preservando os demais
                 for (const inspKey in newDateData.inspectors) {
                     if (!finalData.inspectors[inspKey]) finalData.inspectors[inspKey] = { products: {} };
                     for (const prodKey in newDateData.inspectors[inspKey].products) {
@@ -1608,16 +1695,26 @@
                                 .totalAverage === 'number' ? m.totalAverage.toFixed(3).replace(
                                     '.', ',') : m.totalAverage) : '—';
                             const encProd = escapeAttr(prodKey);
+                            let problemaHtml = '';
+                            if (m.problema) {
+                                problemaHtml = `<br><small style="color:#dc3545;font-weight:600;">⚠️ Problema: ${escapeHtml(m.problema)}</small>`;
+                            }
+                            let motivoHtml = '';
+                            if (m.motivoAusencia) {
+                                motivoHtml = `<br><small style="color:#856404;font-weight:600;">📝 Motivo ausência: ${escapeHtml(m.motivoAusencia)}</small>`;
+                            }
                             itemDiv.innerHTML = `
                                 <div class="item-content">
-                                    <strong>🏭 Máquina:</strong> ${m.machine}<br>
-                                    <small>🔄 Turno: ${m.turn} | 🔢 Cavidade: ${m.cavity} | ⚡ Ciclo: ${m.cycle || '-'} | 🧑 Colaborador: ${m.collaborator || '-'}</small><br>
-                                    <small>🕐 Horários: M1=${m.timeM1 || '14:00'} | M3=${m.timeM3 || '18:00'} | M4=${m.timeM4 || '20:30'}</small>
+                                    <strong>🏭 Máquina:</strong> ${escapeHtml(m.machine)}<br>
+                                    <small>🔄 Turno: ${escapeHtml(m.turn)} | 🔢 Cavidade: ${m.cavity} | ⚡ Ciclo: ${escapeHtml(m.cycle || '-')} | 🧑 Colaborador: ${escapeHtml(m.collaborator || '-')}</small><br>
+                                    <small>🕐 Horários: M1=${escapeHtml(m.timeM1 || '14:00')} | M3=${escapeHtml(m.timeM3 || '18:00')} | M4=${escapeHtml(m.timeM4 || '20:30')}</small>
+                                    ${problemaHtml}
+                                    ${motivoHtml}
                                 </div>
                                 <div class="item-actions">
                                     <span style="font-size:12px;color:#888;">Média Geral:</span>
                                     <span style="font-size:18px;font-weight:700;color:#3e2970;">${avgDisplay}</span>
-                                    <span style="font-size:11px;color:${m.status==='APROVADO'?'#28a745':'#dc3545'};font-weight:600;">${m.status}</span>
+                                    <span style="font-size:11px;color:${m.status==='APROVADO'?'#28a745':'#dc3545'};font-weight:600;">${escapeHtml(m.status)}</span>
                                     <button class="btn-delete-item" onclick="deleteHistoryItem('${date}', '${encInsp}', '${encProd}', ${machineIndex})">🗑️ Excluir</button>
                                 </div>`;
                             prodSubDiv.appendChild(itemDiv);
@@ -1701,7 +1798,7 @@
                 machineCounter = 0;
                 loadedDate = date;
                 document.getElementById('selected-date').value = date;
-                document.getElementById('selected-date').disabled = false; // permite alterar data se quiser
+                document.getElementById('selected-date').disabled = false;
                 document.getElementById('btn-save-daily').style.display = 'none';
                 document.getElementById('btn-save-edits').style.display = 'inline-flex';
                 machines.forEach(m => addMachineCard(m));
@@ -1817,11 +1914,11 @@
                 `<div class="pdf-summary"><div class="pdf-summary-item"><div class="pdf-summary-value">${totalMachines}</div><div class="pdf-summary-label">🏭 Máquinas</div></div><div class="pdf-summary-item"><div class="pdf-summary-value" style="color:#28a745;">${approved}</div><div class="pdf-summary-label">✅ Aprovadas</div></div><div class="pdf-summary-item"><div class="pdf-summary-value" style="color:#dc3545;">${rejected}</div><div class="pdf-summary-label">❌ Reprovadas</div></div><div class="pdf-summary-item"><div class="pdf-summary-value">${totalMeas}</div><div class="pdf-summary-label">📐 Medições</div></div><div class="pdf-summary-item"><div class="pdf-summary-value">${overallAvg.toFixed(4).replace('.', ',')}</div><div class="pdf-summary-label">📈 Média Geral</div></div></div>`;
             Object.keys(grouped).sort().forEach(inspName => {
                 reportHTML +=
-                    `<div class="pdf-inspector-section"><div class="pdf-inspector-title">👤 Inspetor: ${inspName}</div>`;
+                    `<div class="pdf-inspector-section"><div class="pdf-inspector-title">👤 Inspetor: ${escapeHtml(inspName)}</div>`;
                 Object.keys(grouped[inspName]).sort().forEach(prodKey => {
                     const prodMachines = grouped[inspName][prodKey];
                     reportHTML +=
-                        `<div class="pdf-product-title">📦 ${prodKey} (${prodMachines.length} máquina(s))</div><div class="dash-table-wrapper" style="margin-bottom:12px;"><table><thead><tr><th>🏭 Máquina</th><th>🔄 Turno</th><th>🔢 Cav.</th><th>⚡ Ciclo</th><th>🧑 Colab.</th><th>🕐 M1</th><th>🕐 M3</th><th>🕐 M4</th><th>📊 Média M1</th><th>📊 Média M3</th><th>📊 Média M4</th><th>📈 Média Geral</th><th>✅ Status</th></tr></thead><tbody>`;
+                        `<div class="pdf-product-title">📦 ${escapeHtml(prodKey)} (${prodMachines.length} máquina(s))</div><div class="dash-table-wrapper" style="margin-bottom:12px;"><table><thead><tr><th>🏭 Máquina</th><th>🔄 Turno</th><th>🔢 Cav.</th><th>⚡ Ciclo</th><th>🧑 Colab.</th><th>🕐 M1</th><th>🕐 M3</th><th>🕐 M4</th><th>📊 Média M1</th><th>📊 Média M3</th><th>📊 Média M4</th><th>📈 Média Geral</th><th>✅ Status</th></tr></thead><tbody>`;
                     prodMachines.forEach(m => {
                         const rows = m.rows || [];
                         const m1vals = rows.filter(r => r.m1 !== '').map(r => parseFloat(r.m1));
@@ -1835,12 +1932,19 @@
                             .length : 0;
                         const statusClass = m.status === 'APROVADO' ? 'approved' : 'rejected';
                         reportHTML +=
-                            `<tr><td><strong>${m.machine}</strong></td><td>${m.turn}</td><td>${m.cavity}</td><td>${m.cycle || '-'}</td><td>${m.collaborator || '-'}</td><td>${m.timeM1 || '14:00'}</td><td>${m.timeM3 || '18:00'}</td><td>${m.timeM4 || '20:30'}</td><td>${avgM1 > 0 ? avgM1.toFixed(4).replace('.', ',') : '—'}</td><td>${avgM3 > 0 ? avgM3.toFixed(4).replace('.', ',') : '—'}</td><td>${avgM4 > 0 ? avgM4.toFixed(4).replace('.', ',') : '—'}</td><td><strong>${m.totalAverage > 0 ? (typeof m.totalAverage === 'number' ? m.totalAverage.toFixed(4).replace('.', ',') : m.totalAverage) : '—'}</strong></td><td><span class="status-pill ${statusClass}">${m.status}</span></td></tr>`;
+                            `<tr><td><strong>${escapeHtml(m.machine)}</strong></td><td>${escapeHtml(m.turn)}</td><td>${m.cavity}</td><td>${escapeHtml(m.cycle || '-')}</td><td>${escapeHtml(m.collaborator || '-')}</td><td>${escapeHtml(m.timeM1 || '14:00')}</td><td>${escapeHtml(m.timeM3 || '18:00')}</td><td>${escapeHtml(m.timeM4 || '20:30')}</td><td>${avgM1 > 0 ? avgM1.toFixed(4).replace('.', ',') : '—'}</td><td>${avgM3 > 0 ? avgM3.toFixed(4).replace('.', ',') : '—'}</td><td>${avgM4 > 0 ? avgM4.toFixed(4).replace('.', ',') : '—'}</td><td><strong>${m.totalAverage > 0 ? (typeof m.totalAverage === 'number' ? m.totalAverage.toFixed(4).replace('.', ',') : m.totalAverage) : '—'}</strong></td><td><span class="status-pill ${statusClass}">${escapeHtml(m.status)}</span></td></tr>`;
                     });
                     reportHTML += `</tbody></table></div>`;
                     prodMachines.forEach(m => {
                         reportHTML +=
-                            `<div style="margin-bottom:10px;"><strong style="font-size:12px;">🔍 Detalhamento: ${m.machine} (${m.product})</strong><table style="font-size:10px;"><thead><tr><th>Cav.</th><th>Peso M1 (${m.timeM1 || '14:00'})</th><th>Peso M3 (${m.timeM3 || '18:00'})</th><th>Peso M4 (${m.timeM4 || '20:30'})</th></tr></thead><tbody>`;
+                            `<div style="margin-bottom:10px;"><strong style="font-size:12px;">🔍 Detalhamento: ${escapeHtml(m.machine)} (${escapeHtml(m.product)})</strong>`;
+                        if (m.problema) {
+                            reportHTML += `<div style="font-size:10px;color:#dc3545;margin-top:4px;">⚠️ Problema: ${escapeHtml(m.problema)}</div>`;
+                        }
+                        if (m.motivoAusencia) {
+                            reportHTML += `<div style="font-size:10px;color:#856404;margin-top:2px;">📝 Motivo ausência: ${escapeHtml(m.motivoAusencia)}</div>`;
+                        }
+                        reportHTML += `<table style="font-size:10px;"><thead><tr><th>Cav.</th><th>Peso M1 (${escapeHtml(m.timeM1 || '14:00')})</th><th>Peso M3 (${escapeHtml(m.timeM3 || '18:00')})</th><th>Peso M4 (${escapeHtml(m.timeM4 || '20:30')})</th></tr></thead><tbody>`;
                         (m.rows || []).forEach((r, idx) => {
                             if (idx < (m.cavity || 10)) {
                                 reportHTML +=
@@ -1848,7 +1952,7 @@
                             }
                         });
                         reportHTML +=
-                            `</tbody></table><div style="font-size:10px;color:#888;">🔻 Tolerâncias: Mín=${m.tolMin} | Ideal=${m.tolMid} | Máx=${m.tolMax}</div></div>`;
+                            `</tbody></table><div style="font-size:10px;color:#888;">🔻 Tolerâncias: Mín=${escapeHtml(m.tolMin)} | Ideal=${escapeHtml(m.tolMid)} | Máx=${escapeHtml(m.tolMax)}</div></div>`;
                     });
                 });
                 reportHTML += `</div>`;
@@ -1907,6 +2011,8 @@
                     tolMin: parseFloat(card.querySelector('.tol-min').value.replace(',', '.')) || 0,
                     tolMax: parseFloat(card.querySelector('.tol-max').value.replace(',', '.')) || 100,
                     tolMid: parseFloat(card.querySelector('.tol-mid').value.replace(',', '.')) || 0,
+                    motivoAusencia: card.querySelector('.motivo-ausencia').value.trim(),
+                    problema: card.querySelector('.problema').value.trim(),
                     avgAll: allValues.length > 0 ? allValues.reduce((a, b) => a + b, 0) / allValues.length :
                         0,
                     avgM1: m1Vals.length > 0 ? m1Vals.reduce((a, b) => a + b, 0) / m1Vals.length : 0,
@@ -1942,16 +2048,29 @@
                     0);
                 const barClass = getBarClass(m.avgAll, m.tolMin, m.tolMax, m.tolMid);
                 dashHTML +=
-                    `<div class="bar-chart-row"><div class="bar-chart-label">${m.machine}</div><div class="bar-chart-track"><div class="bar-chart-fill ${barClass}" style="width:${Math.max(barWidth,3)}%;">${m.avgAll > 0 ? m.avgAll.toFixed(3).replace('.', ',') : '—'}</div></div><span style="font-size:11px;color:#888;min-width:50px;">${m.status}</span></div>`;
+                    `<div class="bar-chart-row"><div class="bar-chart-label">${escapeHtml(m.machine)}</div><div class="bar-chart-track"><div class="bar-chart-fill ${barClass}" style="width:${Math.max(barWidth,3)}%;">${m.avgAll > 0 ? m.avgAll.toFixed(3).replace('.', ',') : '—'}</div></div><span style="font-size:11px;color:#888;min-width:50px;">${escapeHtml(m.status)}</span></div>`;
             });
             dashHTML +=
-                `</div><div class="dash-section-title">📋 Detalhamento Completo</div><div class="dash-table-wrapper"><table class="dash-table"><thead><tr><th>Máquina</th><th>Inspetor</th><th>Produto</th><th>Turno</th><th>Cav.</th><th>⚡ Ciclo</th><th>🧑 Colab.</th><th>Média M1</th><th>Média M3</th><th>Média M4</th><th>Média Geral</th><th>Status</th></tr></thead><tbody>`;
+                `</div><div class="dash-section-title">📋 Detalhamento Completo</div><div class="dash-table-wrapper"><table class="dash-table"><thead><tr><th>Máquina</th><th>Inspetor</th><th>Produto</th><th>Turno</th><th>Cav.</th><th>⚡ Ciclo</th><th>🧑 Colab.</th><th>Média M1</th><th>Média M3</th><th>Média M4</th><th>Média Geral</th><th>Status</th><th>📝 Motivo Ausência</th><th>⚠️ Problema</th></tr></thead><tbody>`;
             machinesData.forEach(m => {
                 const statusClass = m.status === 'APROVADO' ? 'status-approved' : 'status-rejected';
                 dashHTML +=
-                    `<tr><td><strong>${m.machine}</strong></td><td>${m.inspector}</td><td>${m.product}</td><td>${m.turn}</td><td>${m.cavity}</td><td>${m.cycle || '-'}</td><td>${m.collaborator || '-'}</td><td>${m.avgM1 > 0 ? m.avgM1.toFixed(3).replace('.', ',') : '—'}</td><td>${m.avgM3 > 0 ? m.avgM3.toFixed(3).replace('.', ',') : '—'}</td><td>${m.avgM4 > 0 ? m.avgM4.toFixed(3).replace('.', ',') : '—'}</td><td><strong>${m.avgAll > 0 ? m.avgAll.toFixed(3).replace('.', ',') : '—'}</strong></td><td><span class="status-badge ${statusClass}">${m.status}</span></td></tr>`;
+                    `<tr><td><strong>${escapeHtml(m.machine)}</strong></td><td>${escapeHtml(m.inspector)}</td><td>${escapeHtml(m.product)}</td><td>${escapeHtml(m.turn)}</td><td>${m.cavity}</td><td>${escapeHtml(m.cycle || '-')}</td><td>${escapeHtml(m.collaborator || '-')}</td><td>${m.avgM1 > 0 ? m.avgM1.toFixed(3).replace('.', ',') : '—'}</td><td>${m.avgM3 > 0 ? m.avgM3.toFixed(3).replace('.', ',') : '—'}</td><td>${m.avgM4 > 0 ? m.avgM4.toFixed(3).replace('.', ',') : '—'}</td><td><strong>${m.avgAll > 0 ? m.avgAll.toFixed(3).replace('.', ',') : '—'}</strong></td><td><span class="status-badge ${statusClass}">${escapeHtml(m.status)}</span></td><td>${escapeHtml(m.motivoAusencia || '—')}</td><td>${escapeHtml(m.problema || '—')}</td></tr>`;
             });
-            dashHTML += `</tbody></table></div></div></div></div>`;
+            dashHTML += `</tbody></table></div>`;
+            // Seção de problemas relatados
+            const problemas = machinesData.filter(m => m.problema && m.problema.trim() !== '');
+            dashHTML += `<div class="dash-section-title">⚠️ Problemas Relatados</div><div class="problem-list">`;
+            if (problemas.length > 0) {
+                problemas.forEach(m => {
+                    dashHTML += `<div class="problem-item"><strong>🏭 ${escapeHtml(m.machine)}</strong><span>${escapeHtml(m.problema)}</span></div>`;
+                });
+            } else {
+                dashHTML += `<p style="color:#888;">Nenhum problema relatado.</p>`;
+            }
+            dashHTML += `</div>`;
+            // Fechar modal
+            dashHTML += `</div></div></div>`;
             document.getElementById('dashboard-modal-container').innerHTML = dashHTML;
             document.body.style.overflow = 'hidden';
         }
