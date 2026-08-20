@@ -1011,6 +1011,30 @@
             background: #f8d7da;
             color: #721c24;
         }
+        .report-controls {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #f8f7fc;
+            border-radius: 8px;
+            border: 1px dashed #d5cfe8;
+        }
+        .report-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        #report-content {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+        }
         @media (max-width: 768px) {
             .header-info {
                 flex-direction: column;
@@ -1063,6 +1087,26 @@
                 font-size: 10px;
             }
         }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #report-content,
+            #report-content * {
+                visibility: visible;
+            }
+            #report-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 20px;
+                background: white;
+            }
+            .report-actions {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1084,8 +1128,8 @@
         </div>
         <div class="toolbar-buttons">
             <button class="btn btn-outline" onclick="resetForm()" title="Nova inspeção (salva antes se necessário)">🆕 Nova Inspeção</button>
-            <button class="btn btn-accent" onclick="openDashboard()" title="Ver dashboard do dia">📊 Dashboard do Dia</button>
-            <button class="btn btn-pdf" onclick="downloadPDF()" title="Baixar relatório em PDF">📄 Baixar PDF</button>
+            <button class="btn btn-accent" onclick="openReportModal()" title="Abrir relatório com médias e dashboard">📊 Relatórios</button>
+            <button class="btn btn-pdf" onclick="openReportModal()" title="Gerar PDF de relatório">📄 PDF Relatório</button>
             <button class="btn btn-success" onclick="addMachineCard()">➕ Adicionar Máquina</button>
             <button id="btn-save-daily" class="btn btn-primary" onclick="saveDailyData()">💾 Salvar Histórico do Dia</button>
             <button id="btn-save-edits" class="btn btn-warning" onclick="saveEdits()" style="display:none;">💾 Salvar Alterações</button>
@@ -1113,6 +1157,7 @@
     </div>
 
     <div id="dashboard-modal-container"></div>
+    <div id="report-modal-container"></div>
     <div id="pdf-generation-container" style="position: absolute; left: -9999px; top: 0; width: 900px;"></div>
 
     <script>
@@ -1150,7 +1195,6 @@
                 .replace(/'/g, '&#39;');
         }
 
-        // Codifica string para uso seguro em atributos HTML (para onclick com parâmetros)
         function escapeAttr(str) {
             return encodeURIComponent(str || '');
         }
@@ -1862,226 +1906,344 @@
             }
         }
 
-        async function downloadPDF() {
-            const date = document.getElementById('selected-date').value;
-            let machines = [];
-            let sourceLabel = '';
-            try {
-                const docSnap = await db.collection(COLLECTION_NAME).doc(date).get();
-                if (docSnap.exists) {
-                    const dateData = docSnap.data();
-                    if (dateData.inspectors) {
-                        Object.keys(dateData.inspectors).forEach(inspName => {
-                            Object.keys(dateData.inspectors[inspName].products).forEach(prodKey => {
-                                dateData.inspectors[inspName].products[prodKey].forEach(m => machines
-                                    .push(m));
-                            });
-                        });
-                        sourceLabel = `Dados salvos do Firebase (${date})`;
-                    }
-                }
-            } catch (error) { console.error(error); }
-            if (machines.length === 0) {
-                machines = collectFormData();
-                if (machines.length === 0) { alert('⚠️ Nenhum dado encontrado.'); return; }
-                sourceLabel = `Dados atuais do formulário (não salvos) - Data: ${date}`;
-                if (!confirm(`Não há dados salvos para ${date}. Gerar PDF com dados atuais?`)) return;
-            }
-            const grouped = {};
-            machines.forEach(m => {
-                const inspKey = m.inspector.trim() || 'SEM INSPETOR';
-                const prodKey = m.product.trim() || 'SEM PRODUTO';
-                if (!grouped[inspKey]) grouped[inspKey] = {};
-                if (!grouped[inspKey][prodKey]) grouped[inspKey][prodKey] = [];
-                grouped[inspKey][prodKey].push(m);
-            });
-            let reportHTML =
-                `<div class="pdf-report"><div class="pdf-header"><h1>📊 Relatório de Inspeção de Peso</h1><div class="pdf-date">📅 Data: ${date.split('-').reverse().join('/')}</div><div style="font-size:11px;color:#888;">${sourceLabel}</div></div>`;
-            const totalMachines = machines.length;
-            const approved = machines.filter(m => m.status === 'APROVADO').length;
-            const rejected = machines.filter(m => m.status === 'REPROVADO').length;
-            let allMeasurements = [];
-            machines.forEach(m => {
-                if (m.rows) m.rows.forEach(r => {
-                    if (r.m1 !== '' && !isNaN(parseFloat(r.m1))) allMeasurements.push(parseFloat(r.m1));
-                    if (r.m3 !== '' && !isNaN(parseFloat(r.m3))) allMeasurements.push(parseFloat(r.m3));
-                    if (r.m4 !== '' && !isNaN(parseFloat(r.m4))) allMeasurements.push(parseFloat(r.m4));
-                });
-            });
-            const totalMeas = allMeasurements.length;
-            const overallAvg = totalMeas > 0 ? allMeasurements.reduce((a, b) => a + b, 0) / totalMeas : 0;
-            reportHTML +=
-                `<div class="pdf-summary"><div class="pdf-summary-item"><div class="pdf-summary-value">${totalMachines}</div><div class="pdf-summary-label">🏭 Máquinas</div></div><div class="pdf-summary-item"><div class="pdf-summary-value" style="color:#28a745;">${approved}</div><div class="pdf-summary-label">✅ Aprovadas</div></div><div class="pdf-summary-item"><div class="pdf-summary-value" style="color:#dc3545;">${rejected}</div><div class="pdf-summary-label">❌ Reprovadas</div></div><div class="pdf-summary-item"><div class="pdf-summary-value">${totalMeas}</div><div class="pdf-summary-label">📐 Medições</div></div><div class="pdf-summary-item"><div class="pdf-summary-value">${overallAvg.toFixed(4).replace('.', ',')}</div><div class="pdf-summary-label">📈 Média Geral</div></div></div>`;
-            Object.keys(grouped).sort().forEach(inspName => {
-                reportHTML +=
-                    `<div class="pdf-inspector-section"><div class="pdf-inspector-title">👤 Inspetor: ${escapeHtml(inspName)}</div>`;
-                Object.keys(grouped[inspName]).sort().forEach(prodKey => {
-                    const prodMachines = grouped[inspName][prodKey];
-                    reportHTML +=
-                        `<div class="pdf-product-title">📦 ${escapeHtml(prodKey)} (${prodMachines.length} máquina(s))</div><div class="dash-table-wrapper" style="margin-bottom:12px;"><table><thead><tr><th>🏭 Máquina</th><th>🔄 Turno</th><th>🔢 Cav.</th><th>⚡ Ciclo</th><th>🧑 Colab.</th><th>🕐 M1</th><th>🕐 M3</th><th>🕐 M4</th><th>📊 Média M1</th><th>📊 Média M3</th><th>📊 Média M4</th><th>📈 Média Geral</th><th>✅ Status</th></tr></thead><tbody>`;
-                    prodMachines.forEach(m => {
-                        const rows = m.rows || [];
-                        const m1vals = rows.filter(r => r.m1 !== '').map(r => parseFloat(r.m1));
-                        const m3vals = rows.filter(r => r.m3 !== '').map(r => parseFloat(r.m3));
-                        const m4vals = rows.filter(r => r.m4 !== '').map(r => parseFloat(r.m4));
-                        const avgM1 = m1vals.length > 0 ? m1vals.reduce((a, b) => a + b, 0) / m1vals
-                            .length : 0;
-                        const avgM3 = m3vals.length > 0 ? m3vals.reduce((a, b) => a + b, 0) / m3vals
-                            .length : 0;
-                        const avgM4 = m4vals.length > 0 ? m4vals.reduce((a, b) => a + b, 0) / m4vals
-                            .length : 0;
-                        const statusClass = m.status === 'APROVADO' ? 'approved' : 'rejected';
-                        reportHTML +=
-                            `<tr><td><strong>${escapeHtml(m.machine)}</strong></td><td>${escapeHtml(m.turn)}</td><td>${m.cavity}</td><td>${escapeHtml(m.cycle || '-')}</td><td>${escapeHtml(m.collaborator || '-')}</td><td>${escapeHtml(m.timeM1 || '14:00')}</td><td>${escapeHtml(m.timeM3 || '18:00')}</td><td>${escapeHtml(m.timeM4 || '20:30')}</td><td>${avgM1 > 0 ? avgM1.toFixed(4).replace('.', ',') : '—'}</td><td>${avgM3 > 0 ? avgM3.toFixed(4).replace('.', ',') : '—'}</td><td>${avgM4 > 0 ? avgM4.toFixed(4).replace('.', ',') : '—'}</td><td><strong>${m.totalAverage > 0 ? (typeof m.totalAverage === 'number' ? m.totalAverage.toFixed(4).replace('.', ',') : m.totalAverage) : '—'}</strong></td><td><span class="status-pill ${statusClass}">${escapeHtml(m.status)}</span></td></tr>`;
-                    });
-                    reportHTML += `</tbody></table></div>`;
-                    prodMachines.forEach(m => {
-                        reportHTML +=
-                            `<div style="margin-bottom:10px;"><strong style="font-size:12px;">🔍 Detalhamento: ${escapeHtml(m.machine)} (${escapeHtml(m.product)})</strong>`;
-                        if (m.problema) {
-                            reportHTML += `<div style="font-size:10px;color:#dc3545;margin-top:4px;">⚠️ Problema: ${escapeHtml(m.problema)}</div>`;
-                        }
-                        if (m.motivoAusencia) {
-                            reportHTML += `<div style="font-size:10px;color:#856404;margin-top:2px;">📝 Motivo ausência: ${escapeHtml(m.motivoAusencia)}</div>`;
-                        }
-                        reportHTML += `<table style="font-size:10px;"><thead><tr><th>Cav.</th><th>Peso M1 (${escapeHtml(m.timeM1 || '14:00')})</th><th>Peso M3 (${escapeHtml(m.timeM3 || '18:00')})</th><th>Peso M4 (${escapeHtml(m.timeM4 || '20:30')})</th></tr></thead><tbody>`;
-                        (m.rows || []).forEach((r, idx) => {
-                            if (idx < (m.cavity || 10)) {
-                                reportHTML +=
-                                    `<tr><td>${idx+1}</td><td>${r.m1 !== '' ? (typeof r.m1 === 'number' ? r.m1.toFixed(4).replace('.', ',') : r.m1) : '—'}</td><td>${r.m3 !== '' ? (typeof r.m3 === 'number' ? r.m3.toFixed(4).replace('.', ',') : r.m3) : '—'}</td><td>${r.m4 !== '' ? (typeof r.m4 === 'number' ? r.m4.toFixed(4).replace('.', ',') : r.m4) : '—'}</td></tr>`;
-                            }
-                        });
-                        reportHTML +=
-                            `</tbody></table><div style="font-size:10px;color:#888;">🔻 Tolerâncias: Mín=${escapeHtml(m.tolMin)} | Ideal=${escapeHtml(m.tolMid)} | Máx=${escapeHtml(m.tolMax)}</div></div>`;
-                    });
-                });
-                reportHTML += `</div>`;
-            });
-            reportHTML +=
-                `<div style="text-align:center;margin-top:20px;font-size:10px;color:#aaa;">Relatório gerado pelo Sistema de Inspeção Dona Rita Embalagens</div></div>`;
-            document.getElementById('pdf-generation-container').innerHTML = reportHTML;
-            setTimeout(() => {
-                html2pdf().set({
-                    margin: [8, 6, 8, 6],
-                    filename: `Relatorio_Inspecao_${date}.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-                }).from(document.querySelector('.pdf-report')).save().finally(() => document.getElementById(
-                    'pdf-generation-container').innerHTML = '');
-            }, 400);
-        }
-
-        function openDashboard() {
-            const cards = document.querySelectorAll('.machine-card');
-            if (cards.length === 0) { alert('⚠️ Nenhuma máquina no formulário.'); return; }
-            const machinesData = [];
-            cards.forEach(card => {
-                const rows = card.querySelectorAll('.data-row');
-                const allValues = [],
-                    m1Vals = [],
-                    m3Vals = [],
-                    m4Vals = [];
-                rows.forEach(row => {
-                    if (row.style.display !== 'none') {
-                        const v1 = parseFloat(row.querySelector('.m1-val').value.replace(',', '.'));
-                        const v3 = parseFloat(row.querySelector('.m3-val').value.replace(',', '.'));
-                        const v4 = parseFloat(row.querySelector('.m4-val').value.replace(',', '.'));
-                        if (!isNaN(v1) && row.querySelector('.m1-val').value.trim() !== '') { allValues.push(
-                                v1);
-                            m1Vals.push(v1); }
-                        if (!isNaN(v3) && row.querySelector('.m3-val').value.trim() !== '') { allValues.push(
-                                v3);
-                            m3Vals.push(v3); }
-                        if (!isNaN(v4) && row.querySelector('.m4-val').value.trim() !== '') { allValues.push(
-                                v4);
-                            m4Vals.push(v4); }
-                    }
-                });
-                machinesData.push({
-                    machine: card.querySelector('.machine-name').value || 'N/I',
-                    inspector: card.querySelector('.inspector').value || 'N/I',
-                    product: card.querySelector('.product-code').value || 'N/I',
-                    turn: card.querySelector('.turn').value || 'N/I',
-                    status: card.querySelector('.status').value || 'N/I',
-                    cavity: parseInt(card.querySelector('.cavity-input').value) || 10,
-                    cycle: card.querySelector('.cycle-input').value || '',
-                    collaborator: card.querySelector('.collaborator-input').value || '',
-                    tolMin: parseFloat(card.querySelector('.tol-min').value.replace(',', '.')) || 0,
-                    tolMax: parseFloat(card.querySelector('.tol-max').value.replace(',', '.')) || 100,
-                    tolMid: parseFloat(card.querySelector('.tol-mid').value.replace(',', '.')) || 0,
-                    motivoAusencia: card.querySelector('.motivo-ausencia').value.trim(),
-                    problema: card.querySelector('.problema').value.trim(),
-                    avgAll: allValues.length > 0 ? allValues.reduce((a, b) => a + b, 0) / allValues.length :
-                        0,
-                    avgM1: m1Vals.length > 0 ? m1Vals.reduce((a, b) => a + b, 0) / m1Vals.length : 0,
-                    avgM3: m3Vals.length > 0 ? m3Vals.reduce((a, b) => a + b, 0) / m3Vals.length : 0,
-                    avgM4: m4Vals.length > 0 ? m4Vals.reduce((a, b) => a + b, 0) / m4Vals.length : 0,
-                    timeM1: card.querySelector('.time-m1').value || '14:00',
-                    timeM3: card.querySelector('.time-m3').value || '18:00',
-                    timeM4: card.querySelector('.time-m4').value || '20:30',
-                    totalMeasurements: allValues.length,
-                });
-            });
-            const totalMachines = machinesData.length;
-            const approved = machinesData.filter(m => m.status === 'APROVADO').length;
-            const rejected = machinesData.filter(m => m.status === 'REPROVADO').length;
-            const totalMeasurementsAll = machinesData.reduce((sum, m) => sum + m.totalMeasurements, 0);
-            const getBarClass = (avg, tolMin, tolMax, tolMid) => {
-                if (avg <= 0) return '';
-                if (tolMid > 0) { const deviation = Math.abs(avg - tolMid) / tolMid; if (deviation < 0.03)
-                        return 'success-fill'; if (deviation < 0.08) return 'warning-fill';
-                    return 'danger-fill'; }
-                if (avg < tolMin || avg > tolMax) return 'danger-fill';
-                const range = tolMax - tolMin;
-                const midPoint = (tolMin + tolMax) / 2;
-                const dev = Math.abs(avg - midPoint) / (range / 2);
-                if (dev < 0.3) return 'success-fill';
-                if (dev < 0.7) return 'warning-fill';
-                return 'danger-fill';
-            };
-            let dashHTML =
-                `<div class="dashboard-overlay" id="dashboard-overlay" onclick="closeDashboard(event)"><div class="dashboard-modal" onclick="event.stopPropagation()"><div class="dash-header"><h2>📊 Dashboard do Dia</h2><button class="close-dash" onclick="closeDashboard()">✕</button></div><div class="dash-body"><p style="color:#888;margin-bottom:18px;">📅 <strong>${document.getElementById('selected-date').value}</strong> | Dados atuais do formulário</p><div class="dash-summary-cards"><div class="dash-card info-border"><div class="dash-icon">🏭</div><div class="dash-value">${totalMachines}</div><div class="dash-label">Máquinas</div></div><div class="dash-card success-border"><div class="dash-icon">✅</div><div class="dash-value">${approved}</div><div class="dash-label">Aprovadas</div></div><div class="dash-card danger-border"><div class="dash-icon">❌</div><div class="dash-value">${rejected}</div><div class="dash-label">Reprovadas</div></div><div class="dash-card accent-border"><div class="dash-icon">📐</div><div class="dash-value">${totalMeasurementsAll}</div><div class="dash-label">Medições</div></div></div><div class="dash-section-title">📈 Médias por Máquina</div><div class="bar-chart-container">`;
-            machinesData.forEach(m => {
-                const barWidth = m.tolMax > 0 ? Math.min((m.avgAll / m.tolMax) * 100, 100) : (m.avgAll > 0 ? 50 :
-                    0);
-                const barClass = getBarClass(m.avgAll, m.tolMin, m.tolMax, m.tolMid);
-                dashHTML +=
-                    `<div class="bar-chart-row"><div class="bar-chart-label">${escapeHtml(m.machine)}</div><div class="bar-chart-track"><div class="bar-chart-fill ${barClass}" style="width:${Math.max(barWidth,3)}%;">${m.avgAll > 0 ? m.avgAll.toFixed(3).replace('.', ',') : '—'}</div></div><span style="font-size:11px;color:#888;min-width:50px;">${escapeHtml(m.status)}</span></div>`;
-            });
-            dashHTML +=
-                `</div><div class="dash-section-title">📋 Detalhamento Completo</div><div class="dash-table-wrapper"><table class="dash-table"><thead><tr><th>Máquina</th><th>Inspetor</th><th>Produto</th><th>Turno</th><th>Cav.</th><th>⚡ Ciclo</th><th>🧑 Colab.</th><th>Média M1</th><th>Média M3</th><th>Média M4</th><th>Média Geral</th><th>Status</th><th>📝 Motivo Ausência</th><th>⚠️ Problema</th></tr></thead><tbody>`;
-            machinesData.forEach(m => {
-                const statusClass = m.status === 'APROVADO' ? 'status-approved' : 'status-rejected';
-                dashHTML +=
-                    `<tr><td><strong>${escapeHtml(m.machine)}</strong></td><td>${escapeHtml(m.inspector)}</td><td>${escapeHtml(m.product)}</td><td>${escapeHtml(m.turn)}</td><td>${m.cavity}</td><td>${escapeHtml(m.cycle || '-')}</td><td>${escapeHtml(m.collaborator || '-')}</td><td>${m.avgM1 > 0 ? m.avgM1.toFixed(3).replace('.', ',') : '—'}</td><td>${m.avgM3 > 0 ? m.avgM3.toFixed(3).replace('.', ',') : '—'}</td><td>${m.avgM4 > 0 ? m.avgM4.toFixed(3).replace('.', ',') : '—'}</td><td><strong>${m.avgAll > 0 ? m.avgAll.toFixed(3).replace('.', ',') : '—'}</strong></td><td><span class="status-badge ${statusClass}">${escapeHtml(m.status)}</span></td><td>${escapeHtml(m.motivoAusencia || '—')}</td><td>${escapeHtml(m.problema || '—')}</td></tr>`;
-            });
-            dashHTML += `</tbody></table></div>`;
-            // Seção de problemas relatados
-            const problemas = machinesData.filter(m => m.problema && m.problema.trim() !== '');
-            dashHTML += `<div class="dash-section-title">⚠️ Problemas Relatados</div><div class="problem-list">`;
-            if (problemas.length > 0) {
-                problemas.forEach(m => {
-                    dashHTML += `<div class="problem-item"><strong>🏭 ${escapeHtml(m.machine)}</strong><span>${escapeHtml(m.problema)}</span></div>`;
-                });
-            } else {
-                dashHTML += `<p style="color:#888;">Nenhum problema relatado.</p>`;
-            }
-            dashHTML += `</div>`;
-            // Fechar modal
-            dashHTML += `</div></div></div>`;
-            document.getElementById('dashboard-modal-container').innerHTML = dashHTML;
+        // ============ FUNÇÕES DE RELATÓRIO / DASHBOARD AVANÇADO ============
+        function openReportModal() {
+            const modalHTML = `
+                <div class="dashboard-overlay" id="report-overlay" onclick="closeReportModal(event)">
+                    <div class="dashboard-modal" onclick="event.stopPropagation()">
+                        <div class="dash-header">
+                            <h2>📊 Relatório de Inspeção - Médias e Dashboard</h2>
+                            <button class="close-dash" onclick="closeReportModal()">✕</button>
+                        </div>
+                        <div class="dash-body">
+                            <div class="report-controls">
+                                <div class="input-group">
+                                    <label>📅 Tipo de Período</label>
+                                    <select id="report-period-type" onchange="updateReportPeriodFields()">
+                                        <option value="daily">Diário</option>
+                                        <option value="biweekly">Quinzenal</option>
+                                        <option value="monthly">Mensal</option>
+                                    </select>
+                                </div>
+                                <div id="report-period-fields"></div>
+                                <button class="btn btn-primary" onclick="generateReport()">🔍 Gerar Relatório</button>
+                            </div>
+                            <div id="report-content-area">
+                                <p style="color:#888;text-align:center;padding:20px;">Selecione o período e clique em Gerar Relatório.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            document.getElementById('report-modal-container').innerHTML = modalHTML;
             document.body.style.overflow = 'hidden';
+            updateReportPeriodFields();
         }
 
-        function closeDashboard(event) {
-            if (event && event.target !== document.getElementById('dashboard-overlay')) return;
-            document.getElementById('dashboard-modal-container').innerHTML = '';
+        function closeReportModal(event) {
+            if (event && event.target !== document.getElementById('report-overlay')) return;
+            document.getElementById('report-modal-container').innerHTML = '';
             document.body.style.overflow = '';
         }
 
-        // Função para navegação com Enter: pula para o próximo input na mesma coluna (linha de baixo)
+        function updateReportPeriodFields() {
+            const type = document.getElementById('report-period-type').value;
+            const container = document.getElementById('report-period-fields');
+            if (type === 'daily') {
+                container.innerHTML = `
+                    <div class="input-group">
+                        <label>Data</label>
+                        <input type="date" id="report-daily-date" value="${today}">
+                    </div>`;
+            } else if (type === 'monthly') {
+                container.innerHTML = `
+                    <div class="input-group">
+                        <label>Mês</label>
+                        <input type="month" id="report-month" value="${today.slice(0,7)}">
+                    </div>`;
+            } else if (type === 'biweekly') {
+                container.innerHTML = `
+                    <div class="input-group">
+                        <label>Mês</label>
+                        <input type="month" id="report-biweekly-month" value="${today.slice(0,7)}">
+                    </div>
+                    <div class="input-group">
+                        <label>Quinzena</label>
+                        <select id="report-biweekly-half">
+                            <option value="1">1ª Quinzena (01-15)</option>
+                            <option value="2">2ª Quinzena (16-fim)</option>
+                        </select>
+                    </div>`;
+            }
+        }
+
+        function getDateRangeFromSelection() {
+            const type = document.getElementById('report-period-type').value;
+            let start, end, label;
+            if (type === 'daily') {
+                const date = document.getElementById('report-daily-date').value;
+                if (!date) { alert('Selecione uma data.'); return null; }
+                start = date;
+                end = date;
+                label = `Diário - ${date.split('-').reverse().join('/')}`;
+            } else if (type === 'monthly') {
+                const month = document.getElementById('report-month').value; // YYYY-MM
+                if (!month) { alert('Selecione um mês.'); return null; }
+                const year = parseInt(month.split('-')[0]);
+                const monthNum = parseInt(month.split('-')[1]);
+                const lastDay = new Date(year, monthNum, 0).getDate();
+                start = `${month}-01`;
+                end = `${month}-${String(lastDay).padStart(2,'0')}`;
+                label = `Mensal - ${month.split('-').reverse().join('/')}`;
+            } else if (type === 'biweekly') {
+                const month = document.getElementById('report-biweekly-month').value;
+                if (!month) { alert('Selecione um mês.'); return null; }
+                const half = document.getElementById('report-biweekly-half').value;
+                const year = parseInt(month.split('-')[0]);
+                const monthNum = parseInt(month.split('-')[1]);
+                if (half === '1') {
+                    start = `${month}-01`;
+                    end = `${month}-15`;
+                    label = `1ª Quinzena - ${month.split('-').reverse().join('/')}`;
+                } else {
+                    const lastDay = new Date(year, monthNum, 0).getDate();
+                    start = `${month}-16`;
+                    end = `${month}-${String(lastDay).padStart(2,'0')}`;
+                    label = `2ª Quinzena - ${month.split('-').reverse().join('/')}`;
+                }
+            }
+            return { start, end, label };
+        }
+
+        async function fetchDataForRange(start, end) {
+            const machines = [];
+            try {
+                const snapshot = await db.collection(COLLECTION_NAME)
+                    .where(firebase.firestore.FieldPath.documentId(), '>=', start)
+                    .where(firebase.firestore.FieldPath.documentId(), '<=', end)
+                    .get();
+                snapshot.forEach(doc => {
+                    const date = doc.id;
+                    const data = doc.data();
+                    if (data.inspectors) {
+                        Object.keys(data.inspectors).forEach(inspName => {
+                            Object.keys(data.inspectors[inspName].products).forEach(prodKey => {
+                                data.inspectors[inspName].products[prodKey].forEach(m => {
+                                    machines.push({ ...m, date, inspector: inspName, product: prodKey });
+                                });
+                            });
+                        });
+                    }
+                });
+                return machines;
+            } catch (error) {
+                console.error('Erro ao buscar dados:', error);
+                throw error;
+            }
+        }
+
+        function aggregateByProduct(machines) {
+            const productMap = {};
+            machines.forEach(m => {
+                const prod = m.product || 'SEM PRODUTO';
+                if (!productMap[prod]) {
+                    productMap[prod] = {
+                        product: prod,
+                        machines: [],
+                        m1Values: [],
+                        m3Values: [],
+                        m4Values: [],
+                        allValues: [],
+                        problems: [],
+                        motivos: [],
+                        approvedCount: 0,
+                        rejectedCount: 0,
+                        machineList: []
+                    };
+                }
+                const group = productMap[prod];
+                group.machines.push(m);
+                group.machineList.push(m);
+                if (m.status === 'APROVADO') group.approvedCount++; else group.rejectedCount++;
+                if (m.problema) group.problems.push(`Máquina ${m.machine} (${m.date}): ${m.problema}`);
+                if (m.motivoAusencia) group.motivos.push(`Máquina ${m.machine} (${m.date}): ${m.motivoAusencia}`);
+                (m.rows || []).forEach(r => {
+                    if (r.m1 !== '' && !isNaN(parseFloat(r.m1))) { const v = parseFloat(r.m1); group.m1Values.push(v); group.allValues.push(v); }
+                    if (r.m3 !== '' && !isNaN(parseFloat(r.m3))) { const v = parseFloat(r.m3); group.m3Values.push(v); group.allValues.push(v); }
+                    if (r.m4 !== '' && !isNaN(parseFloat(r.m4))) { const v = parseFloat(r.m4); group.m4Values.push(v); group.allValues.push(v); }
+                });
+            });
+            const products = Object.values(productMap).map(g => {
+                const avg = arr => arr.length > 0 ? arr.reduce((a,b) => a+b, 0) / arr.length : 0;
+                return {
+                    product: g.product,
+                    machineCount: g.machines.length,
+                    avgM1: avg(g.m1Values),
+                    avgM3: avg(g.m3Values),
+                    avgM4: avg(g.m4Values),
+                    avgAll: avg(g.allValues),
+                    totalMeasurements: g.allValues.length,
+                    approvedCount: g.approvedCount,
+                    rejectedCount: g.rejectedCount,
+                    problems: g.problems,
+                    motivos: g.motivos,
+                    machineList: g.machineList
+                };
+            });
+            return products.sort((a,b) => a.product.localeCompare(b.product));
+        }
+
+        function formatNumber(value) {
+            if (value === null || value === undefined || isNaN(value) || value === 0) return '—';
+            return Number(value).toFixed(3).replace('.', ',');
+        }
+
+        function renderReportDashboard(machines, label) {
+            const products = aggregateByProduct(machines);
+            const totalMachines = machines.length;
+            const totalProducts = products.length;
+            let totalMeasurements = 0;
+            const allMeasurements = [];
+            machines.forEach(m => {
+                (m.rows || []).forEach(r => {
+                    if (r.m1 !== '' && !isNaN(parseFloat(r.m1))) { totalMeasurements++; allMeasurements.push(parseFloat(r.m1)); }
+                    if (r.m3 !== '' && !isNaN(parseFloat(r.m3))) { totalMeasurements++; allMeasurements.push(parseFloat(r.m3)); }
+                    if (r.m4 !== '' && !isNaN(parseFloat(r.m4))) { totalMeasurements++; allMeasurements.push(parseFloat(r.m4)); }
+                });
+            });
+            const overallAvg = allMeasurements.length > 0 ? allMeasurements.reduce((a,b) => a+b, 0) / allMeasurements.length : 0;
+            const approved = machines.filter(m => m.status === 'APROVADO').length;
+            const rejected = machines.filter(m => m.status === 'REPROVADO').length;
+            const allProblems = products.flatMap(p => p.problems);
+            const allMotivos = products.flatMap(p => p.motivos);
+
+            let html = `
+                <div id="report-content">
+                    <div class="pdf-header" style="text-align:center; border-bottom: 2px solid #241245; padding-bottom: 12px; margin-bottom: 20px;">
+                        <h2 style="color:#241245;">📊 Relatório de Inspeção de Peso</h2>
+                        <div style="color:#555;">📅 Período: ${label}</div>
+                    </div>
+                    <div class="dash-summary-cards">
+                        <div class="dash-card info-border"><div class="dash-icon">🏭</div><div class="dash-value">${totalMachines}</div><div class="dash-label">Máquinas</div></div>
+                        <div class="dash-card accent-border"><div class="dash-icon">📦</div><div class="dash-value">${totalProducts}</div><div class="dash-label">Produtos</div></div>
+                        <div class="dash-card success-border"><div class="dash-icon">✅</div><div class="dash-value">${approved}</div><div class="dash-label">Aprovadas</div></div>
+                        <div class="dash-card danger-border"><div class="dash-icon">❌</div><div class="dash-value">${rejected}</div><div class="dash-label">Reprovadas</div></div>
+                        <div class="dash-card info-border"><div class="dash-icon">📐</div><div class="dash-value">${totalMeasurements}</div><div class="dash-label">Medições</div></div>
+                        <div class="dash-card accent-border"><div class="dash-icon">📈</div><div class="dash-value">${formatNumber(overallAvg)}</div><div class="dash-label">Média Geral</div></div>
+                    </div>
+                    <div class="dash-section-title">📈 Médias por Produto</div>
+                    <div class="bar-chart-container">`;
+            products.forEach(p => {
+                const maxWidth = 100;
+                const barWidth = p.avgAll > 0 ? Math.min((p.avgAll / 30) * 100, 100) : 0; // escala arbitrária até 30
+                html += `
+                    <div class="bar-chart-row">
+                        <div class="bar-chart-label">${escapeHtml(p.product)}</div>
+                        <div class="bar-chart-track"><div class="bar-chart-fill ${p.avgAll > 25 ? 'warning-fill' : p.avgAll > 27 ? 'danger-fill' : 'success-fill'}" style="width:${Math.max(barWidth,3)}%;">${formatNumber(p.avgAll)}</div></div>
+                        <span style="font-size:11px;color:#888;min-width:60px;">${p.machineCount} máq.</span>
+                    </div>`;
+            });
+            html += `</div>
+                <div class="dash-section-title">📋 Detalhamento por Produto</div>
+                <div class="dash-table-wrapper">
+                    <table class="dash-table">
+                        <thead><tr><th>Produto</th><th>Máquinas</th><th>Média M1</th><th>Média M3</th><th>Média M4</th><th>Média Geral</th><th>Aprov.</th><th>Reprov.</th><th>Problemas</th><th>Motivos de Ausência</th></tr></thead>
+                        <tbody>`;
+            products.forEach(p => {
+                const problemsText = p.problems.length > 0 ? p.problems.join('<br>') : '—';
+                const motivosText = p.motivos.length > 0 ? p.motivos.join('<br>') : '—';
+                html += `<tr>
+                    <td><strong>${escapeHtml(p.product)}</strong></td>
+                    <td>${p.machineCount}</td>
+                    <td>${formatNumber(p.avgM1)}</td>
+                    <td>${formatNumber(p.avgM3)}</td>
+                    <td>${formatNumber(p.avgM4)}</td>
+                    <td><strong>${formatNumber(p.avgAll)}</strong></td>
+                    <td>${p.approvedCount}</td>
+                    <td>${p.rejectedCount}</td>
+                    <td style="text-align:left;">${problemsText}</td>
+                    <td style="text-align:left;">${motivosText}</td>
+                </tr>`;
+            });
+            html += `</tbody></table></div>`;
+
+            // Seção de problemas
+            html += `<div class="dash-section-title">⚠️ Problemas Relatados</div><div class="problem-list">`;
+            if (allProblems.length > 0) {
+                allProblems.forEach(prob => {
+                    html += `<div class="problem-item"><strong>⚠️</strong><span>${escapeHtml(prob)}</span></div>`;
+                });
+            } else {
+                html += `<p style="color:#888;">Nenhum problema relatado.</p>`;
+            }
+            html += `</div>`;
+
+            // Seção de motivos de ausência
+            html += `<div class="dash-section-title">📝 Motivos de Ausência de Peso</div><div class="problem-list" style="margin-bottom:0;">`;
+            if (allMotivos.length > 0) {
+                allMotivos.forEach(mot => {
+                    html += `<div class="problem-item" style="border-left-color:#f0ad4e; background:#fefbf5;"><strong>📝</strong><span>${escapeHtml(mot)}</span></div>`;
+                });
+            } else {
+                html += `<p style="color:#888;">Nenhum motivo de ausência registrado.</p>`;
+            }
+            html += `</div>`;
+
+            // Botões de ação
+            html += `<div class="report-actions">
+                <button class="btn btn-primary" onclick="printReport()">🖨️ Imprimir Relatório</button>
+                <button class="btn btn-pdf" onclick="downloadReportPDF()">📄 Baixar PDF do Relatório</button>
+            </div></div>`;
+
+            document.getElementById('report-content-area').innerHTML = html;
+        }
+
+        async function generateReport() {
+            const range = getDateRangeFromSelection();
+            if (!range) return;
+            const { start, end, label } = range;
+            try {
+                const machines = await fetchDataForRange(start, end);
+                if (machines.length === 0) {
+                    document.getElementById('report-content-area').innerHTML =
+                        `<p style="color:#888;text-align:center;padding:20px;">📭 Nenhum dado encontrado no período selecionado.</p>`;
+                    return;
+                }
+                renderReportDashboard(machines, label);
+            } catch (error) {
+                alert('Erro ao gerar relatório: ' + error.message);
+            }
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function downloadReportPDF() {
+            const element = document.getElementById('report-content');
+            if (!element) { alert('Gere o relatório primeiro.'); return; }
+            const dateLabel = new Date().toISOString().split('T')[0];
+            html2pdf().set({
+                margin: [8, 6, 8, 6],
+                filename: `Relatorio_Inspecao_${dateLabel}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            }).from(element).save();
+        }
+
+        // Manter funções antigas para compatibilidade (não são mais usadas nos botões)
+        function openDashboard() {
+            // Antigo dashboard do dia (não usado)
+            alert('Use "Relatórios" para abrir o dashboard completo.');
+        }
+
+        async function downloadPDF() {
+            // Antigo PDF diário (não usado)
+            alert('Use "PDF Relatório" para gerar PDF com período selecionado.');
+        }
+
+        // Navegação com Enter
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 const target = e.target;
@@ -2112,7 +2274,7 @@
         };
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('dashboard-overlay')) closeDashboard();
+            if (e.key === 'Escape' && document.getElementById('report-overlay')) closeReportModal();
         });
     </script>
 </body>
