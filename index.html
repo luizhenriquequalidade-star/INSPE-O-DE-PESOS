@@ -629,45 +629,32 @@
             background: #dc3545;
             color: #fff;
         }
-        .dashboard-overlay {
+        /* ===== NOVOS ESTILOS PARA O RELATÓRIO EM TELA CHEIA ===== */
+        .fullscreen-report-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.55);
-            z-index: 9999;
+            background: #ffffff;
+            z-index: 99999;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.2s ease;
-            backdrop-filter: blur(2px);
-            -webkit-backdrop-filter: blur(2px);
+            flex-direction: column;
+            overflow: hidden;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .dashboard-modal {
-            background: #fff;
-            border-radius: 16px;
-            width: 95%;
-            max-width: 1050px;
-            max-height: 90vh;
+        .fullscreen-report-modal {
+            width: 100%;
+            height: 100%;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: scaleIn 0.3s ease;
-            position: relative;
+            background: #ffffff;
+            border-radius: 0;
+            box-shadow: none;
+            padding: 30px;
         }
-        @keyframes scaleIn {
-            from { transform: scale(0.92); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        .dashboard-modal .dash-header {
+        .fullscreen-report-header {
             background: linear-gradient(135deg, #241245, #3e2970);
             color: #fff;
-            padding: 20px 28px;
-            border-radius: 16px 16px 0 0;
+            padding: 20px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -675,30 +662,31 @@
             top: 0;
             z-index: 10;
         }
-        .dashboard-modal .dash-header h2 {
-            font-size: 22px;
+        .fullscreen-report-header h2 {
+            font-size: 24px;
             letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
-        .dashboard-modal .dash-header .close-dash {
+        .fullscreen-report-header .close-fullscreen {
             background: rgba(255, 255, 255, 0.2);
             border: none;
             color: #fff;
-            width: 38px;
-            height: 38px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 20px;
+            font-size: 24px;
             transition: var(--transition);
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .dashboard-modal .dash-header .close-dash:hover {
+        .fullscreen-report-header .close-fullscreen:hover {
             background: rgba(255, 255, 255, 0.35);
             transform: rotate(90deg);
         }
-        .dashboard-modal .dash-body {
-            padding: 24px 28px 30px;
+        .report-content-area {
+            padding: 30px;
         }
         .dash-summary-cards {
             display: grid;
@@ -760,52 +748,6 @@
             border-bottom: 2px solid #f0edf7;
             letter-spacing: 0.4px;
         }
-        .dash-table-wrapper {
-            overflow-x: auto;
-            border-radius: 8px;
-            border: 1px solid #e9ecef;
-            margin-bottom: 24px;
-        }
-        .dash-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            min-width: 700px;
-        }
-        .dash-table th,
-        .dash-table td {
-            padding: 11px 10px;
-            text-align: center;
-            border-bottom: 1px solid #eee;
-            vertical-align: top;
-        }
-        .dash-table thead th {
-            background: #f0edf7;
-            font-weight: 700;
-            color: #241245;
-            font-size: 11px;
-            letter-spacing: 0.4px;
-            text-transform: uppercase;
-        }
-        .dash-table tbody tr:hover {
-            background: #fdfcff;
-        }
-        .dash-table .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 11px;
-            letter-spacing: 0.3px;
-            display: inline-block;
-        }
-        .status-approved {
-            background: #d4edda;
-            color: #155724;
-        }
-        .status-rejected {
-            background: #f8d7da;
-            color: #721c24;
-        }
         .bar-chart-container {
             display: flex;
             flex-direction: column;
@@ -855,6 +797,52 @@
         .bar-chart-fill.success-fill {
             background: linear-gradient(90deg, #28a745, #48c964);
         }
+        .dash-table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 24px;
+        }
+        .dash-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 700px;
+        }
+        .dash-table th,
+        .dash-table td {
+            padding: 11px 10px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        .dash-table thead th {
+            background: #f0edf7;
+            font-weight: 700;
+            color: #241245;
+            font-size: 11px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+        .dash-table tbody tr:hover {
+            background: #fdfcff;
+        }
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 11px;
+            letter-spacing: 0.3px;
+            display: inline-block;
+        }
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
         .problem-list {
             display: flex;
             flex-direction: column;
@@ -882,85 +870,19 @@
             font-weight: 500;
             font-size: 13px;
         }
-        .close-history-btn {
-            background: transparent;
-            border: 1px solid #ccc;
-            padding: 6px 14px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-            color: #666;
-            transition: var(--transition);
-        }
-        .close-history-btn:hover {
-            background: #f5f5f5;
-            color: #333;
-        }
-        .pdf-report {
-            background: #fff;
-            padding: 30px;
-            font-family: 'Roboto', sans-serif;
-            color: #1a1a2e;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .pdf-report .pdf-header {
-            text-align: center;
-            border-bottom: 3px solid #241245;
-            padding-bottom: 16px;
-            margin-bottom: 24px;
-        }
-        .pdf-report .pdf-header h1 {
-            font-size: 24px;
-            color: #241245;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .pdf-report .pdf-header .pdf-date {
-            font-size: 15px;
-            color: #555;
-            margin-top: 4px;
-            font-weight: 500;
-        }
-        .pdf-report .pdf-inspector-section {
-            margin-bottom: 28px;
-            page-break-inside: avoid;
-        }
-        .pdf-report .pdf-inspector-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #3e2970;
-            background: #f0edf7;
-            padding: 10px 16px;
-            border-radius: 6px;
-            margin-bottom: 14px;
-            border-left: 5px solid #f47b20;
-        }
-        .pdf-report .pdf-product-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: #241245;
-            margin-bottom: 10px;
-            margin-top: 12px;
-            padding-left: 8px;
-            border-left: 3px solid #3e2970;
-            text-transform: uppercase;
-        }
-        .pdf-report table {
+        .detail-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11px;
-            margin-bottom: 16px;
-            page-break-inside: avoid;
+            font-size: 12px;
+            margin-bottom: 20px;
         }
-        .pdf-report table th,
-        .pdf-report table td {
+        .detail-table th,
+        .detail-table td {
             border: 1px solid #ccc;
-            padding: 7px 5px;
+            padding: 6px 5px;
             text-align: center;
         }
-        .pdf-report table thead th {
+        .detail-table thead th {
             background: #241245;
             color: #fff;
             font-weight: 600;
@@ -968,59 +890,8 @@
             text-transform: uppercase;
             letter-spacing: 0.4px;
         }
-        .pdf-report table tbody tr:nth-child(even) {
+        .detail-table tbody tr:nth-child(even) {
             background: #f9f9f9;
-        }
-        .pdf-report .pdf-summary {
-            background: #f8f7fc;
-            border-radius: 8px;
-            padding: 14px 18px;
-            margin-bottom: 18px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            justify-content: space-around;
-        }
-        .pdf-report .pdf-summary-item {
-            text-align: center;
-        }
-        .pdf-report .pdf-summary-item .pdf-summary-value {
-            font-size: 22px;
-            font-weight: 700;
-            color: #241245;
-        }
-        .pdf-report .pdf-summary-item .pdf-summary-label {
-            font-size: 10px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .pdf-report .status-pill {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 10px;
-            letter-spacing: 0.3px;
-        }
-        .pdf-report .status-pill.approved {
-            background: #d4edda;
-            color: #155724;
-        }
-        .pdf-report .status-pill.rejected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .report-controls {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            align-items: flex-end;
-            margin-bottom: 24px;
-            padding: 16px;
-            background: #f8f7fc;
-            border-radius: 8px;
-            border: 1px dashed #d5cfe8;
         }
         .report-actions {
             display: flex;
@@ -1028,12 +899,6 @@
             justify-content: center;
             margin-top: 24px;
             flex-wrap: wrap;
-        }
-        #report-content {
-            background: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            border: 1px solid #e9ecef;
         }
         @media (max-width: 768px) {
             .header-info {
@@ -1087,26 +952,6 @@
                 font-size: 10px;
             }
         }
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #report-content,
-            #report-content * {
-                visibility: visible;
-            }
-            #report-content {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                padding: 20px;
-                background: white;
-            }
-            .report-actions {
-                display: none;
-            }
-        }
     </style>
 </head>
 <body>
@@ -1128,8 +973,10 @@
         </div>
         <div class="toolbar-buttons">
             <button class="btn btn-outline" onclick="resetForm()" title="Nova inspeção (salva antes se necessário)">🆕 Nova Inspeção</button>
-            <button class="btn btn-accent" onclick="openReportModal()" title="Abrir relatório com médias e dashboard">📊 Relatórios</button>
-            <button class="btn btn-pdf" onclick="openReportModal()" title="Gerar PDF de relatório">📄 PDF Relatório</button>
+            <!-- Botão único de RELATÓRIO (substitui os antigos Relatórios e PDF Relatório) -->
+            <button class="btn btn-accent" onclick="openCurrentDataReport()" title="Ver relatório dos pesos atuais em tela cheia">📊 RELATORIO</button>
+            <!-- NOVO BOTÃO PARA PDF MENSAL -->
+            <button class="btn btn-warning" onclick="openMonthlyReport()" title="Gerar PDF mensal de tudo que foi realizado">📅 PDF MENSAL</button>
             <button class="btn btn-success" onclick="addMachineCard()">➕ Adicionar Máquina</button>
             <button id="btn-save-daily" class="btn btn-primary" onclick="saveDailyData()">💾 Salvar Histórico do Dia</button>
             <button id="btn-save-edits" class="btn btn-warning" onclick="saveEdits()" style="display:none;">💾 Salvar Alterações</button>
@@ -1156,9 +1003,22 @@
         </div>
     </div>
 
-    <div id="dashboard-modal-container"></div>
+    <!-- Container para o relatório em tela cheia -->
     <div id="report-modal-container"></div>
     <div id="pdf-generation-container" style="position: absolute; left: -9999px; top: 0; width: 900px;"></div>
+
+    <!-- NOVO MODAL PARA SELEÇÃO DO MÊS DO RELATÓRIO MENSAL -->
+    <div id="monthly-report-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99998; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:25px; border-radius:12px; width:380px; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+            <h3 style="color:#241245; margin-bottom:15px;">📅 Relatório Mensal</h3>
+            <p style="color:#555; margin-bottom:10px;">Selecione o mês desejado:</p>
+            <input type="month" id="monthly-report-month" style="width:100%; padding:10px; border:1.5px solid #ccc; border-radius:6px; font-size:15px;">
+            <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="closeMonthlyReport()">Cancelar</button>
+                <button class="btn btn-success" onclick="generateMonthlyPDF()">📥 Gerar PDF</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const firebaseConfig = {
@@ -1906,190 +1766,397 @@
             }
         }
 
-        // ============ FUNÇÕES DE RELATÓRIO / DASHBOARD AVANÇADO ============
-        function openReportModal() {
-            const modalHTML = `
-                <div class="dashboard-overlay" id="report-overlay" onclick="closeReportModal(event)">
-                    <div class="dashboard-modal" onclick="event.stopPropagation()">
-                        <div class="dash-header">
-                            <h2>📊 Relatório de Inspeção - Médias e Dashboard</h2>
-                            <button class="close-dash" onclick="closeReportModal()">✕</button>
+        // ============ NOVA FUNÇÃO: RELATÓRIO DOS PESOS ATUAIS EM TELA CHEIA ============
+        function openCurrentDataReport() {
+            const machines = collectFormData();
+            if (machines.length === 0) {
+                alert('Adicione pelo menos uma máquina com dados antes de gerar o relatório.');
+                return;
+            }
+
+            // Monta o HTML do relatório
+            let html = `
+                <div class="fullscreen-report-overlay" id="fullscreen-report-overlay">
+                    <div class="fullscreen-report-modal">
+                        <div class="fullscreen-report-header">
+                            <h2>📊 RELATÓRIO DE PESOS ATUAIS</h2>
+                            <button class="close-fullscreen" onclick="closeCurrentDataReport()" title="Fechar">✕</button>
                         </div>
-                        <div class="dash-body">
-                            <div class="report-controls">
-                                <div class="input-group">
-                                    <label>📅 Tipo de Período</label>
-                                    <select id="report-period-type" onchange="updateReportPeriodFields()">
-                                        <option value="daily">Diário</option>
-                                        <option value="biweekly">Quinzenal</option>
-                                        <option value="monthly">Mensal</option>
-                                    </select>
-                                </div>
-                                <div id="report-period-fields"></div>
-                                <button class="btn btn-primary" onclick="generateReport()">🔍 Gerar Relatório</button>
-                            </div>
-                            <div id="report-content-area">
-                                <p style="color:#888;text-align:center;padding:20px;">Selecione o período e clique em Gerar Relatório.</p>
-                            </div>
-                        </div>
-                    </div>
+                        <div class="report-content-area">
+                            <div style="text-align:center; margin-bottom:20px;">
+                                <span style="font-size:14px; color:#555;">Data: ${today.split('-').reverse().join('/')} - Hora: ${new Date().toLocaleTimeString()}</span>
+                            </div>`;
+
+            // Estatísticas gerais
+            let totalMeasurements = 0;
+            let allValues = [];
+            machines.forEach(m => {
+                m.rows.forEach(r => {
+                    [r.m1, r.m3, r.m4].forEach(v => {
+                        if (v !== '' && !isNaN(parseFloat(v))) {
+                            totalMeasurements++;
+                            allValues.push(parseFloat(v));
+                        }
+                    });
+                });
+            });
+            const overallAvg = allValues.length > 0 ? allValues.reduce((a,b)=>a+b,0)/allValues.length : 0;
+            const approved = machines.filter(m => m.status === 'APROVADO').length;
+            const rejected = machines.filter(m => m.status === 'REPROVADO').length;
+
+            html += `<div class="dash-summary-cards">
+                <div class="dash-card info-border"><div class="dash-icon">🏭</div><div class="dash-value">${machines.length}</div><div class="dash-label">Máquinas</div></div>
+                <div class="dash-card success-border"><div class="dash-icon">✅</div><div class="dash-value">${approved}</div><div class="dash-label">Aprovadas</div></div>
+                <div class="dash-card danger-border"><div class="dash-icon">❌</div><div class="dash-value">${rejected}</div><div class="dash-label">Reprovadas</div></div>
+                <div class="dash-card accent-border"><div class="dash-icon">📐</div><div class="dash-value">${totalMeasurements}</div><div class="dash-label">Medições</div></div>
+                <div class="dash-card info-border"><div class="dash-icon">📈</div><div class="dash-value">${overallAvg.toFixed(3).replace('.',',')}</div><div class="dash-label">Média Geral</div></div>
+            </div>`;
+
+            // Gráfico de barras por máquina (média geral)
+            html += `<div class="dash-section-title">📊 Média Geral por Máquina</div>`;
+            html += `<div class="bar-chart-container">`;
+            machines.forEach(m => {
+                const avg = m.totalAverage;
+                const width = avg > 0 ? Math.min((avg / 30) * 100, 100) : 3;
+                const fillClass = avg > 25 ? 'warning-fill' : avg > 27 ? 'danger-fill' : 'success-fill';
+                html += `<div class="bar-chart-row">
+                    <div class="bar-chart-label">${escapeHtml(m.machine || '?')}</div>
+                    <div class="bar-chart-track"><div class="bar-chart-fill ${fillClass}" style="width:${Math.max(width,3)}%;">${avg > 0 ? avg.toFixed(3).replace('.',',') : '—'}</div></div>
+                    <span style="font-size:11px;color:#888;min-width:70px;">${escapeHtml(m.product || 'sem produto')}</span>
                 </div>`;
-            document.getElementById('report-modal-container').innerHTML = modalHTML;
+            });
+            html += `</div>`;
+
+            // Tabela resumo por máquina
+            html += `<div class="dash-section-title">📋 Resumo por Máquina</div>`;
+            html += `<div class="dash-table-wrapper"><table class="dash-table">
+                <thead><tr><th>Máquina</th><th>Inspetor</th><th>Produto</th><th>Turno</th><th>Status</th><th>Média M1</th><th>Média M3</th><th>Média M4</th><th>Média Geral</th></tr></thead>
+                <tbody>`;
+            machines.forEach(m => {
+                const avg = (arr) => arr.length > 0 ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+                const m1s = [], m3s = [], m4s = [];
+                m.rows.forEach(r => {
+                    if (r.m1 !== '' && !isNaN(parseFloat(r.m1))) m1s.push(parseFloat(r.m1));
+                    if (r.m3 !== '' && !isNaN(parseFloat(r.m3))) m3s.push(parseFloat(r.m3));
+                    if (r.m4 !== '' && !isNaN(parseFloat(r.m4))) m4s.push(parseFloat(r.m4));
+                });
+                const avgM1 = avg(m1s), avgM3 = avg(m3s), avgM4 = avg(m4s);
+                const statusClass = m.status === 'APROVADO' ? 'status-approved' : 'status-rejected';
+                html += `<tr>
+                    <td><strong>${escapeHtml(m.machine)}</strong></td>
+                    <td>${escapeHtml(m.inspector)}</td>
+                    <td>${escapeHtml(m.product)}</td>
+                    <td>${escapeHtml(m.turn)}</td>
+                    <td><span class="status-badge ${statusClass}">${escapeHtml(m.status)}</span></td>
+                    <td>${avgM1 ? avgM1.toFixed(3).replace('.',',') : '—'}</td>
+                    <td>${avgM3 ? avgM3.toFixed(3).replace('.',',') : '—'}</td>
+                    <td>${avgM4 ? avgM4.toFixed(3).replace('.',',') : '—'}</td>
+                    <td><strong>${m.totalAverage ? m.totalAverage.toFixed(3).replace('.',',') : '—'}</strong></td>
+                </tr>`;
+            });
+            html += `</tbody></table></div>`;
+
+            // Detalhamento das medições por máquina
+            html += `<div class="dash-section-title">🔍 Detalhamento das Medições por Máquina</div>`;
+            machines.forEach((m, idx) => {
+                html += `<div style="margin-bottom:20px;"><h4 style="color:#241245;">Máquina: ${escapeHtml(m.machine)} - Produto: ${escapeHtml(m.product)}</h4>`;
+                html += `<div class="dash-table-wrapper"><table class="detail-table">
+                    <thead><tr><th>Cavidade</th><th>M1</th><th>M3</th><th>M4</th></tr></thead>
+                    <tbody>`;
+                const cavityCount = m.cavity || 10;
+                for (let i = 0; i < cavityCount; i++) {
+                    const r = m.rows[i] || {};
+                    html += `<tr>
+                        <td>${i+1}</td>
+                        <td>${r.m1 !== '' && r.m1 !== undefined ? parseFloat(r.m1).toFixed(3).replace('.',',') : '—'}</td>
+                        <td>${r.m3 !== '' && r.m3 !== undefined ? parseFloat(r.m3).toFixed(3).replace('.',',') : '—'}</td>
+                        <td>${r.m4 !== '' && r.m4 !== undefined ? parseFloat(r.m4).toFixed(3).replace('.',',') : '—'}</td>
+                    </tr>`;
+                }
+                html += `</tbody></table></div></div>`;
+            });
+
+            // Problemas e motivos
+            const allProblems = machines.filter(m => m.problema).map(m => `Máquina ${m.machine}: ${m.problema}`);
+            const allMotivos = machines.filter(m => m.motivoAusencia).map(m => `Máquina ${m.machine}: ${m.motivoAusencia}`);
+            if (allProblems.length > 0) {
+                html += `<div class="dash-section-title">⚠️ Problemas Relatados</div><div class="problem-list">`;
+                allProblems.forEach(p => { html += `<div class="problem-item"><strong>⚠️</strong><span>${escapeHtml(p)}</span></div>`; });
+                html += `</div>`;
+            }
+            if (allMotivos.length > 0) {
+                html += `<div class="dash-section-title">📝 Motivos de Ausência de Peso</div><div class="problem-list" style="margin-bottom:0;">`;
+                allMotivos.forEach(mo => { html += `<div class="problem-item" style="border-left-color:#f0ad4e; background:#fefbf5;"><strong>📝</strong><span>${escapeHtml(mo)}</span></div>`; });
+                html += `</div>`;
+            }
+
+            // Botões de ação
+            html += `<div class="report-actions">
+                <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+                <button class="btn btn-danger" onclick="closeCurrentDataReport()">✕ Fechar</button>
+            </div>`;
+
+            html += `</div></div></div>`;
+
+            // Insere no container
+            document.getElementById('report-modal-container').innerHTML = html;
             document.body.style.overflow = 'hidden';
-            updateReportPeriodFields();
+
+            // Tenta entrar em tela cheia
+            const overlay = document.getElementById('fullscreen-report-overlay');
+            if (overlay && overlay.requestFullscreen) {
+                overlay.requestFullscreen().catch(err => console.log('Fullscreen não suportado:', err));
+            } else if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => console.log('Fullscreen não suportado:', err));
+            }
         }
 
-        function closeReportModal(event) {
-            if (event && event.target !== document.getElementById('report-overlay')) return;
+        function closeCurrentDataReport() {
             document.getElementById('report-modal-container').innerHTML = '';
             document.body.style.overflow = '';
-        }
-
-        function updateReportPeriodFields() {
-            const type = document.getElementById('report-period-type').value;
-            const container = document.getElementById('report-period-fields');
-            if (type === 'daily') {
-                container.innerHTML = `
-                    <div class="input-group">
-                        <label>Data</label>
-                        <input type="date" id="report-daily-date" value="${today}">
-                    </div>`;
-            } else if (type === 'monthly') {
-                container.innerHTML = `
-                    <div class="input-group">
-                        <label>Mês</label>
-                        <input type="month" id="report-month" value="${today.slice(0,7)}">
-                    </div>`;
-            } else if (type === 'biweekly') {
-                container.innerHTML = `
-                    <div class="input-group">
-                        <label>Mês</label>
-                        <input type="month" id="report-biweekly-month" value="${today.slice(0,7)}">
-                    </div>
-                    <div class="input-group">
-                        <label>Quinzena</label>
-                        <select id="report-biweekly-half">
-                            <option value="1">1ª Quinzena (01-15)</option>
-                            <option value="2">2ª Quinzena (16-fim)</option>
-                        </select>
-                    </div>`;
+            // Sai do fullscreen se estiver ativo
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(err => console.log('Erro ao sair do fullscreen:', err));
             }
         }
+
+        // ============ NOVAS FUNÇÕES PARA O RELATÓRIO MENSAL EM PDF ============
+        function openMonthlyReport() {
+            const modal = document.getElementById('monthly-report-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                const now = new Date();
+                const currentMonth = now.toISOString().slice(0, 7);
+                document.getElementById('monthly-report-month').value = currentMonth;
+            }
+        }
+
+        function closeMonthlyReport() {
+            const modal = document.getElementById('monthly-report-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        async function generateMonthlyPDF() {
+            const monthValue = document.getElementById('monthly-report-month').value;
+            if (!monthValue) {
+                alert('Selecione um mês para gerar o relatório.');
+                return;
+            }
+
+            const [year, month] = monthValue.split('-');
+            const startDate = `${monthValue}-01`;
+            const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+            const endDate = `${monthValue}-${String(lastDay).padStart(2, '0')}`;
+
+            try {
+                // Busca documentos no Firebase dentro do intervalo de datas
+                const snapshot = await db.collection(COLLECTION_NAME)
+                    .where(firebase.firestore.FieldPath.documentId(), '>=', startDate)
+                    .where(firebase.firestore.FieldPath.documentId(), '<=', endDate)
+                    .get();
+
+                if (snapshot.empty) {
+                    alert(`Nenhum dado encontrado para o mês ${monthValue}.`);
+                    return;
+                }
+
+                const monthlyData = [];
+                snapshot.forEach(doc => {
+                    monthlyData.push({ date: doc.id, data: doc.data() });
+                });
+                monthlyData.sort((a, b) => a.date.localeCompare(b.date));
+
+                // Monta o HTML do relatório
+                const reportHTML = buildMonthlyReportHTML(monthlyData, monthValue);
+
+                // Cria elemento temporário para o html2pdf
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = reportHTML;
+                tempDiv.style.padding = '20px';
+                tempDiv.style.backgroundColor = '#fff';
+                tempDiv.style.width = '900px';
+                tempDiv.style.margin = '0 auto';
+                document.getElementById('pdf-generation-container').appendChild(tempDiv);
+
+                // Opções do html2pdf
+                const opt = {
+                    margin: 10,
+                    filename: `Relatorio_Mensal_${monthValue}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+                };
+
+                await html2pdf().from(tempDiv).set(opt).save();
+
+                // Remove o elemento temporário
+                tempDiv.remove();
+                closeMonthlyReport();
+            } catch (error) {
+                console.error('Erro ao gerar PDF mensal:', error);
+                alert('❌ Erro ao gerar PDF mensal. Verifique se os dados estão acessíveis.');
+            }
+        }
+
+        function buildMonthlyReportHTML(monthlyData, monthLabel) {
+            const allMachines = [];
+            let totalMeasurements = 0;
+            let allValues = [];
+            let approvedCount = 0;
+            let rejectedCount = 0;
+            const problems = [];
+
+            monthlyData.forEach(day => {
+                const date = day.date;
+                const data = day.data;
+                if (!data.inspectors) return;
+                Object.keys(data.inspectors).forEach(inspName => {
+                    const products = data.inspectors[inspName].products;
+                    Object.keys(products).forEach(prodKey => {
+                        products[prodKey].forEach(m => {
+                            const machineName = m.machine || '?';
+                            const inspector = inspName;
+                            const product = prodKey;
+                            const turn = m.turn || '';
+                            const status = m.status || 'APROVADO';
+                            const totalAvg = m.totalAverage || 0;
+                            const cavity = m.cavity || 10;
+                            const rows = m.rows || [];
+                            let measurementCount = 0;
+                            const machineValues = [];
+                            rows.forEach(r => {
+                                [r.m1, r.m3, r.m4].forEach(v => {
+                                    if (v !== '' && !isNaN(parseFloat(v))) {
+                                        measurementCount++;
+                                        machineValues.push(parseFloat(v));
+                                    }
+                                });
+                            });
+                            totalMeasurements += measurementCount;
+                            allValues.push(...machineValues);
+                            if (status === 'APROVADO') approvedCount++;
+                            else rejectedCount++;
+                            if (m.problema) {
+                                problems.push({ date, machine: machineName, problema: m.problema, inspector, product });
+                            }
+                            let realAvg = totalAvg;
+                            if (!realAvg || isNaN(realAvg)) {
+                                realAvg = machineValues.length > 0 ? machineValues.reduce((a, b) => a + b, 0) / machineValues.length : 0;
+                            }
+                            allMachines.push({
+                                date, machine: machineName, inspector, product, turn, status,
+                                totalAvg: realAvg, measurementCount, cavity, rows
+                            });
+                        });
+                    });
+                });
+            });
+
+            const overallAvg = allValues.length > 0 ? allValues.reduce((a, b) => a + b, 0) / allValues.length : 0;
+
+            let html = `
+                <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+                    <h2 style="text-align:center; color: #241245;">📊 Relatório Mensal - ${monthLabel.replace('-','/')}</h2>
+                    <p style="text-align:center; color:#555;">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;">
+                        <div style="background:#f0edf7; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
+                            <div style="font-size:24px; font-weight:bold; color:#241245;">${allMachines.length}</div>
+                            <div style="font-size:11px; color:#666;">Máquinas</div>
+                        </div>
+                        <div style="background:#d4edda; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
+                            <div style="font-size:24px; font-weight:bold; color:#155724;">${approvedCount}</div>
+                            <div style="font-size:11px; color:#666;">Aprovadas</div>
+                        </div>
+                        <div style="background:#f8d7da; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
+                            <div style="font-size:24px; font-weight:bold; color:#721c24;">${rejectedCount}</div>
+                            <div style="font-size:11px; color:#666;">Reprovadas</div>
+                        </div>
+                        <div style="background:#d1ecf1; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
+                            <div style="font-size:24px; font-weight:bold; color:#0c5460;">${totalMeasurements}</div>
+                            <div style="font-size:11px; color:#666;">Medições</div>
+                        </div>
+                        <div style="background:#fff3cd; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
+                            <div style="font-size:24px; font-weight:bold; color:#856404;">${overallAvg.toFixed(3).replace('.',',')}</div>
+                            <div style="font-size:11px; color:#666;">Média Geral</div>
+                        </div>
+                    </div>
+            `;
+
+            html += `<h3 style="color:#241245; margin-top:20px;">📋 Resumo de Máquinas</h3>`;
+            html += `<table style="width:100%; border-collapse: collapse; font-size:12px; margin-bottom:20px;">
+                <thead>
+                    <tr style="background:#241245; color:#fff;">
+                        <th style="padding:6px; border:1px solid #ccc;">Data</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Máquina</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Inspetor</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Produto</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Turno</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Status</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Cavidade</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Medições</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Média Geral</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            allMachines.forEach(m => {
+                html += `<tr>
+                    <td style="padding:5px; border:1px solid #ccc;">${m.date.split('-').reverse().join('/')}</td>
+                    <td style="padding:5px; border:1px solid #ccc;">${escapeHtml(m.machine)}</td>
+                    <td style="padding:5px; border:1px solid #ccc;">${escapeHtml(m.inspector)}</td>
+                    <td style="padding:5px; border:1px solid #ccc;">${escapeHtml(m.product)}</td>
+                    <td style="padding:5px; border:1px solid #ccc;">${escapeHtml(m.turn)}</td>
+                    <td style="padding:5px; border:1px solid #ccc; color:${m.status==='APROVADO'?'#155724':'#721c24'}; font-weight:bold;">${escapeHtml(m.status)}</td>
+                    <td style="padding:5px; border:1px solid #ccc;">${m.cavity}</td>
+                    <td style="padding:5px; border:1px solid #ccc;">${m.measurementCount}</td>
+                    <td style="padding:5px; border:1px solid #ccc;">${m.totalAvg ? m.totalAvg.toFixed(3).replace('.',',') : '—'}</td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+
+            if (problems.length > 0) {
+                html += `<h3 style="color:#dc3545; margin-top:20px;">⚠️ Problemas Registrados</h3>`;
+                html += `<ul style="list-style:none; padding:0;">`;
+                problems.forEach(p => {
+                    html += `<li style="margin-bottom:5px;"><strong>${p.date.split('-').reverse().join('/')} - ${escapeHtml(p.machine)}:</strong> ${escapeHtml(p.problema)}</li>`;
+                });
+                html += `</ul>`;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        // Fechar com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('fullscreen-report-overlay')) {
+                closeCurrentDataReport();
+            }
+            if (e.key === 'Escape') {
+                closeMonthlyReport();
+            }
+        });
+
+        // ============ FUNÇÕES ANTIGAS MANTIDAS PARA COMPATIBILIDADE (não usadas) ============
+        function openReportModal() {
+            alert('Use o botão RELATORIO para ver os pesos atuais.');
+        }
+
+        function closeReportModal(event) {}
+
+        function updateReportPeriodFields() {}
 
         function getDateRangeFromSelection() {
-            const type = document.getElementById('report-period-type').value;
-            let start, end, label;
-            if (type === 'daily') {
-                const date = document.getElementById('report-daily-date').value;
-                if (!date) { alert('Selecione uma data.'); return null; }
-                start = date;
-                end = date;
-                label = `Diário - ${date.split('-').reverse().join('/')}`;
-            } else if (type === 'monthly') {
-                const month = document.getElementById('report-month').value; // YYYY-MM
-                if (!month) { alert('Selecione um mês.'); return null; }
-                const year = parseInt(month.split('-')[0]);
-                const monthNum = parseInt(month.split('-')[1]);
-                const lastDay = new Date(year, monthNum, 0).getDate();
-                start = `${month}-01`;
-                end = `${month}-${String(lastDay).padStart(2,'0')}`;
-                label = `Mensal - ${month.split('-').reverse().join('/')}`;
-            } else if (type === 'biweekly') {
-                const month = document.getElementById('report-biweekly-month').value;
-                if (!month) { alert('Selecione um mês.'); return null; }
-                const half = document.getElementById('report-biweekly-half').value;
-                const year = parseInt(month.split('-')[0]);
-                const monthNum = parseInt(month.split('-')[1]);
-                if (half === '1') {
-                    start = `${month}-01`;
-                    end = `${month}-15`;
-                    label = `1ª Quinzena - ${month.split('-').reverse().join('/')}`;
-                } else {
-                    const lastDay = new Date(year, monthNum, 0).getDate();
-                    start = `${month}-16`;
-                    end = `${month}-${String(lastDay).padStart(2,'0')}`;
-                    label = `2ª Quinzena - ${month.split('-').reverse().join('/')}`;
-                }
-            }
-            return { start, end, label };
+            return null;
         }
 
         async function fetchDataForRange(start, end) {
-            const machines = [];
-            try {
-                const snapshot = await db.collection(COLLECTION_NAME)
-                    .where(firebase.firestore.FieldPath.documentId(), '>=', start)
-                    .where(firebase.firestore.FieldPath.documentId(), '<=', end)
-                    .get();
-                snapshot.forEach(doc => {
-                    const date = doc.id;
-                    const data = doc.data();
-                    if (data.inspectors) {
-                        Object.keys(data.inspectors).forEach(inspName => {
-                            Object.keys(data.inspectors[inspName].products).forEach(prodKey => {
-                                data.inspectors[inspName].products[prodKey].forEach(m => {
-                                    machines.push({ ...m, date, inspector: inspName, product: prodKey });
-                                });
-                            });
-                        });
-                    }
-                });
-                return machines;
-            } catch (error) {
-                console.error('Erro ao buscar dados:', error);
-                throw error;
-            }
+            return [];
         }
 
         function aggregateByProduct(machines) {
-            const productMap = {};
-            machines.forEach(m => {
-                const prod = m.product || 'SEM PRODUTO';
-                if (!productMap[prod]) {
-                    productMap[prod] = {
-                        product: prod,
-                        machines: [],
-                        m1Values: [],
-                        m3Values: [],
-                        m4Values: [],
-                        allValues: [],
-                        problems: [],
-                        motivos: [],
-                        approvedCount: 0,
-                        rejectedCount: 0,
-                        machineList: []
-                    };
-                }
-                const group = productMap[prod];
-                group.machines.push(m);
-                group.machineList.push(m);
-                if (m.status === 'APROVADO') group.approvedCount++; else group.rejectedCount++;
-                if (m.problema) group.problems.push(`Máquina ${m.machine} (${m.date}): ${m.problema}`);
-                if (m.motivoAusencia) group.motivos.push(`Máquina ${m.machine} (${m.date}): ${m.motivoAusencia}`);
-                (m.rows || []).forEach(r => {
-                    if (r.m1 !== '' && !isNaN(parseFloat(r.m1))) { const v = parseFloat(r.m1); group.m1Values.push(v); group.allValues.push(v); }
-                    if (r.m3 !== '' && !isNaN(parseFloat(r.m3))) { const v = parseFloat(r.m3); group.m3Values.push(v); group.allValues.push(v); }
-                    if (r.m4 !== '' && !isNaN(parseFloat(r.m4))) { const v = parseFloat(r.m4); group.m4Values.push(v); group.allValues.push(v); }
-                });
-            });
-            const products = Object.values(productMap).map(g => {
-                const avg = arr => arr.length > 0 ? arr.reduce((a,b) => a+b, 0) / arr.length : 0;
-                return {
-                    product: g.product,
-                    machineCount: g.machines.length,
-                    avgM1: avg(g.m1Values),
-                    avgM3: avg(g.m3Values),
-                    avgM4: avg(g.m4Values),
-                    avgAll: avg(g.allValues),
-                    totalMeasurements: g.allValues.length,
-                    approvedCount: g.approvedCount,
-                    rejectedCount: g.rejectedCount,
-                    problems: g.problems,
-                    motivos: g.motivos,
-                    machineList: g.machineList
-                };
-            });
-            return products.sort((a,b) => a.product.localeCompare(b.product));
+            return [];
         }
 
         function formatNumber(value) {
@@ -2097,150 +2164,22 @@
             return Number(value).toFixed(3).replace('.', ',');
         }
 
-        function renderReportDashboard(machines, label) {
-            const products = aggregateByProduct(machines);
-            const totalMachines = machines.length;
-            const totalProducts = products.length;
-            let totalMeasurements = 0;
-            const allMeasurements = [];
-            machines.forEach(m => {
-                (m.rows || []).forEach(r => {
-                    if (r.m1 !== '' && !isNaN(parseFloat(r.m1))) { totalMeasurements++; allMeasurements.push(parseFloat(r.m1)); }
-                    if (r.m3 !== '' && !isNaN(parseFloat(r.m3))) { totalMeasurements++; allMeasurements.push(parseFloat(r.m3)); }
-                    if (r.m4 !== '' && !isNaN(parseFloat(r.m4))) { totalMeasurements++; allMeasurements.push(parseFloat(r.m4)); }
-                });
-            });
-            const overallAvg = allMeasurements.length > 0 ? allMeasurements.reduce((a,b) => a+b, 0) / allMeasurements.length : 0;
-            const approved = machines.filter(m => m.status === 'APROVADO').length;
-            const rejected = machines.filter(m => m.status === 'REPROVADO').length;
-            const allProblems = products.flatMap(p => p.problems);
-            const allMotivos = products.flatMap(p => p.motivos);
+        function renderReportDashboard(machines, label) {}
 
-            let html = `
-                <div id="report-content">
-                    <div class="pdf-header" style="text-align:center; border-bottom: 2px solid #241245; padding-bottom: 12px; margin-bottom: 20px;">
-                        <h2 style="color:#241245;">📊 Relatório de Inspeção de Peso</h2>
-                        <div style="color:#555;">📅 Período: ${label}</div>
-                    </div>
-                    <div class="dash-summary-cards">
-                        <div class="dash-card info-border"><div class="dash-icon">🏭</div><div class="dash-value">${totalMachines}</div><div class="dash-label">Máquinas</div></div>
-                        <div class="dash-card accent-border"><div class="dash-icon">📦</div><div class="dash-value">${totalProducts}</div><div class="dash-label">Produtos</div></div>
-                        <div class="dash-card success-border"><div class="dash-icon">✅</div><div class="dash-value">${approved}</div><div class="dash-label">Aprovadas</div></div>
-                        <div class="dash-card danger-border"><div class="dash-icon">❌</div><div class="dash-value">${rejected}</div><div class="dash-label">Reprovadas</div></div>
-                        <div class="dash-card info-border"><div class="dash-icon">📐</div><div class="dash-value">${totalMeasurements}</div><div class="dash-label">Medições</div></div>
-                        <div class="dash-card accent-border"><div class="dash-icon">📈</div><div class="dash-value">${formatNumber(overallAvg)}</div><div class="dash-label">Média Geral</div></div>
-                    </div>
-                    <div class="dash-section-title">📈 Médias por Produto</div>
-                    <div class="bar-chart-container">`;
-            products.forEach(p => {
-                const maxWidth = 100;
-                const barWidth = p.avgAll > 0 ? Math.min((p.avgAll / 30) * 100, 100) : 0; // escala arbitrária até 30
-                html += `
-                    <div class="bar-chart-row">
-                        <div class="bar-chart-label">${escapeHtml(p.product)}</div>
-                        <div class="bar-chart-track"><div class="bar-chart-fill ${p.avgAll > 25 ? 'warning-fill' : p.avgAll > 27 ? 'danger-fill' : 'success-fill'}" style="width:${Math.max(barWidth,3)}%;">${formatNumber(p.avgAll)}</div></div>
-                        <span style="font-size:11px;color:#888;min-width:60px;">${p.machineCount} máq.</span>
-                    </div>`;
-            });
-            html += `</div>
-                <div class="dash-section-title">📋 Detalhamento por Produto</div>
-                <div class="dash-table-wrapper">
-                    <table class="dash-table">
-                        <thead><tr><th>Produto</th><th>Máquinas</th><th>Média M1</th><th>Média M3</th><th>Média M4</th><th>Média Geral</th><th>Aprov.</th><th>Reprov.</th><th>Problemas</th><th>Motivos de Ausência</th></tr></thead>
-                        <tbody>`;
-            products.forEach(p => {
-                const problemsText = p.problems.length > 0 ? p.problems.join('<br>') : '—';
-                const motivosText = p.motivos.length > 0 ? p.motivos.join('<br>') : '—';
-                html += `<tr>
-                    <td><strong>${escapeHtml(p.product)}</strong></td>
-                    <td>${p.machineCount}</td>
-                    <td>${formatNumber(p.avgM1)}</td>
-                    <td>${formatNumber(p.avgM3)}</td>
-                    <td>${formatNumber(p.avgM4)}</td>
-                    <td><strong>${formatNumber(p.avgAll)}</strong></td>
-                    <td>${p.approvedCount}</td>
-                    <td>${p.rejectedCount}</td>
-                    <td style="text-align:left;">${problemsText}</td>
-                    <td style="text-align:left;">${motivosText}</td>
-                </tr>`;
-            });
-            html += `</tbody></table></div>`;
-
-            // Seção de problemas
-            html += `<div class="dash-section-title">⚠️ Problemas Relatados</div><div class="problem-list">`;
-            if (allProblems.length > 0) {
-                allProblems.forEach(prob => {
-                    html += `<div class="problem-item"><strong>⚠️</strong><span>${escapeHtml(prob)}</span></div>`;
-                });
-            } else {
-                html += `<p style="color:#888;">Nenhum problema relatado.</p>`;
-            }
-            html += `</div>`;
-
-            // Seção de motivos de ausência
-            html += `<div class="dash-section-title">📝 Motivos de Ausência de Peso</div><div class="problem-list" style="margin-bottom:0;">`;
-            if (allMotivos.length > 0) {
-                allMotivos.forEach(mot => {
-                    html += `<div class="problem-item" style="border-left-color:#f0ad4e; background:#fefbf5;"><strong>📝</strong><span>${escapeHtml(mot)}</span></div>`;
-                });
-            } else {
-                html += `<p style="color:#888;">Nenhum motivo de ausência registrado.</p>`;
-            }
-            html += `</div>`;
-
-            // Botões de ação
-            html += `<div class="report-actions">
-                <button class="btn btn-primary" onclick="printReport()">🖨️ Imprimir Relatório</button>
-                <button class="btn btn-pdf" onclick="downloadReportPDF()">📄 Baixar PDF do Relatório</button>
-            </div></div>`;
-
-            document.getElementById('report-content-area').innerHTML = html;
-        }
-
-        async function generateReport() {
-            const range = getDateRangeFromSelection();
-            if (!range) return;
-            const { start, end, label } = range;
-            try {
-                const machines = await fetchDataForRange(start, end);
-                if (machines.length === 0) {
-                    document.getElementById('report-content-area').innerHTML =
-                        `<p style="color:#888;text-align:center;padding:20px;">📭 Nenhum dado encontrado no período selecionado.</p>`;
-                    return;
-                }
-                renderReportDashboard(machines, label);
-            } catch (error) {
-                alert('Erro ao gerar relatório: ' + error.message);
-            }
-        }
+        async function generateReport() {}
 
         function printReport() {
             window.print();
         }
 
-        function downloadReportPDF() {
-            const element = document.getElementById('report-content');
-            if (!element) { alert('Gere o relatório primeiro.'); return; }
-            const dateLabel = new Date().toISOString().split('T')[0];
-            html2pdf().set({
-                margin: [8, 6, 8, 6],
-                filename: `Relatorio_Inspecao_${dateLabel}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-            }).from(element).save();
-        }
+        function downloadReportPDF() {}
 
-        // Manter funções antigas para compatibilidade (não são mais usadas nos botões)
         function openDashboard() {
-            // Antigo dashboard do dia (não usado)
-            alert('Use "Relatórios" para abrir o dashboard completo.');
+            alert('Use o botão RELATORIO para ver os pesos atuais.');
         }
 
         async function downloadPDF() {
-            // Antigo PDF diário (não usado)
-            alert('Use "PDF Relatório" para gerar PDF com período selecionado.');
+            alert('Use o botão RELATORIO para ver os pesos atuais.');
         }
 
         // Navegação com Enter
@@ -2272,10 +2211,6 @@
             document.getElementById('selected-date').disabled = false;
             loadInspectorNames();
         };
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('report-overlay')) closeReportModal();
-        });
     </script>
 </body>
 </html>
