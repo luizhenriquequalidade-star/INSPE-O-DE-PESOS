@@ -1830,7 +1830,7 @@
             // Tabela resumo por máquina
             html += `<div class="dash-section-title">📋 Resumo por Máquina</div>`;
             html += `<div class="dash-table-wrapper"><table class="dash-table">
-                <thead><tr><th>Máquina</th><th>Inspetor</th><th>Produto</th><th>Turno</th><th>Status</th><th>Média M1</th><th>Média M3</th><th>Média M4</th><th>Média Geral</th></tr></thead>
+                <thead><tr><th>Máquina</th><th>Inspetor</th><th>Produto</th><th>Turno</th><th>Status</th><th>Ciclo</th><th>Colaborador</th><th>Média M1</th><th>Média M3</th><th>Média M4</th><th>Média Geral</th></tr></thead>
                 <tbody>`;
             machines.forEach(m => {
                 const avg = (arr) => arr.length > 0 ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
@@ -1848,6 +1848,8 @@
                     <td>${escapeHtml(m.product)}</td>
                     <td>${escapeHtml(m.turn)}</td>
                     <td><span class="status-badge ${statusClass}">${escapeHtml(m.status)}</span></td>
+                    <td>${escapeHtml(m.cycle || '-')}</td>
+                    <td>${escapeHtml(m.collaborator || '-')}</td>
                     <td>${avgM1 ? avgM1.toFixed(3).replace('.',',') : '—'}</td>
                     <td>${avgM3 ? avgM3.toFixed(3).replace('.',',') : '—'}</td>
                     <td>${avgM4 ? avgM4.toFixed(3).replace('.',',') : '—'}</td>
