@@ -470,6 +470,27 @@
             background: #fff;
             box-shadow: 0 0 0 4px rgba(62, 41, 112, 0.06);
         }
+        /* Classes de cor para pesos */
+        .weight-ok {
+            background-color: #d4edda !important;
+            color: #155724 !important;
+            font-weight: 600;
+        }
+        .weight-min {
+            background-color: #fff3cd !important;
+            color: #856404 !important;
+            font-weight: 600;
+        }
+        .weight-low {
+            background-color: #f8d7da !important;
+            color: #721c24 !important;
+            font-weight: 600;
+        }
+        .weight-high {
+            background-color: #f8d7da !important;
+            color: #721c24 !important;
+            font-weight: 600;
+        }
         .stat-row td {
             font-weight: 700;
             background-color: #fcfcfc;
@@ -1059,6 +1080,15 @@
             return encodeURIComponent(str || '');
         }
 
+        // Função auxiliar para classificar peso
+        function getWeightColorClass(value, min, max) {
+            if (value === '' || isNaN(value)) return '';
+            if (value < min) return 'weight-low';
+            if (value === min) return 'weight-min';
+            if (value <= max) return 'weight-ok';
+            return 'weight-high';
+        }
+
         async function loadInspectorNames() {
             try {
                 const snapshot = await db.collection(COLLECTION_NAME).get();
@@ -1250,6 +1280,10 @@
             cardElement.querySelector('.time-m4').addEventListener('change', () => updateTimeLabels(cardId));
             cardElement.querySelector('.motivo-ausencia').addEventListener('input', () => { hasUnsavedChanges = true; });
             cardElement.querySelector('.problema').addEventListener('input', () => { hasUnsavedChanges = true; });
+            // Listeners para tolerâncias
+            cardElement.querySelector('.tol-min').addEventListener('input', () => { updateStats(cardId); hasUnsavedChanges = true; });
+            cardElement.querySelector('.tol-mid').addEventListener('input', () => { updateStats(cardId); hasUnsavedChanges = true; });
+            cardElement.querySelector('.tol-max').addEventListener('input', () => { updateStats(cardId); hasUnsavedChanges = true; });
             const inspectorInput = cardElement.querySelector('.inspector');
             if (inspectorInput) {
                 inspectorInput.addEventListener('blur', function() { addInspectorNameToSet(this.value); });
@@ -1300,6 +1334,40 @@
             updateStats(cardId);
         }
 
+        function classifyWeight(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            const tolMinRaw = card.querySelector('.tol-min').value.replace(',', '.');
+            const tolMaxRaw = card.querySelector('.tol-max').value.replace(',', '.');
+            const tolMin = parseFloat(tolMinRaw);
+            const tolMax = parseFloat(tolMaxRaw);
+            if (isNaN(tolMin) || isNaN(tolMax)) return;
+            const rows = card.querySelectorAll('.data-row');
+            rows.forEach(row => {
+                if (row.style.display === 'none') return;
+                ['m1', 'm3', 'm4'].forEach(prefix => {
+                    const input = row.querySelector(`.${prefix}-val`);
+                    if (!input) return;
+                    const valRaw = input.value.replace(',', '.');
+                    const val = parseFloat(valRaw);
+                    input.classList.remove('weight-ok', 'weight-min', 'weight-low', 'weight-high');
+                    if (valRaw.trim() === '' || isNaN(val)) {
+                        input.style.backgroundColor = '';
+                        return;
+                    }
+                    if (val < tolMin) {
+                        input.classList.add('weight-low');
+                    } else if (val === tolMin) {
+                        input.classList.add('weight-min');
+                    } else if (val <= tolMax) {
+                        input.classList.add('weight-ok');
+                    } else {
+                        input.classList.add('weight-high');
+                    }
+                });
+            });
+        }
+
         function updateStats(cardId) {
             const card = document.getElementById(cardId);
             if (!card) return;
@@ -1327,6 +1395,7 @@
             setEl('m1', calc(m1Values));
             setEl('m3', calc(m3Values));
             setEl('m4', calc(m4Values));
+            classifyWeight(cardId);
         }
 
         function collectFormData() {
@@ -1866,13 +1935,21 @@
                     <thead><tr><th>Cavidade</th><th>M1</th><th>M3</th><th>M4</th></tr></thead>
                     <tbody>`;
                 const cavityCount = m.cavity || 10;
+                const minTol = parseFloat(String(m.tolMin).replace(',', '.'));
+                const maxTol = parseFloat(String(m.tolMax).replace(',', '.'));
                 for (let i = 0; i < cavityCount; i++) {
                     const r = m.rows[i] || {};
+                    const valM1 = r.m1 !== '' && r.m1 !== undefined ? parseFloat(r.m1) : '';
+                    const valM3 = r.m3 !== '' && r.m3 !== undefined ? parseFloat(r.m3) : '';
+                    const valM4 = r.m4 !== '' && r.m4 !== undefined ? parseFloat(r.m4) : '';
+                    const clsM1 = getWeightColorClass(valM1, minTol, maxTol);
+                    const clsM3 = getWeightColorClass(valM3, minTol, maxTol);
+                    const clsM4 = getWeightColorClass(valM4, minTol, maxTol);
                     html += `<tr>
                         <td>${i+1}</td>
-                        <td>${r.m1 !== '' && r.m1 !== undefined ? parseFloat(r.m1).toFixed(3).replace('.',',') : '—'}</td>
-                        <td>${r.m3 !== '' && r.m3 !== undefined ? parseFloat(r.m3).toFixed(3).replace('.',',') : '—'}</td>
-                        <td>${r.m4 !== '' && r.m4 !== undefined ? parseFloat(r.m4).toFixed(3).replace('.',',') : '—'}</td>
+                        <td class="${clsM1}">${valM1 !== '' && !isNaN(valM1) ? valM1.toFixed(3).replace('.',',') : '—'}</td>
+                        <td class="${clsM3}">${valM3 !== '' && !isNaN(valM3) ? valM3.toFixed(3).replace('.',',') : '—'}</td>
+                        <td class="${clsM4}">${valM4 !== '' && !isNaN(valM4) ? valM4.toFixed(3).replace('.',',') : '—'}</td>
                     </tr>`;
                 }
                 html += `</tbody></table></div></div>`;
@@ -2025,6 +2102,8 @@
                             const status = m.status || 'APROVADO';
                             const totalAvg = m.totalAverage || 0;
                             const cavity = m.cavity || 10;
+                            const tolMin = m.tolMin || '23,51';
+                            const tolMax = m.tolMax || '25,11';
                             const rows = m.rows || [];
                             let measurementCount = 0;
                             const machineValues = [];
@@ -2049,7 +2128,7 @@
                             }
                             allMachines.push({
                                 date, machine: machineName, inspector, product, turn, status,
-                                totalAvg: realAvg, measurementCount, cavity, rows
+                                totalAvg: realAvg, measurementCount, cavity, rows, tolMin, tolMax
                             });
                         });
                     });
@@ -2116,6 +2195,34 @@
                 </tr>`;
             });
             html += `</tbody></table>`;
+
+            // Detalhamento com cores
+            html += `<h3 style="color:#241245; margin-top:20px;">🔍 Detalhamento das Medições</h3>`;
+            allMachines.forEach(m => {
+                const minTol = parseFloat(String(m.tolMin).replace(',', '.'));
+                const maxTol = parseFloat(String(m.tolMax).replace(',', '.'));
+                html += `<div style="margin-bottom:20px;"><h4 style="color:#241245;">Máquina: ${escapeHtml(m.machine)} - Produto: ${escapeHtml(m.product)}</h4>`;
+                html += `<table style="width:100%; border-collapse:collapse; font-size:11px;">
+                    <thead><tr style="background:#241245; color:#fff;"><th style="padding:4px; border:1px solid #ccc;">Cavidade</th><th style="padding:4px; border:1px solid #ccc;">M1</th><th style="padding:4px; border:1px solid #ccc;">M3</th><th style="padding:4px; border:1px solid #ccc;">M4</th></tr></thead>
+                    <tbody>`;
+                const cavityCount = m.cavity || 10;
+                for (let i = 0; i < cavityCount; i++) {
+                    const r = m.rows[i] || {};
+                    const valM1 = r.m1 !== '' && r.m1 !== undefined ? parseFloat(r.m1) : '';
+                    const valM3 = r.m3 !== '' && r.m3 !== undefined ? parseFloat(r.m3) : '';
+                    const valM4 = r.m4 !== '' && r.m4 !== undefined ? parseFloat(r.m4) : '';
+                    const clsM1 = getWeightColorClass(valM1, minTol, maxTol);
+                    const clsM3 = getWeightColorClass(valM3, minTol, maxTol);
+                    const clsM4 = getWeightColorClass(valM4, minTol, maxTol);
+                    html += `<tr>
+                        <td style="padding:4px; border:1px solid #ccc;">${i+1}</td>
+                        <td style="padding:4px; border:1px solid #ccc; background:${clsM1==='weight-ok'?'#d4edda':clsM1==='weight-min'?'#fff3cd':clsM1==='weight-low'||clsM1==='weight-high'?'#f8d7da':'transparent'}; color:${clsM1==='weight-ok'?'#155724':clsM1==='weight-min'?'#856404':clsM1==='weight-low'||clsM1==='weight-high'?'#721c24':'#333'};">${valM1 !== '' && !isNaN(valM1) ? valM1.toFixed(3).replace('.',',') : '—'}</td>
+                        <td style="padding:4px; border:1px solid #ccc; background:${clsM3==='weight-ok'?'#d4edda':clsM3==='weight-min'?'#fff3cd':clsM3==='weight-low'||clsM3==='weight-high'?'#f8d7da':'transparent'}; color:${clsM3==='weight-ok'?'#155724':clsM3==='weight-min'?'#856404':clsM3==='weight-low'||clsM3==='weight-high'?'#721c24':'#333'};">${valM3 !== '' && !isNaN(valM3) ? valM3.toFixed(3).replace('.',',') : '—'}</td>
+                        <td style="padding:4px; border:1px solid #ccc; background:${clsM4==='weight-ok'?'#d4edda':clsM4==='weight-min'?'#fff3cd':clsM4==='weight-low'||clsM4==='weight-high'?'#f8d7da':'transparent'}; color:${clsM4==='weight-ok'?'#155724':clsM4==='weight-min'?'#856404':clsM4==='weight-low'||clsM4==='weight-high'?'#721c24':'#333'};">${valM4 !== '' && !isNaN(valM4) ? valM4.toFixed(3).replace('.',',') : '—'}</td>
+                    </tr>`;
+                }
+                html += `</tbody></table></div>`;
+            });
 
             if (problems.length > 0) {
                 html += `<h3 style="color:#dc3545; margin-top:20px;">⚠️ Problemas Registrados</h3>`;
