@@ -1881,13 +1881,27 @@
                 <div class="dash-card info-border"><div class="dash-icon">📈</div><div class="dash-value">${overallAvg.toFixed(3).replace('.',',')}</div><div class="dash-label">Média Geral</div></div>
             </div>`;
 
-            // Gráfico de barras por máquina (média geral)
+            // Gráfico de barras por máquina (média geral) - cores baseadas nas tolerâncias
             html += `<div class="dash-section-title">📊 Média Geral por Máquina</div>`;
             html += `<div class="bar-chart-container">`;
             machines.forEach(m => {
                 const avg = m.totalAverage;
                 const width = avg > 0 ? Math.min((avg / 30) * 100, 100) : 3;
-                const fillClass = avg > 25 ? 'warning-fill' : avg > 27 ? 'danger-fill' : 'success-fill';
+                // Converte tolerâncias para números
+                const tolMin = parseFloat(String(m.tolMin).replace(',', '.'));
+                const tolMax = parseFloat(String(m.tolMax).replace(',', '.'));
+                let fillClass = 'success-fill'; // padrão verde
+                if (!isNaN(tolMin) && !isNaN(tolMax) && avg > 0) {
+                    if (avg < tolMin) {
+                        fillClass = 'danger-fill'; // vermelho abaixo da mínima
+                    } else if (avg === tolMin) {
+                        fillClass = 'warning-fill'; // amarelo na mínima
+                    } else if (avg <= tolMax) {
+                        fillClass = 'success-fill'; // verde dentro da faixa ideal
+                    } else {
+                        fillClass = 'danger-fill'; // vermelho acima da máxima
+                    }
+                }
                 html += `<div class="bar-chart-row">
                     <div class="bar-chart-label">${escapeHtml(m.machine || '?')}</div>
                     <div class="bar-chart-track"><div class="bar-chart-fill ${fillClass}" style="width:${Math.max(width,3)}%;">${avg > 0 ? avg.toFixed(3).replace('.',',') : '—'}</div></div>
