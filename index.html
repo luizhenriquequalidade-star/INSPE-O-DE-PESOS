@@ -470,7 +470,6 @@
             background: #fff;
             box-shadow: 0 0 0 4px rgba(62, 41, 112, 0.06);
         }
-        /* Classes de cor para pesos */
         .weight-ok {
             background-color: #d4edda !important;
             color: #155724 !important;
@@ -650,7 +649,6 @@
             background: #dc3545;
             color: #fff;
         }
-        /* ===== NOVOS ESTILOS PARA O RELATÓRIO EM TELA CHEIA ===== */
         .fullscreen-report-overlay {
             position: fixed;
             top: 0;
@@ -993,11 +991,10 @@
             <small>Preencha os dados abaixo para cada máquina</small>
         </div>
         <div class="toolbar-buttons">
-            <button class="btn btn-outline" onclick="resetForm()" title="Nova inspeção (salva antes se necessário)">🆕 Nova Inspeção</button>
-            <!-- Botão único de RELATÓRIO (substitui os antigos Relatórios e PDF Relatório) -->
-            <button class="btn btn-accent" onclick="openCurrentDataReport()" title="Ver relatório dos pesos atuais em tela cheia">📊 RELATORIO</button>
-            <!-- NOVO BOTÃO PARA PDF MENSAL -->
-            <button class="btn btn-warning" onclick="openMonthlyReport()" title="Gerar PDF mensal de tudo que foi realizado">📅 PDF MENSAL</button>
+            <button class="btn btn-outline" onclick="resetForm()">🆕 Nova Inspeção</button>
+            <button class="btn btn-accent" onclick="openCurrentDataReport()">📊 RELATORIO</button>
+            <!-- Botão único de PDF MENSAL (agora abre modal com filtro) -->
+            <button class="btn btn-warning" onclick="openPdfReportModal()">📅 PDF MENSAL</button>
             <button class="btn btn-success" onclick="addMachineCard()">➕ Adicionar Máquina</button>
             <button id="btn-save-daily" class="btn btn-primary" onclick="saveDailyData()">💾 Salvar Histórico do Dia</button>
             <button id="btn-save-edits" class="btn btn-warning" onclick="saveEdits()" style="display:none;">💾 Salvar Alterações</button>
@@ -1028,15 +1025,30 @@
     <div id="report-modal-container"></div>
     <div id="pdf-generation-container" style="position: absolute; left: -9999px; top: 0; width: 900px;"></div>
 
-    <!-- NOVO MODAL PARA SELEÇÃO DO MÊS DO RELATÓRIO MENSAL -->
-    <div id="monthly-report-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99998; align-items:center; justify-content:center;">
-        <div style="background:#fff; padding:25px; border-radius:12px; width:380px; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
-            <h3 style="color:#241245; margin-bottom:15px;">📅 Relatório Mensal</h3>
-            <p style="color:#555; margin-bottom:10px;">Selecione o mês desejado:</p>
-            <input type="month" id="monthly-report-month" style="width:100%; padding:10px; border:1.5px solid #ccc; border-radius:6px; font-size:15px;">
-            <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
-                <button class="btn btn-outline" onclick="closeMonthlyReport()">Cancelar</button>
-                <button class="btn btn-success" onclick="generateMonthlyPDF()">📥 Gerar PDF</button>
+    <!-- MODAL PARA SELEÇÃO DE PERÍODO DO PDF (DIÁRIO OU MENSAL) -->
+    <div id="pdf-report-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99998; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:30px; border-radius:12px; width:450px; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+            <h3 style="color:#241245; margin-bottom:20px; text-align:center;">📊 Gerar Relatório PDF</h3>
+            <p style="color:#555; margin-bottom:15px;">Escolha o tipo de relatório:</p>
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:8px;">
+                    <input type="radio" name="report-type" value="daily" checked onchange="toggleReportType()"> Diário (um dia específico)
+                </label>
+                <label style="display:block;">
+                    <input type="radio" name="report-type" value="monthly" onchange="toggleReportType()"> Mensal (um mês inteiro)
+                </label>
+            </div>
+            <div id="daily-field" style="margin-bottom:20px;">
+                <label style="display:block; font-weight:600; margin-bottom:5px;">📅 Selecione o dia:</label>
+                <input type="date" id="daily-report-date" style="width:100%; padding:10px; border:1.5px solid #ccc; border-radius:6px; font-size:15px;">
+            </div>
+            <div id="monthly-field" style="display:none; margin-bottom:20px;">
+                <label style="display:block; font-weight:600; margin-bottom:5px;">📅 Selecione o mês:</label>
+                <input type="month" id="monthly-report-month" style="width:100%; padding:10px; border:1.5px solid #ccc; border-radius:6px; font-size:15px;">
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+                <button class="btn btn-outline" onclick="closePdfReportModal()">Cancelar</button>
+                <button class="btn btn-success" onclick="generateReportPDF()">📥 Gerar PDF</button>
             </div>
         </div>
     </div>
@@ -1065,7 +1077,6 @@
         let inspectorNamesSet = new Set();
         let hasUnsavedChanges = false;
 
-        // Escape para atributos HTML e conteúdo
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
             return String(str)
@@ -1080,7 +1091,6 @@
             return encodeURIComponent(str || '');
         }
 
-        // Função auxiliar para classificar peso
         function getWeightColorClass(value, min, max) {
             if (value === '' || isNaN(value)) return '';
             if (value < min) return 'weight-low';
@@ -1280,7 +1290,6 @@
             cardElement.querySelector('.time-m4').addEventListener('change', () => updateTimeLabels(cardId));
             cardElement.querySelector('.motivo-ausencia').addEventListener('input', () => { hasUnsavedChanges = true; });
             cardElement.querySelector('.problema').addEventListener('input', () => { hasUnsavedChanges = true; });
-            // Listeners para tolerâncias
             cardElement.querySelector('.tol-min').addEventListener('input', () => { updateStats(cardId); hasUnsavedChanges = true; });
             cardElement.querySelector('.tol-mid').addEventListener('input', () => { updateStats(cardId); hasUnsavedChanges = true; });
             cardElement.querySelector('.tol-max').addEventListener('input', () => { updateStats(cardId); hasUnsavedChanges = true; });
@@ -1835,7 +1844,7 @@
             }
         }
 
-        // ============ NOVA FUNÇÃO: RELATÓRIO DOS PESOS ATUAIS EM TELA CHEIA ============
+        // ============ RELATÓRIO DOS PESOS ATUAIS EM TELA CHEIA ============
         function openCurrentDataReport() {
             const machines = collectFormData();
             if (machines.length === 0) {
@@ -1843,7 +1852,6 @@
                 return;
             }
 
-            // Monta o HTML do relatório
             let html = `
                 <div class="fullscreen-report-overlay" id="fullscreen-report-overlay">
                     <div class="fullscreen-report-modal">
@@ -1856,7 +1864,6 @@
                                 <span style="font-size:14px; color:#555;">Data: ${today.split('-').reverse().join('/')} - Hora: ${new Date().toLocaleTimeString()}</span>
                             </div>`;
 
-            // Estatísticas gerais
             let totalMeasurements = 0;
             let allValues = [];
             machines.forEach(m => {
@@ -1881,25 +1888,23 @@
                 <div class="dash-card info-border"><div class="dash-icon">📈</div><div class="dash-value">${overallAvg.toFixed(3).replace('.',',')}</div><div class="dash-label">Média Geral</div></div>
             </div>`;
 
-            // Gráfico de barras por máquina (média geral) - cores baseadas nas tolerâncias
             html += `<div class="dash-section-title">📊 Média Geral por Máquina</div>`;
             html += `<div class="bar-chart-container">`;
             machines.forEach(m => {
                 const avg = m.totalAverage;
                 const width = avg > 0 ? Math.min((avg / 30) * 100, 100) : 3;
-                // Converte tolerâncias para números
                 const tolMin = parseFloat(String(m.tolMin).replace(',', '.'));
                 const tolMax = parseFloat(String(m.tolMax).replace(',', '.'));
-                let fillClass = 'success-fill'; // padrão verde
+                let fillClass = 'success-fill';
                 if (!isNaN(tolMin) && !isNaN(tolMax) && avg > 0) {
                     if (avg < tolMin) {
-                        fillClass = 'danger-fill'; // vermelho abaixo da mínima
+                        fillClass = 'danger-fill';
                     } else if (avg === tolMin) {
-                        fillClass = 'warning-fill'; // amarelo na mínima
+                        fillClass = 'warning-fill';
                     } else if (avg <= tolMax) {
-                        fillClass = 'success-fill'; // verde dentro da faixa ideal
+                        fillClass = 'success-fill';
                     } else {
-                        fillClass = 'danger-fill'; // vermelho acima da máxima
+                        fillClass = 'danger-fill';
                     }
                 }
                 html += `<div class="bar-chart-row">
@@ -1910,7 +1915,6 @@
             });
             html += `</div>`;
 
-            // Tabela resumo por máquina
             html += `<div class="dash-section-title">📋 Resumo por Máquina</div>`;
             html += `<div class="dash-table-wrapper"><table class="dash-table">
                 <thead><tr><th>Máquina</th><th>Inspetor</th><th>Produto</th><th>Turno</th><th>Status</th><th>Ciclo</th><th>Colaborador</th><th>Média M1</th><th>Média M3</th><th>Média M4</th><th>Média Geral</th></tr></thead>
@@ -1941,7 +1945,6 @@
             });
             html += `</tbody></table></div>`;
 
-            // Detalhamento das medições por máquina
             html += `<div class="dash-section-title">🔍 Detalhamento das Medições por Máquina</div>`;
             machines.forEach((m, idx) => {
                 html += `<div style="margin-bottom:20px;"><h4 style="color:#241245;">Máquina: ${escapeHtml(m.machine)} - Produto: ${escapeHtml(m.product)}</h4>`;
@@ -1969,7 +1972,6 @@
                 html += `</tbody></table></div></div>`;
             });
 
-            // Problemas e motivos
             const allProblems = machines.filter(m => m.problema).map(m => `Máquina ${m.machine}: ${m.problema}`);
             const allMotivos = machines.filter(m => m.motivoAusencia).map(m => `Máquina ${m.machine}: ${m.motivoAusencia}`);
             if (allProblems.length > 0) {
@@ -1983,7 +1985,6 @@
                 html += `</div>`;
             }
 
-            // Botões de ação
             html += `<div class="report-actions">
                 <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
                 <button class="btn btn-danger" onclick="closeCurrentDataReport()">✕ Fechar</button>
@@ -1991,11 +1992,9 @@
 
             html += `</div></div></div>`;
 
-            // Insere no container
             document.getElementById('report-modal-container').innerHTML = html;
             document.body.style.overflow = 'hidden';
 
-            // Tenta entrar em tela cheia
             const overlay = document.getElementById('fullscreen-report-overlay');
             if (overlay && overlay.requestFullscreen) {
                 overlay.requestFullscreen().catch(err => console.log('Fullscreen não suportado:', err));
@@ -2007,64 +2006,90 @@
         function closeCurrentDataReport() {
             document.getElementById('report-modal-container').innerHTML = '';
             document.body.style.overflow = '';
-            // Sai do fullscreen se estiver ativo
             if (document.fullscreenElement) {
                 document.exitFullscreen().catch(err => console.log('Erro ao sair do fullscreen:', err));
             }
         }
 
-        // ============ NOVAS FUNÇÕES PARA O RELATÓRIO MENSAL EM PDF ============
-        function openMonthlyReport() {
-            const modal = document.getElementById('monthly-report-modal');
+        // ============ FUNÇÕES PARA O PDF (DIÁRIO OU MENSAL) ============
+        function openPdfReportModal() {
+            const modal = document.getElementById('pdf-report-modal');
             if (modal) {
                 modal.style.display = 'flex';
-                const now = new Date();
-                const currentMonth = now.toISOString().slice(0, 7);
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('daily-report-date').value = today;
+                const currentMonth = today.slice(0, 7);
                 document.getElementById('monthly-report-month').value = currentMonth;
+                document.querySelector('input[name="report-type"][value="daily"]').checked = true;
+                toggleReportType();
             }
         }
 
-        function closeMonthlyReport() {
-            const modal = document.getElementById('monthly-report-modal');
+        function closePdfReportModal() {
+            const modal = document.getElementById('pdf-report-modal');
             if (modal) {
                 modal.style.display = 'none';
             }
         }
 
-        async function generateMonthlyPDF() {
-            const monthValue = document.getElementById('monthly-report-month').value;
-            if (!monthValue) {
-                alert('Selecione um mês para gerar o relatório.');
-                return;
+        function toggleReportType() {
+            const type = document.querySelector('input[name="report-type"]:checked').value;
+            const dailyField = document.getElementById('daily-field');
+            const monthlyField = document.getElementById('monthly-field');
+            if (type === 'daily') {
+                dailyField.style.display = 'block';
+                monthlyField.style.display = 'none';
+            } else {
+                dailyField.style.display = 'none';
+                monthlyField.style.display = 'block';
+            }
+        }
+
+        async function generateReportPDF() {
+            const type = document.querySelector('input[name="report-type"]:checked').value;
+            let startDate, endDate, label;
+
+            if (type === 'daily') {
+                const date = document.getElementById('daily-report-date').value;
+                if (!date) {
+                    alert('Selecione uma data.');
+                    return;
+                }
+                startDate = date;
+                endDate = date;
+                label = `Diário - ${date.split('-').reverse().join('/')}`;
+            } else {
+                const monthValue = document.getElementById('monthly-report-month').value;
+                if (!monthValue) {
+                    alert('Selecione um mês.');
+                    return;
+                }
+                const [year, month] = monthValue.split('-');
+                startDate = `${monthValue}-01`;
+                const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+                endDate = `${monthValue}-${String(lastDay).padStart(2, '0')}`;
+                label = `Mensal - ${monthValue.replace('-', '/')}`;
             }
 
-            const [year, month] = monthValue.split('-');
-            const startDate = `${monthValue}-01`;
-            const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
-            const endDate = `${monthValue}-${String(lastDay).padStart(2, '0')}`;
-
             try {
-                // Busca documentos no Firebase dentro do intervalo de datas
                 const snapshot = await db.collection(COLLECTION_NAME)
                     .where(firebase.firestore.FieldPath.documentId(), '>=', startDate)
                     .where(firebase.firestore.FieldPath.documentId(), '<=', endDate)
                     .get();
 
                 if (snapshot.empty) {
-                    alert(`Nenhum dado encontrado para o mês ${monthValue}.`);
+                    alert(`Nenhum dado encontrado para o período selecionado.`);
                     return;
                 }
 
-                const monthlyData = [];
+                const reportData = [];
                 snapshot.forEach(doc => {
-                    monthlyData.push({ date: doc.id, data: doc.data() });
+                    reportData.push({ date: doc.id, data: doc.data() });
                 });
-                monthlyData.sort((a, b) => a.date.localeCompare(b.date));
+                reportData.sort((a, b) => a.date.localeCompare(b.date));
 
-                // Monta o HTML do relatório
-                const reportHTML = buildMonthlyReportHTML(monthlyData, monthValue);
+                const reportHTML = buildReportHTML(reportData, label);
 
-                // Cria elemento temporário para o html2pdf
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = reportHTML;
                 tempDiv.style.padding = '20px';
@@ -2073,10 +2098,9 @@
                 tempDiv.style.margin = '0 auto';
                 document.getElementById('pdf-generation-container').appendChild(tempDiv);
 
-                // Opções do html2pdf
                 const opt = {
                     margin: 10,
-                    filename: `Relatorio_Mensal_${monthValue}.pdf`,
+                    filename: `Relatorio_${label.replace(/\s+/g, '_')}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2 },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
@@ -2084,16 +2108,15 @@
 
                 await html2pdf().from(tempDiv).set(opt).save();
 
-                // Remove o elemento temporário
                 tempDiv.remove();
-                closeMonthlyReport();
+                closePdfReportModal();
             } catch (error) {
-                console.error('Erro ao gerar PDF mensal:', error);
-                alert('❌ Erro ao gerar PDF mensal. Verifique se os dados estão acessíveis.');
+                console.error('Erro ao gerar PDF:', error);
+                alert('❌ Erro ao gerar PDF. Verifique se os dados estão acessíveis.');
             }
         }
 
-        function buildMonthlyReportHTML(monthlyData, monthLabel) {
+        function buildReportHTML(reportData, label) {
             const allMachines = [];
             let totalMeasurements = 0;
             let allValues = [];
@@ -2101,7 +2124,7 @@
             let rejectedCount = 0;
             const problems = [];
 
-            monthlyData.forEach(day => {
+            reportData.forEach(day => {
                 const date = day.date;
                 const data = day.data;
                 if (!data.inspectors) return;
@@ -2153,7 +2176,7 @@
 
             let html = `
                 <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
-                    <h2 style="text-align:center; color: #241245;">📊 Relatório Mensal - ${monthLabel.replace('-','/')}</h2>
+                    <h2 style="text-align:center; color: #241245;">📊 Relatório ${label}</h2>
                     <p style="text-align:center; color:#555;">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
                     <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;">
                         <div style="background:#f0edf7; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
@@ -2210,7 +2233,6 @@
             });
             html += `</tbody></table>`;
 
-            // Detalhamento com cores
             html += `<h3 style="color:#241245; margin-top:20px;">🔍 Detalhamento das Medições</h3>`;
             allMachines.forEach(m => {
                 const minTol = parseFloat(String(m.tolMin).replace(',', '.'));
@@ -2228,11 +2250,17 @@
                     const clsM1 = getWeightColorClass(valM1, minTol, maxTol);
                     const clsM3 = getWeightColorClass(valM3, minTol, maxTol);
                     const clsM4 = getWeightColorClass(valM4, minTol, maxTol);
+                    const bgM1 = clsM1 === 'weight-ok' ? '#d4edda' : clsM1 === 'weight-min' ? '#fff3cd' : clsM1 === 'weight-low' || clsM1 === 'weight-high' ? '#f8d7da' : 'transparent';
+                    const bgM3 = clsM3 === 'weight-ok' ? '#d4edda' : clsM3 === 'weight-min' ? '#fff3cd' : clsM3 === 'weight-low' || clsM3 === 'weight-high' ? '#f8d7da' : 'transparent';
+                    const bgM4 = clsM4 === 'weight-ok' ? '#d4edda' : clsM4 === 'weight-min' ? '#fff3cd' : clsM4 === 'weight-low' || clsM4 === 'weight-high' ? '#f8d7da' : 'transparent';
+                    const colM1 = clsM1 === 'weight-ok' ? '#155724' : clsM1 === 'weight-min' ? '#856404' : clsM1 === 'weight-low' || clsM1 === 'weight-high' ? '#721c24' : '#333';
+                    const colM3 = clsM3 === 'weight-ok' ? '#155724' : clsM3 === 'weight-min' ? '#856404' : clsM3 === 'weight-low' || clsM3 === 'weight-high' ? '#721c24' : '#333';
+                    const colM4 = clsM4 === 'weight-ok' ? '#155724' : clsM4 === 'weight-min' ? '#856404' : clsM4 === 'weight-low' || clsM4 === 'weight-high' ? '#721c24' : '#333';
                     html += `<tr>
                         <td style="padding:4px; border:1px solid #ccc;">${i+1}</td>
-                        <td style="padding:4px; border:1px solid #ccc; background:${clsM1==='weight-ok'?'#d4edda':clsM1==='weight-min'?'#fff3cd':clsM1==='weight-low'||clsM1==='weight-high'?'#f8d7da':'transparent'}; color:${clsM1==='weight-ok'?'#155724':clsM1==='weight-min'?'#856404':clsM1==='weight-low'||clsM1==='weight-high'?'#721c24':'#333'};">${valM1 !== '' && !isNaN(valM1) ? valM1.toFixed(3).replace('.',',') : '—'}</td>
-                        <td style="padding:4px; border:1px solid #ccc; background:${clsM3==='weight-ok'?'#d4edda':clsM3==='weight-min'?'#fff3cd':clsM3==='weight-low'||clsM3==='weight-high'?'#f8d7da':'transparent'}; color:${clsM3==='weight-ok'?'#155724':clsM3==='weight-min'?'#856404':clsM3==='weight-low'||clsM3==='weight-high'?'#721c24':'#333'};">${valM3 !== '' && !isNaN(valM3) ? valM3.toFixed(3).replace('.',',') : '—'}</td>
-                        <td style="padding:4px; border:1px solid #ccc; background:${clsM4==='weight-ok'?'#d4edda':clsM4==='weight-min'?'#fff3cd':clsM4==='weight-low'||clsM4==='weight-high'?'#f8d7da':'transparent'}; color:${clsM4==='weight-ok'?'#155724':clsM4==='weight-min'?'#856404':clsM4==='weight-low'||clsM4==='weight-high'?'#721c24':'#333'};">${valM4 !== '' && !isNaN(valM4) ? valM4.toFixed(3).replace('.',',') : '—'}</td>
+                        <td style="padding:4px; border:1px solid #ccc; background:${bgM1}; color:${colM1};">${valM1 !== '' && !isNaN(valM1) ? valM1.toFixed(3).replace('.',',') : '—'}</td>
+                        <td style="padding:4px; border:1px solid #ccc; background:${bgM3}; color:${colM3};">${valM3 !== '' && !isNaN(valM3) ? valM3.toFixed(3).replace('.',',') : '—'}</td>
+                        <td style="padding:4px; border:1px solid #ccc; background:${bgM4}; color:${colM4};">${valM4 !== '' && !isNaN(valM4) ? valM4.toFixed(3).replace('.',',') : '—'}</td>
                     </tr>`;
                 }
                 html += `</tbody></table></div>`;
@@ -2251,61 +2279,23 @@
             return html;
         }
 
-        // Fechar com ESC
+        // ============ FUNÇÕES ANTIGAS MANTIDAS PARA COMPATIBILIDADE ============
+        function openMonthlyReport() {
+            openPdfReportModal();
+        }
+        function generateMonthlyPDF() {
+            generateReportPDF();
+        }
+
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && document.getElementById('fullscreen-report-overlay')) {
                 closeCurrentDataReport();
             }
             if (e.key === 'Escape') {
-                closeMonthlyReport();
+                closePdfReportModal();
             }
         });
 
-        // ============ FUNÇÕES ANTIGAS MANTIDAS PARA COMPATIBILIDADE (não usadas) ============
-        function openReportModal() {
-            alert('Use o botão RELATORIO para ver os pesos atuais.');
-        }
-
-        function closeReportModal(event) {}
-
-        function updateReportPeriodFields() {}
-
-        function getDateRangeFromSelection() {
-            return null;
-        }
-
-        async function fetchDataForRange(start, end) {
-            return [];
-        }
-
-        function aggregateByProduct(machines) {
-            return [];
-        }
-
-        function formatNumber(value) {
-            if (value === null || value === undefined || isNaN(value) || value === 0) return '—';
-            return Number(value).toFixed(3).replace('.', ',');
-        }
-
-        function renderReportDashboard(machines, label) {}
-
-        async function generateReport() {}
-
-        function printReport() {
-            window.print();
-        }
-
-        function downloadReportPDF() {}
-
-        function openDashboard() {
-            alert('Use o botão RELATORIO para ver os pesos atuais.');
-        }
-
-        async function downloadPDF() {
-            alert('Use o botão RELATORIO para ver os pesos atuais.');
-        }
-
-        // Navegação com Enter
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 const target = e.target;
