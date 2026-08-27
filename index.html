@@ -993,7 +993,6 @@
         <div class="toolbar-buttons">
             <button class="btn btn-outline" onclick="resetForm()">🆕 Nova Inspeção</button>
             <button class="btn btn-accent" onclick="openCurrentDataReport()">📊 RELATORIO</button>
-            <!-- Botão único de PDF MENSAL (agora abre modal com filtro) -->
             <button class="btn btn-warning" onclick="openPdfReportModal()">📅 PDF MENSAL</button>
             <button class="btn btn-success" onclick="addMachineCard()">➕ Adicionar Máquina</button>
             <button id="btn-save-daily" class="btn btn-primary" onclick="saveDailyData()">💾 Salvar Histórico do Dia</button>
@@ -1021,7 +1020,6 @@
         </div>
     </div>
 
-    <!-- Container para o relatório em tela cheia -->
     <div id="report-modal-container"></div>
     <div id="pdf-generation-container" style="position: absolute; left: -9999px; top: 0; width: 900px;"></div>
 
@@ -1880,13 +1878,27 @@
             const approved = machines.filter(m => m.status === 'APROVADO').length;
             const rejected = machines.filter(m => m.status === 'REPROVADO').length;
 
+            // Lista de produtos únicos
+            const uniqueProducts = [...new Set(machines.map(m => m.product).filter(p => p && p.trim() !== ''))];
+
             html += `<div class="dash-summary-cards">
                 <div class="dash-card info-border"><div class="dash-icon">🏭</div><div class="dash-value">${machines.length}</div><div class="dash-label">Máquinas</div></div>
                 <div class="dash-card success-border"><div class="dash-icon">✅</div><div class="dash-value">${approved}</div><div class="dash-label">Aprovadas</div></div>
                 <div class="dash-card danger-border"><div class="dash-icon">❌</div><div class="dash-value">${rejected}</div><div class="dash-label">Reprovadas</div></div>
                 <div class="dash-card accent-border"><div class="dash-icon">📐</div><div class="dash-value">${totalMeasurements}</div><div class="dash-label">Medições</div></div>
                 <div class="dash-card info-border"><div class="dash-icon">📈</div><div class="dash-value">${overallAvg.toFixed(3).replace('.',',')}</div><div class="dash-label">Média Geral</div></div>
+                <div class="dash-card warning-border"><div class="dash-icon">📦</div><div class="dash-value">${uniqueProducts.length}</div><div class="dash-label">Produtos Únicos</div></div>
             </div>`;
+
+            // Lista de produtos únicos
+            if (uniqueProducts.length > 0) {
+                html += `<div class="dash-section-title">📦 Produtos Encontrados</div>`;
+                html += `<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">`;
+                uniqueProducts.forEach(p => {
+                    html += `<span style="background:#f0edf7; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600; color:#241245;">${escapeHtml(p)}</span>`;
+                });
+                html += `</div>`;
+            }
 
             html += `<div class="dash-section-title">📊 Média Geral por Máquina</div>`;
             html += `<div class="bar-chart-container">`;
@@ -2088,7 +2100,8 @@
                 });
                 reportData.sort((a, b) => a.date.localeCompare(b.date));
 
-                const reportHTML = buildReportHTML(reportData, label);
+                const isMonthly = type === 'monthly';
+                const reportHTML = buildReportHTML(reportData, label, isMonthly);
 
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = reportHTML;
@@ -2116,13 +2129,22 @@
             }
         }
 
-        function buildReportHTML(reportData, label) {
+        function buildReportHTML(reportData, label, isMonthly = false) {
+            if (isMonthly) {
+                return buildMonthlyReportHTML(reportData, label);
+            } else {
+                return buildDailyReportHTML(reportData, label);
+            }
+        }
+
+        function buildDailyReportHTML(reportData, label) {
             const allMachines = [];
             let totalMeasurements = 0;
             let allValues = [];
             let approvedCount = 0;
             let rejectedCount = 0;
             const problems = [];
+            const uniqueProductsSet = new Set();
 
             reportData.forEach(day => {
                 const date = day.date;
@@ -2135,6 +2157,7 @@
                             const machineName = m.machine || '?';
                             const inspector = inspName;
                             const product = prodKey;
+                            uniqueProductsSet.add(product);
                             const turn = m.turn || '';
                             const status = m.status || 'APROVADO';
                             const totalAvg = m.totalAverage || 0;
@@ -2173,6 +2196,7 @@
             });
 
             const overallAvg = allValues.length > 0 ? allValues.reduce((a, b) => a + b, 0) / allValues.length : 0;
+            const uniqueProducts = [...uniqueProductsSet];
 
             let html = `
                 <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
@@ -2199,8 +2223,22 @@
                             <div style="font-size:24px; font-weight:bold; color:#856404;">${overallAvg.toFixed(3).replace('.',',')}</div>
                             <div style="font-size:11px; color:#666;">Média Geral</div>
                         </div>
+                        <div style="background:#fce4d6; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
+                            <div style="font-size:24px; font-weight:bold; color:#d35400;">${uniqueProducts.length}</div>
+                            <div style="font-size:11px; color:#666;">Produtos Únicos</div>
+                        </div>
                     </div>
             `;
+
+            // Lista de produtos únicos
+            if (uniqueProducts.length > 0) {
+                html += `<h3 style="color:#241245; margin-top:10px;">📦 Produtos Encontrados</h3>`;
+                html += `<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">`;
+                uniqueProducts.forEach(p => {
+                    html += `<span style="background:#f0edf7; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600; color:#241245;">${escapeHtml(p)}</span>`;
+                });
+                html += `</div>`;
+            }
 
             html += `<h3 style="color:#241245; margin-top:20px;">📋 Resumo de Máquinas</h3>`;
             html += `<table style="width:100%; border-collapse: collapse; font-size:12px; margin-bottom:20px;">
@@ -2270,7 +2308,196 @@
                 html += `<h3 style="color:#dc3545; margin-top:20px;">⚠️ Problemas Registrados</h3>`;
                 html += `<ul style="list-style:none; padding:0;">`;
                 problems.forEach(p => {
-                    html += `<li style="margin-bottom:5px;"><strong>${p.date.split('-').reverse().join('/')} - ${escapeHtml(p.machine)}:</strong> ${escapeHtml(p.problema)}</li>`;
+                    html += `<li style="margin-bottom:5px;"><strong>${p.date.split('-').reverse().join('/')} - ${escapeHtml(p.machine)} (${escapeHtml(p.product)}):</strong> ${escapeHtml(p.problema)}</li>`;
+                });
+                html += `</ul>`;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        function buildMonthlyReportHTML(reportData, label) {
+            const dailySummary = {};
+            const allProblems = [];
+            const allProductsSet = new Set();
+
+            reportData.forEach(day => {
+                const date = day.date;
+                const data = day.data;
+                if (!data.inspectors) return;
+                if (!dailySummary[date]) {
+                    dailySummary[date] = { machines: 0, measurements: 0, values: [], approved: 0, rejected: 0, products: new Set(), details: [] };
+                }
+                const summary = dailySummary[date];
+                Object.keys(data.inspectors).forEach(inspName => {
+                    const products = data.inspectors[inspName].products;
+                    Object.keys(products).forEach(prodKey => {
+                        products[prodKey].forEach(m => {
+                            summary.machines++;
+                            summary.products.add(prodKey);
+                            allProductsSet.add(prodKey);
+                            if (m.status === 'APROVADO') summary.approved++;
+                            else summary.rejected++;
+                            if (m.problema) {
+                                summary.problems = summary.problems || [];
+                                summary.problems.push({ machine: m.machine, problema: m.problema, product: prodKey, inspector: inspName });
+                                allProblems.push({ date, machine: m.machine, problema: m.problema, product: prodKey, inspector: inspName });
+                            }
+                            const rows = m.rows || [];
+                            rows.forEach(r => {
+                                [r.m1, r.m3, r.m4].forEach(v => {
+                                    if (v !== '' && !isNaN(parseFloat(v))) {
+                                        summary.measurements++;
+                                        summary.values.push(parseFloat(v));
+                                    }
+                                });
+                            });
+                            summary.details.push({
+                                machine: m.machine,
+                                product: prodKey,
+                                inspector: inspName,
+                                status: m.status,
+                                totalAvg: m.totalAverage || 0
+                            });
+                        });
+                    });
+                });
+            });
+
+            const allValues = [];
+            Object.values(dailySummary).forEach(s => allValues.push(...s.values));
+            const overallAvg = allValues.length > 0 ? allValues.reduce((a,b)=>a+b,0)/allValues.length : 0;
+            const totalMachines = Object.values(dailySummary).reduce((acc, s) => acc + s.machines, 0);
+            const totalApproved = Object.values(dailySummary).reduce((acc, s) => acc + s.approved, 0);
+            const totalRejected = Object.values(dailySummary).reduce((acc, s) => acc + s.rejected, 0);
+            const totalMeasurements = Object.values(dailySummary).reduce((acc, s) => acc + s.measurements, 0);
+            const uniqueProducts = [...allProductsSet];
+
+            let html = `
+                <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+                    <h2 style="text-align:center; color: #241245;">📊 Relatório ${label}</h2>
+                    <p style="text-align:center; color:#555;">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;">
+                        <div style="background:#f0edf7; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
+                            <div style="font-size:24px; font-weight:bold; color:#241245;">${totalMachines}</div>
+                            <div style="font-size:11px; color:#666;">Máquinas</div>
+                        </div>
+                        <div style="background:#d4edda; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
+                            <div style="font-size:24px; font-weight:bold; color:#155724;">${totalApproved}</div>
+                            <div style="font-size:11px; color:#666;">Aprovadas</div>
+                        </div>
+                        <div style="background:#f8d7da; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
+                            <div style="font-size:24px; font-weight:bold; color:#721c24;">${totalRejected}</div>
+                            <div style="font-size:11px; color:#666;">Reprovadas</div>
+                        </div>
+                        <div style="background:#d1ecf1; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
+                            <div style="font-size:24px; font-weight:bold; color:#0c5460;">${totalMeasurements}</div>
+                            <div style="font-size:11px; color:#666;">Medições</div>
+                        </div>
+                        <div style="background:#fff3cd; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
+                            <div style="font-size:24px; font-weight:bold; color:#856404;">${overallAvg.toFixed(3).replace('.',',')}</div>
+                            <div style="font-size:11px; color:#666;">Média Geral</div>
+                        </div>
+                        <div style="background:#fce4d6; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
+                            <div style="font-size:24px; font-weight:bold; color:#d35400;">${uniqueProducts.length}</div>
+                            <div style="font-size:11px; color:#666;">Produtos Únicos</div>
+                        </div>
+                    </div>
+            `;
+
+            // Lista de produtos únicos do mês
+            if (uniqueProducts.length > 0) {
+                html += `<h3 style="color:#241245; margin-top:10px;">📦 Produtos Encontrados no Mês</h3>`;
+                html += `<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">`;
+                uniqueProducts.forEach(p => {
+                    html += `<span style="background:#f0edf7; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600; color:#241245;">${escapeHtml(p)}</span>`;
+                });
+                html += `</div>`;
+            }
+
+            // Gráfico de barras por dia
+            html += `<h3 style="color:#241245; margin-top:20px;">📊 Média Geral por Dia</h3>`;
+            html += `<div style="margin-bottom:20px;">`;
+            const sortedDates = Object.keys(dailySummary).sort();
+            sortedDates.forEach(date => {
+                const s = dailySummary[date];
+                const dayAvg = s.values.length > 0 ? s.values.reduce((a,b)=>a+b,0)/s.values.length : 0;
+                const width = dayAvg > 0 ? Math.min((dayAvg / 30) * 100, 100) : 3;
+                html += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
+                    <div style="min-width:100px; text-align:right; font-weight:bold; font-size:11px;">${date.split('-').reverse().join('/')}</div>
+                    <div style="flex:1; background:#e9ecef; border-radius:10px; height:20px; overflow:hidden;">
+                        <div style="height:100%; background:${dayAvg < 23.51 ? '#dc3545' : dayAvg <= 25.11 ? '#28a745' : '#dc3545'}; width:${width}%; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; font-size:10px; color:#fff; font-weight:bold;">${dayAvg ? dayAvg.toFixed(3).replace('.',',') : '—'}</div>
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+
+            // Tabela resumo diário
+            html += `<h3 style="color:#241245; margin-top:20px;">📋 Resumo Diário</h3>`;
+            html += `<table style="width:100%; border-collapse: collapse; font-size:12px; margin-bottom:20px;">
+                <thead>
+                    <tr style="background:#241245; color:#fff;">
+                        <th style="padding:6px; border:1px solid #ccc;">Data</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Máquinas</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Medições</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Média Geral</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Aprovadas</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Reprovadas</th>
+                        <th style="padding:6px; border:1px solid #ccc;">Produtos</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            sortedDates.forEach(date => {
+                const s = dailySummary[date];
+                const dayAvg = s.values.length > 0 ? s.values.reduce((a,b)=>a+b,0)/s.values.length : 0;
+                const productsStr = [...s.products].join(', ');
+                html += `<tr>
+                    <td style="padding:5px; border:1px solid #ccc;">${date.split('-').reverse().join('/')}</td>
+                    <td style="padding:5px; border:1px solid #ccc;">${s.machines}</td>
+                    <td style="padding:5px; border:1px solid #ccc;">${s.measurements}</td>
+                    <td style="padding:5px; border:1px solid #ccc;">${dayAvg ? dayAvg.toFixed(3).replace('.',',') : '—'}</td>
+                    <td style="padding:5px; border:1px solid #ccc; color:#155724;">${s.approved}</td>
+                    <td style="padding:5px; border:1px solid #ccc; color:#721c24;">${s.rejected}</td>
+                    <td style="padding:5px; border:1px solid #ccc; font-size:11px;">${escapeHtml(productsStr)}</td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+
+            // Detalhamento por dia e produto
+            html += `<h3 style="color:#241245; margin-top:20px;">🔍 Detalhamento por Dia e Produto</h3>`;
+            sortedDates.forEach(date => {
+                const s = dailySummary[date];
+                html += `<h4 style="color:#241245;">📅 ${date.split('-').reverse().join('/')}</h4>`;
+                html += `<table style="width:100%; border-collapse: collapse; font-size:11px; margin-bottom:15px;">
+                    <thead>
+                        <tr style="background:#241245; color:#fff;">
+                            <th style="padding:4px; border:1px solid #ccc;">Máquina</th>
+                            <th style="padding:4px; border:1px solid #ccc;">Produto</th>
+                            <th style="padding:4px; border:1px solid #ccc;">Inspetor</th>
+                            <th style="padding:4px; border:1px solid #ccc;">Status</th>
+                            <th style="padding:4px; border:1px solid #ccc;">Média Geral</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                s.details.forEach(d => {
+                    html += `<tr>
+                        <td style="padding:4px; border:1px solid #ccc;">${escapeHtml(d.machine)}</td>
+                        <td style="padding:4px; border:1px solid #ccc;">${escapeHtml(d.product)}</td>
+                        <td style="padding:4px; border:1px solid #ccc;">${escapeHtml(d.inspector)}</td>
+                        <td style="padding:4px; border:1px solid #ccc; color:${d.status==='APROVADO'?'#155724':'#721c24'};">${escapeHtml(d.status)}</td>
+                        <td style="padding:4px; border:1px solid #ccc;">${d.totalAvg ? d.totalAvg.toFixed(3).replace('.',',') : '—'}</td>
+                    </tr>`;
+                });
+                html += `</tbody></table>`;
+            });
+
+            // Problemas do mês
+            if (allProblems.length > 0) {
+                html += `<h3 style="color:#dc3545; margin-top:20px;">⚠️ Problemas Registrados no Mês</h3>`;
+                html += `<ul style="list-style:none; padding:0;">`;
+                allProblems.forEach(p => {
+                    html += `<li style="margin-bottom:5px;"><strong>${p.date.split('-').reverse().join('/')} - ${escapeHtml(p.machine)} (${escapeHtml(p.product)}):</strong> ${escapeHtml(p.problema)}</li>`;
                 });
                 html += `</ul>`;
             }
