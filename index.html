@@ -1085,8 +1085,10 @@
                 .replace(/'/g, '&#39;');
         }
 
+        // Corrigido: substitui apóstrofos por %27 para evitar quebra no onclick
         function escapeAttr(str) {
-            return encodeURIComponent(str || '');
+            if (str === null || str === undefined) return '';
+            return encodeURIComponent(str).replace(/'/g, '%27');
         }
 
         function getWeightColorClass(value, min, max) {
