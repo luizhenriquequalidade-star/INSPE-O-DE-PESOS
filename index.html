@@ -1085,7 +1085,6 @@
                 .replace(/'/g, '&#39;');
         }
 
-        // Corrigido: substitui apóstrofos por %27 para evitar quebra no onclick
         function escapeAttr(str) {
             if (str === null || str === undefined) return '';
             return encodeURIComponent(str).replace(/'/g, '%27');
@@ -1880,7 +1879,6 @@
             const approved = machines.filter(m => m.status === 'APROVADO').length;
             const rejected = machines.filter(m => m.status === 'REPROVADO').length;
 
-            // Lista de produtos únicos
             const uniqueProducts = [...new Set(machines.map(m => m.product).filter(p => p && p.trim() !== ''))];
 
             html += `<div class="dash-summary-cards">
@@ -1892,7 +1890,6 @@
                 <div class="dash-card warning-border"><div class="dash-icon">📦</div><div class="dash-value">${uniqueProducts.length}</div><div class="dash-label">Produtos Únicos</div></div>
             </div>`;
 
-            // Lista de produtos únicos
             if (uniqueProducts.length > 0) {
                 html += `<div class="dash-section-title">📦 Produtos Encontrados</div>`;
                 html += `<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">`;
@@ -2118,7 +2115,8 @@
                     filename: `Relatorio_${label.replace(/\s+/g, '_')}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2 },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
                 };
 
                 await html2pdf().from(tempDiv).set(opt).save();
@@ -2202,6 +2200,12 @@
 
             let html = `
                 <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+                    <style>
+                        .page-break { page-break-before: always; }
+                        .avoid-break { page-break-inside: avoid; }
+                        table { page-break-inside: auto; }
+                        tr { page-break-inside: avoid; }
+                    </style>
                     <h2 style="text-align:center; color: #241245;">📊 Relatório ${label}</h2>
                     <p style="text-align:center; color:#555;">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
                     <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;">
@@ -2232,7 +2236,6 @@
                     </div>
             `;
 
-            // Lista de produtos únicos
             if (uniqueProducts.length > 0) {
                 html += `<h3 style="color:#241245; margin-top:10px;">📦 Produtos Encontrados</h3>`;
                 html += `<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">`;
@@ -2277,7 +2280,7 @@
             allMachines.forEach(m => {
                 const minTol = parseFloat(String(m.tolMin).replace(',', '.'));
                 const maxTol = parseFloat(String(m.tolMax).replace(',', '.'));
-                html += `<div style="margin-bottom:20px;"><h4 style="color:#241245;">Máquina: ${escapeHtml(m.machine)} - Produto: ${escapeHtml(m.product)}</h4>`;
+                html += `<div class="avoid-break" style="margin-bottom:20px;"><h4 style="color:#241245;">Máquina: ${escapeHtml(m.machine)} - Produto: ${escapeHtml(m.product)}</h4>`;
                 html += `<table style="width:100%; border-collapse:collapse; font-size:11px;">
                     <thead><tr style="background:#241245; color:#fff;"><th style="padding:4px; border:1px solid #ccc;">Cavidade</th><th style="padding:4px; border:1px solid #ccc;">M1</th><th style="padding:4px; border:1px solid #ccc;">M3</th><th style="padding:4px; border:1px solid #ccc;">M4</th></tr></thead>
                     <tbody>`;
@@ -2378,6 +2381,12 @@
 
             let html = `
                 <div style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+                    <style>
+                        .page-break { page-break-before: always; }
+                        .avoid-break { page-break-inside: avoid; }
+                        table { page-break-inside: auto; }
+                        tr { page-break-inside: avoid; }
+                    </style>
                     <h2 style="text-align:center; color: #241245;">📊 Relatório ${label}</h2>
                     <p style="text-align:center; color:#555;">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
                     <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;">
@@ -2408,7 +2417,6 @@
                     </div>
             `;
 
-            // Lista de produtos únicos do mês
             if (uniqueProducts.length > 0) {
                 html += `<h3 style="color:#241245; margin-top:10px;">📦 Produtos Encontrados no Mês</h3>`;
                 html += `<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">`;
@@ -2470,8 +2478,9 @@
             html += `<h3 style="color:#241245; margin-top:20px;">🔍 Detalhamento por Dia e Produto</h3>`;
             sortedDates.forEach(date => {
                 const s = dailySummary[date];
+                html += `<div class="page-break"></div>`;
                 html += `<h4 style="color:#241245;">📅 ${date.split('-').reverse().join('/')}</h4>`;
-                html += `<table style="width:100%; border-collapse: collapse; font-size:11px; margin-bottom:15px;">
+                html += `<div class="avoid-break"><table style="width:100%; border-collapse: collapse; font-size:11px; margin-bottom:15px;">
                     <thead>
                         <tr style="background:#241245; color:#fff;">
                             <th style="padding:4px; border:1px solid #ccc;">Máquina</th>
@@ -2491,7 +2500,7 @@
                         <td style="padding:4px; border:1px solid #ccc;">${d.totalAvg ? d.totalAvg.toFixed(3).replace('.',',') : '—'}</td>
                     </tr>`;
                 });
-                html += `</tbody></table>`;
+                html += `</tbody></table></div>`;
             });
 
             // Problemas do mês
