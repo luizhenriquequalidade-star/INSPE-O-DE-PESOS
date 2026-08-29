@@ -1002,6 +1002,111 @@
     </div>
 
     <datalist id="inspector-list"></datalist>
+    <datalist id="product-list">
+        <option value="DA 08"></option>
+        <option value="D 540"></option>
+        <option value="D 560"></option>
+        <option value="D 630"></option>
+        <option value="D 640"></option>
+        <option value="D 645"></option>
+        <option value="D 650"></option>
+        <option value="D 681"></option>
+        <option value="D 695 BR"></option>
+        <option value="D 695 CR"></option>
+        <option value="D 695 PR"></option>
+        <option value="D 730"></option>
+        <option value="D 731"></option>
+        <option value="D 732"></option>
+        <option value="D 742P"></option>
+        <option value="D 742R"></option>
+        <option value="D 750P"></option>
+        <option value="D 750R"></option>
+        <option value="D 771P"></option>
+        <option value="D 771R"></option>
+        <option value="D30 R BR"></option>
+        <option value="D30 R PR"></option>
+        <option value="D32 H PR"></option>
+        <option value="D32 NYB PR"></option>
+        <option value="D32 NY PR"></option>
+        <option value="D32 RA BR"></option>
+        <option value="D32 RA PR"></option>
+        <option value="D32 RB BR"></option>
+        <option value="D32 RB PR"></option>
+        <option value="D32 R BR"></option>
+        <option value="D32 R PR"></option>
+        <option value="D35 RA BR"></option>
+        <option value="D35 RA PR"></option>
+        <option value="D35 RB BR"></option>
+        <option value="D35 RB PR"></option>
+        <option value="D37 RA BR"></option>
+        <option value="D37 RA PR"></option>
+        <option value="D37 RB BR"></option>
+        <option value="D37 RB PR"></option>
+        <option value="D38 R BR"></option>
+        <option value="D38 R PR"></option>
+        <option value="D40 R BR"></option>
+        <option value="D40 R PR"></option>
+        <option value="D50 NYA PR"></option>
+        <option value="D50 NYB PR"></option>
+        <option value="D50 NY PR"></option>
+        <option value="D50 RA BR"></option>
+        <option value="D50 RA PR"></option>
+        <option value="D50 RB BR"></option>
+        <option value="D50 RB PR"></option>
+        <option value="D50 R BR"></option>
+        <option value="D50 R PR"></option>
+        <option value="D56 RA BR"></option>
+        <option value="D56 RA PR"></option>
+        <option value="D56 RB BR"></option>
+        <option value="D56 RB PR"></option>
+        <option value="D56 R BR"></option>
+        <option value="D56 R PR"></option>
+        <option value="D60 RA BR"></option>
+        <option value="D60 RA PR"></option>
+        <option value="D60 RB BR"></option>
+        <option value="D60 RB PR"></option>
+        <option value="D60 R BR"></option>
+        <option value="D60 R PR"></option>
+        <option value="D62 R BR"></option>
+        <option value="D62 R PR"></option>
+        <option value="D63 RA BR"></option>
+        <option value="D63 RA PR"></option>
+        <option value="D63 R BR"></option>
+        <option value="D63 R PR"></option>
+        <option value="D64 R BR"></option>
+        <option value="D64 R PR"></option>
+        <option value="D65 RB BR"></option>
+        <option value="D65 RB PR"></option>
+        <option value="D70 RB BR"></option>
+        <option value="D70 RB PR"></option>
+        <option value="D70 R BR"></option>
+        <option value="D70 R PR"></option>
+        <option value="D78 RB BR"></option>
+        <option value="D78 R BR"></option>
+        <option value="D78 R PR"></option>
+        <option value="D80 RA BR"></option>
+        <option value="D80 RA PR"></option>
+        <option value="D80 RB BR"></option>
+        <option value="D80 RB PR"></option>
+        <option value="DA 10"></option>
+        <option value="DA 12"></option>
+        <option value="DA 13"></option>
+        <option value="DA 14"></option>
+        <option value="DA 15"></option>
+        <option value="DA 16"></option>
+        <option value="DA 17"></option>
+        <option value="DA 18"></option>
+        <option value="DA 20"></option>
+        <option value="DA 88"></option>
+        <option value="DA 90"></option>
+        <option value="DA 91"></option>
+        <option value="DA 92"></option>
+        <option value="DA 94"></option>
+        <option value="D32 ATN BR"></option>
+        <option value="D32 ATN PR"></option>
+        <option value="D34"></option>
+        <option value="D34P"></option>
+    </datalist>
 
     <div id="machines-container"></div>
 
@@ -1148,6 +1253,7 @@
             const mName = machineData ? (machineData.machine || '') : '';
             const inspector = machineData ? (machineData.inspector || '') : '';
             const product = machineData ? (machineData.product || '') : '';
+            const productType = machineData ? (machineData.productType || '') : '';
             const turn = machineData ? (machineData.turn || '') : '';
             const status = machineData ? (machineData.status || '') : '';
             const tolMin = machineData ? (machineData.tolMin || '23,51') : '23,51';
@@ -1187,6 +1293,19 @@
                 `;
             }
 
+            // Definir o valor selecionado do select (TAMPA, BASE ou NENHUM)
+            let typeValue = 'TAMPA';
+            if (productType && productType.trim() !== '') {
+                const upper = productType.toUpperCase();
+                if (upper === 'BASE') {
+                    typeValue = 'BASE';
+                } else if (upper === 'NENHUM') {
+                    typeValue = 'NENHUM';
+                } else {
+                    typeValue = 'TAMPA';
+                }
+            }
+
             const cardHTML = `
                 <div class="machine-card" id="${cardId}">
                     <div class="card-header-row">
@@ -1204,7 +1323,15 @@
                         </div>
                         <div class="input-group">
                             <label>📦 Cód. Produto</label>
-                            <input type="text" class="product-code" value="${escapeHtml(product)}" placeholder="Ex: DG50 BASE">
+                            <input type="text" class="product-code" value="${escapeHtml(product)}" placeholder="Ex: DG50 BASE" list="product-list" autocomplete="off">
+                        </div>
+                        <div class="input-group">
+                            <label>🏷️ Tipo</label>
+                            <select class="product-type-select" style="width:100%; padding:8px 10px; border-radius:5px; font-weight:700; text-transform:uppercase; background:#f0edf7; border:1.5px solid #3e2970; color:#241245; cursor:pointer; font-size:13px;" onchange="hasUnsavedChanges = true;">
+                                <option value="TAMPA" ${typeValue === 'TAMPA' ? 'selected' : ''}>TAMPA</option>
+                                <option value="BASE" ${typeValue === 'BASE' ? 'selected' : ''}>BASE</option>
+                                <option value="NENHUM" ${typeValue === 'NENHUM' ? 'selected' : ''}>NENHUM</option>
+                            </select>
                         </div>
                         <div class="input-group">
                             <label>🔄 Turno</label>
@@ -1295,6 +1422,13 @@
             const inspectorInput = cardElement.querySelector('.inspector');
             if (inspectorInput) {
                 inspectorInput.addEventListener('blur', function() { addInspectorNameToSet(this.value); });
+            }
+            // Listener para o select de tipo
+            const typeSelect = cardElement.querySelector('.product-type-select');
+            if (typeSelect) {
+                typeSelect.addEventListener('change', function() {
+                    hasUnsavedChanges = true;
+                });
             }
             handleCavityChange(cardId);
             updateStats(cardId);
@@ -1411,10 +1545,13 @@
             const machines = [];
             cards.forEach(card => {
                 const rows = card.querySelectorAll('.data-row');
+                const productTypeSelect = card.querySelector('.product-type-select');
+                const productType = productTypeSelect ? productTypeSelect.value : 'TAMPA';
                 const machineData = {
                     machine: card.querySelector('.machine-name').value,
                     inspector: card.querySelector('.inspector').value,
                     product: card.querySelector('.product-code').value,
+                    productType: productType,
                     turn: card.querySelector('.turn').value,
                     status: card.querySelector('.status').value,
                     cavity: parseInt(card.querySelector('.cavity-input').value) || 10,
@@ -1684,10 +1821,11 @@
                             if (m.motivoAusencia) {
                                 motivoHtml = `<br><small style="color:#856404;font-weight:600;">📝 Motivo ausência: ${escapeHtml(m.motivoAusencia)}</small>`;
                             }
+                            const productType = m.productType ? m.productType : 'TAMPA';
                             itemDiv.innerHTML = `
                                 <div class="item-content">
                                     <strong>🏭 Máquina:</strong> ${escapeHtml(m.machine)}<br>
-                                    <small>🔄 Turno: ${escapeHtml(m.turn)} | 🔢 Cavidade: ${m.cavity} | ⚡ Ciclo: ${escapeHtml(m.cycle || '-')} | 🧑 Colaborador: ${escapeHtml(m.collaborator || '-')}</small><br>
+                                    <small>🔄 Turno: ${escapeHtml(m.turn)} | 🔢 Cavidade: ${m.cavity} | ⚡ Ciclo: ${escapeHtml(m.cycle || '-')} | 🧑 Colaborador: ${escapeHtml(m.collaborator || '-')} | 🏷️ Tipo: ${escapeHtml(productType)}</small><br>
                                     <small>🕐 Horários: M1=${escapeHtml(m.timeM1 || '14:00')} | M3=${escapeHtml(m.timeM3 || '18:00')} | M4=${escapeHtml(m.timeM4 || '20:30')}</small>
                                     ${problemaHtml}
                                     ${motivoHtml}
@@ -1928,7 +2066,7 @@
 
             html += `<div class="dash-section-title">📋 Resumo por Máquina</div>`;
             html += `<div class="dash-table-wrapper"><table class="dash-table">
-                <thead><tr><th>Máquina</th><th>Inspetor</th><th>Produto</th><th>Turno</th><th>Status</th><th>Ciclo</th><th>Colaborador</th><th>Média M1</th><th>Média M3</th><th>Média M4</th><th>Média Geral</th></tr></thead>
+                <thead><tr><th>Máquina</th><th>Inspetor</th><th>Produto</th><th>Tipo</th><th>Turno</th><th>Status</th><th>Ciclo</th><th>Colaborador</th><th>Média M1</th><th>Média M3</th><th>Média M4</th><th>Média Geral</th></tr></thead>
                 <tbody>`;
             machines.forEach(m => {
                 const avg = (arr) => arr.length > 0 ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
@@ -1940,10 +2078,12 @@
                 });
                 const avgM1 = avg(m1s), avgM3 = avg(m3s), avgM4 = avg(m4s);
                 const statusClass = m.status === 'APROVADO' ? 'status-approved' : 'status-rejected';
+                const productType = m.productType || 'TAMPA';
                 html += `<tr>
                     <td><strong>${escapeHtml(m.machine)}</strong></td>
                     <td>${escapeHtml(m.inspector)}</td>
                     <td>${escapeHtml(m.product)}</td>
+                    <td>${escapeHtml(productType)}</td>
                     <td>${escapeHtml(m.turn)}</td>
                     <td><span class="status-badge ${statusClass}">${escapeHtml(m.status)}</span></td>
                     <td>${escapeHtml(m.cycle || '-')}</td>
