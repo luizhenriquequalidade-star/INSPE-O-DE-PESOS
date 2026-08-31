@@ -1293,7 +1293,7 @@
                 `;
             }
 
-            // Definir o valor selecionado do select (TAMPA, BASE ou NENHUM)
+            // Definir o valor selecionado do select (TAMPA, BASE, NENHUM ou POTE /C TAMPA)
             let typeValue = 'TAMPA';
             if (productType && productType.trim() !== '') {
                 const upper = productType.toUpperCase();
@@ -1301,6 +1301,8 @@
                     typeValue = 'BASE';
                 } else if (upper === 'NENHUM') {
                     typeValue = 'NENHUM';
+                } else if (upper === 'POTE /C TAMPA') {
+                    typeValue = 'POTE /C TAMPA';
                 } else {
                     typeValue = 'TAMPA';
                 }
@@ -1330,6 +1332,7 @@
                             <select class="product-type-select" style="width:100%; padding:8px 10px; border-radius:5px; font-weight:700; text-transform:uppercase; background:#f0edf7; border:1.5px solid #3e2970; color:#241245; cursor:pointer; font-size:13px;" onchange="hasUnsavedChanges = true;">
                                 <option value="TAMPA" ${typeValue === 'TAMPA' ? 'selected' : ''}>TAMPA</option>
                                 <option value="BASE" ${typeValue === 'BASE' ? 'selected' : ''}>BASE</option>
+                                <option value="POTE /C TAMPA" ${typeValue === 'POTE /C TAMPA' ? 'selected' : ''}>POTE /C TAMPA</option>
                                 <option value="NENHUM" ${typeValue === 'NENHUM' ? 'selected' : ''}>NENHUM</option>
                             </select>
                         </div>
