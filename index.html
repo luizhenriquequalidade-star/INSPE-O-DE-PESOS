@@ -2469,6 +2469,8 @@
             const dailySummary = {};
             const allProblems = [];
             const allProductsSet = new Set();
+            // NOVA VARIÁVEL PARA ARMAZENAR DADOS POR PRODUTO
+            const productSummary = {};
 
             reportData.forEach(day => {
                 const date = day.date;
@@ -2501,6 +2503,23 @@
                                     }
                                 });
                             });
+                            
+                            // COLETA DE DADOS PARA O NOVO GRÁFICO (MÉDIA POR PRODUTO)
+                            if (!productSummary[prodKey]) {
+                                productSummary[prodKey] = { values: [], machines: 0, approved: 0, rejected: 0 };
+                            }
+                            productSummary[prodKey].machines++;
+                            if (m.status === 'APROVADO') productSummary[prodKey].approved++;
+                            else productSummary[prodKey].rejected++;
+                            
+                            rows.forEach(r => {
+                                [r.m1, r.m3, r.m4].forEach(v => {
+                                    if (v !== '' && !isNaN(parseFloat(v))) {
+                                        productSummary[prodKey].values.push(parseFloat(v));
+                                    }
+                                });
+                            });
+                            
                             summary.details.push({
                                 machine: m.machine,
                                 product: prodKey,
@@ -2569,24 +2588,24 @@
                 html += `</div>`;
             }
 
-            // Gráfico de barras por dia
-            html += `<h3 style="color:#241245; margin-top:20px;">📊 Média Geral por Dia</h3>`;
+            // GRÁFICO DE BARRAS POR PRODUTO (SUBSTITUINDO O GRÁFICO POR DIA)
+            html += `<h3 style="color:#241245; margin-top:20px;">📊 Média Geral por Produto</h3>`;
             html += `<div style="margin-bottom:20px;">`;
-            const sortedDates = Object.keys(dailySummary).sort();
-            sortedDates.forEach(date => {
-                const s = dailySummary[date];
-                const dayAvg = s.values.length > 0 ? s.values.reduce((a,b)=>a+b,0)/s.values.length : 0;
-                const width = dayAvg > 0 ? Math.min((dayAvg / 30) * 100, 100) : 3;
+            const sortedProducts = Object.keys(productSummary).sort();
+            sortedProducts.forEach(prodKey => {
+                const s = productSummary[prodKey];
+                const prodAvg = s.values.length > 0 ? s.values.reduce((a,b)=>a+b,0)/s.values.length : 0;
+                const width = prodAvg > 0 ? Math.min((prodAvg / 30) * 100, 100) : 3;
                 html += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
-                    <div style="min-width:100px; text-align:right; font-weight:bold; font-size:11px;">${date.split('-').reverse().join('/')}</div>
+                    <div style="min-width:100px; text-align:right; font-weight:bold; font-size:11px;">${escapeHtml(prodKey)}</div>
                     <div style="flex:1; background:#e9ecef; border-radius:10px; height:20px; overflow:hidden;">
-                        <div style="height:100%; background:${dayAvg < 23.51 ? '#dc3545' : dayAvg <= 25.11 ? '#28a745' : '#dc3545'}; width:${width}%; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; font-size:10px; color:#fff; font-weight:bold;">${dayAvg ? dayAvg.toFixed(3).replace('.',',') : '—'}</div>
+                        <div style="height:100%; background:${prodAvg < 23.51 ? '#dc3545' : prodAvg <= 25.11 ? '#28a745' : '#dc3545'}; width:${width}%; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; font-size:10px; color:#fff; font-weight:bold;">${prodAvg ? prodAvg.toFixed(3).replace('.',',') : '—'}</div>
                     </div>
                 </div>`;
             });
             html += `</div>`;
 
-            // Tabela resumo diário
+            // Tabela resumo diário (mantida como está)
             html += `<h3 style="color:#241245; margin-top:20px;">📋 Resumo Diário</h3>`;
             html += `<table style="width:100%; border-collapse: collapse; font-size:12px; margin-bottom:20px;">
                 <thead>
@@ -2601,6 +2620,7 @@
                     </tr>
                 </thead>
                 <tbody>`;
+            const sortedDates = Object.keys(dailySummary).sort();
             sortedDates.forEach(date => {
                 const s = dailySummary[date];
                 const dayAvg = s.values.length > 0 ? s.values.reduce((a,b)=>a+b,0)/s.values.length : 0;
@@ -2617,7 +2637,7 @@
             });
             html += `</tbody></table>`;
 
-            // Detalhamento por dia e produto
+            // Detalhamento por dia e produto (mantido como está)
             html += `<h3 style="color:#241245; margin-top:20px;">🔍 Detalhamento por Dia e Produto</h3>`;
             sortedDates.forEach(date => {
                 const s = dailySummary[date];
@@ -2646,7 +2666,7 @@
                 html += `</tbody></table></div>`;
             });
 
-            // Problemas do mês
+            // Problemas do mês (mantido como está)
             if (allProblems.length > 0) {
                 html += `<h3 style="color:#dc3545; margin-top:20px;">⚠️ Problemas Registrados no Mês</h3>`;
                 html += `<ul style="list-style:none; padding:0;">`;
