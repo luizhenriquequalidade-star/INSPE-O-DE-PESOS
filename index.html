@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Inspeção - Dona Rita Embalagens</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -155,14 +157,18 @@
             gap: 6px;
             white-space: nowrap;
         }
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             filter: brightness(1.08);
             transform: translateY(-1px);
             box-shadow: var(--shadow-md);
         }
-        .btn:active {
+        .btn:active:not(:disabled) {
             transform: translateY(0);
             filter: brightness(0.95);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
         .btn-primary {
             background-color: var(--primary-color);
@@ -178,7 +184,7 @@
             font-weight: 600;
             box-shadow: 0 3px 10px rgba(244, 123, 32, 0.3);
         }
-        .btn-accent:hover {
+        .btn-accent:hover:not(:disabled) {
             box-shadow: 0 6px 18px rgba(244, 123, 32, 0.4);
             filter: brightness(1.05);
         }
@@ -187,7 +193,7 @@
             border: 2px solid var(--secondary-color);
             color: var(--secondary-color);
         }
-        .btn-outline:hover {
+        .btn-outline:hover:not(:disabled) {
             background: var(--secondary-color);
             color: white;
         }
@@ -195,16 +201,12 @@
             background: #dc3545;
             font-weight: 600;
         }
-        .btn-pdf:hover {
-            background: #c82333;
-            box-shadow: 0 4px 14px rgba(220, 53, 69, 0.35);
-        }
         .btn-warning {
             background: #f0ad4e;
             color: #212529;
             font-weight: 600;
         }
-        .btn-warning:hover {
+        .btn-warning:hover:not(:disabled) {
             background: #ec971f;
             box-shadow: 0 4px 12px rgba(240, 173, 78, 0.4);
         }
@@ -541,6 +543,20 @@
             color: #241245;
             font-size: 18px;
         }
+        .close-history-btn {
+            background: #f0edf7;
+            border: 1px solid #d5cfe8;
+            color: #3e2970;
+            padding: 9px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: var(--transition);
+        }
+        .close-history-btn:hover {
+            background: #e0d8f5;
+        }
         #history-results {
             margin-top: 12px;
             display: flex;
@@ -758,6 +774,9 @@
         .dash-card.info-border {
             border-left: 4px solid var(--info);
         }
+        .dash-card.warning-border {
+            border-left: 4px solid var(--warning);
+        }
         .dash-section-title {
             font-size: 16px;
             font-weight: 700;
@@ -919,6 +938,42 @@
             margin-top: 24px;
             flex-wrap: wrap;
         }
+        #global-loading {
+            position: fixed;
+            inset: 0;
+            background: rgba(36, 18, 69, 0.35);
+            z-index: 999999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        #global-loading.visible {
+            display: flex;
+        }
+        #global-loading .loading-box {
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            color: #241245;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+        #global-loading .spinner {
+            width: 22px;
+            height: 22px;
+            border: 3px solid #e0d8f5;
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
         @media (max-width: 768px) {
             .header-info {
                 flex-direction: column;
@@ -991,13 +1046,13 @@
             <small>Preencha os dados abaixo para cada máquina</small>
         </div>
         <div class="toolbar-buttons">
-            <button class="btn btn-outline" onclick="resetForm()">🆕 Nova Inspeção</button>
-            <button class="btn btn-accent" onclick="openCurrentDataReport()">📊 RELATORIO</button>
-            <button class="btn btn-warning" onclick="openPdfReportModal()">📅 PDF MENSAL</button>
-            <button class="btn btn-success" onclick="addMachineCard()">➕ Adicionar Máquina</button>
-            <button id="btn-save-daily" class="btn btn-primary" onclick="saveDailyData()">💾 Salvar Histórico do Dia</button>
-            <button id="btn-save-edits" class="btn btn-warning" onclick="saveEdits()" style="display:none;">💾 Salvar Alterações</button>
-            <button id="btn-toggle-history" class="btn btn-outline" onclick="toggleHistory()">📂 Histórico</button>
+            <button type="button" class="btn btn-outline" onclick="resetForm()">🆕 Nova Inspeção</button>
+            <button type="button" class="btn btn-accent" onclick="openCurrentDataReport()">📊 RELATORIO</button>
+            <button type="button" class="btn btn-warning" onclick="openPdfReportModal()">📅 PDF MENSAL</button>
+            <button type="button" class="btn btn-success" onclick="addMachineCard()">➕ Adicionar Máquina</button>
+            <button type="button" id="btn-save-daily" class="btn btn-primary" onclick="saveDailyData()">💾 Salvar Histórico do Dia</button>
+            <button type="button" id="btn-save-edits" class="btn btn-warning" onclick="saveEdits()" style="display:none;">💾 Salvar Alterações</button>
+            <button type="button" id="btn-toggle-history" class="btn btn-outline" onclick="toggleHistory()">📂 Histórico</button>
         </div>
     </div>
 
@@ -1115,9 +1170,9 @@
             <h3>📂 Histórico de Inspeções</h3>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                 <input type="date" id="history-date-input" style="padding: 9px 12px; border: 1.5px solid #ccc; border-radius: 6px; font-weight: 500;">
-                <button class="btn" onclick="loadHistory()">🔍 Consultar</button>
-                <button class="btn btn-danger" onclick="clearHistory()">🗑️ Limpar Base</button>
-                <button class="close-history-btn" onclick="hideHistory()" title="Fechar histórico">✕ Fechar</button>
+                <button type="button" class="btn" onclick="loadHistory()">🔍 Consultar</button>
+                <button type="button" class="btn btn-danger" onclick="clearHistory()">🗑️ Limpar Base</button>
+                <button type="button" class="close-history-btn" onclick="hideHistory()" title="Fechar histórico">✕ Fechar</button>
             </div>
         </div>
         <div id="history-results">
@@ -1128,9 +1183,8 @@
     <div id="report-modal-container"></div>
     <div id="pdf-generation-container" style="position: absolute; left: -9999px; top: 0; width: 900px;"></div>
 
-    <!-- MODAL PARA SELEÇÃO DE PERÍODO DO PDF (DIÁRIO OU MENSAL) -->
     <div id="pdf-report-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99998; align-items:center; justify-content:center;">
-        <div style="background:#fff; padding:30px; border-radius:12px; width:450px; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+        <div style="background:#fff; padding:30px; border-radius:12px; width:450px; max-width:92vw; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
             <h3 style="color:#241245; margin-bottom:20px; text-align:center;">📊 Gerar Relatório PDF</h3>
             <p style="color:#555; margin-bottom:15px;">Escolha o tipo de relatório:</p>
             <div style="margin-bottom:20px;">
@@ -1150,13 +1204,23 @@
                 <input type="month" id="monthly-report-month" style="width:100%; padding:10px; border:1.5px solid #ccc; border-radius:6px; font-size:15px;">
             </div>
             <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
-                <button class="btn btn-outline" onclick="closePdfReportModal()">Cancelar</button>
-                <button class="btn btn-success" onclick="generateReportPDF()">📥 Gerar PDF</button>
+                <button type="button" class="btn btn-outline" onclick="closePdfReportModal()">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btn-generate-pdf" onclick="generateReportPDF()">📥 Gerar PDF</button>
             </div>
         </div>
     </div>
 
+    <div id="global-loading">
+        <div class="loading-box">
+            <div class="spinner"></div>
+            <span id="global-loading-text">Carregando...</span>
+        </div>
+    </div>
+
     <script>
+        /* ============================================================
+           CONFIGURAÇÃO FIREBASE
+           ============================================================ */
         const firebaseConfig = {
             apiKey: "AIzaSyCufcKWTkWG0mtRq1iPOkSQbdltdmG7FDI",
             authDomain: "inspecao-78dd5.firebaseapp.com",
@@ -1168,18 +1232,31 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+
+        // Habilita cache local do Firestore para economizar leituras no plano Spark.
+        // Se a persistência falhar (navegador sem suporte / múltiplas abas), o sistema continua funcionando normalmente.
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+            if (err && err.code) console.warn('Cache offline não habilitado:', err.code);
+        });
+
         const COLLECTION_NAME = "historico";
         const SENHA_EXCLUSAO = "130499";
+        const INSPECTOR_CACHE_KEY = 'dr_inspector_names_v1';
+        const INSPECTOR_LOOKBACK_DAYS = 90;
 
+        /* ============================================================
+           ESTADO GLOBAL
+           ============================================================ */
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('selected-date').value = today;
-        document.getElementById('history-date-input').value = today;
-
         let machineCounter = 0;
         let loadedDate = null;
-        let inspectorNamesSet = new Set();
+        const inspectorNamesSet = new Set();
         let hasUnsavedChanges = false;
+        let isSaving = false;
 
+        /* ============================================================
+           HELPERS
+           ============================================================ */
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
             return String(str)
@@ -1192,32 +1269,90 @@
 
         function escapeAttr(str) {
             if (str === null || str === undefined) return '';
-            return encodeURIComponent(str).replace(/'/g, '%27');
+            return encodeURIComponent(String(str));
         }
 
         function getWeightColorClass(value, min, max) {
-            if (value === '' || isNaN(value)) return '';
-            if (value < min) return 'weight-low';
-            if (value === min) return 'weight-min';
-            if (value <= max) return 'weight-ok';
+            if (value === '' || value === null || value === undefined || isNaN(value)) return '';
+            const num = parseFloat(value);
+            if (isNaN(num)) return '';
+            if (num < min) return 'weight-low';
+            if (num === min) return 'weight-min';
+            if (num <= max) return 'weight-ok';
             return 'weight-high';
         }
 
-        async function loadInspectorNames() {
+        function showLoading(text) {
+            const el = document.getElementById('global-loading');
+            const txt = document.getElementById('global-loading-text');
+            if (txt) txt.textContent = text || 'Carregando...';
+            if (el) el.classList.add('visible');
+        }
+        function hideLoading() {
+            const el = document.getElementById('global-loading');
+            if (el) el.classList.remove('visible');
+        }
+
+        function setDateForInputs() {
+            const sd = document.getElementById('selected-date');
+            const hd = document.getElementById('history-date-input');
+            if (sd) sd.value = today;
+            if (hd) hd.value = today;
+        }
+
+        /* ============================================================
+           DATALIST DE INSPETORES (com cache local para economizar leituras)
+           ============================================================ */
+        function loadInspectorNamesFromCache() {
             try {
-                const snapshot = await db.collection(COLLECTION_NAME).get();
-                inspectorNamesSet.clear();
+                const raw = localStorage.getItem(INSPECTOR_CACHE_KEY);
+                if (!raw) return;
+                const arr = JSON.parse(raw);
+                if (Array.isArray(arr)) {
+                    arr.forEach(n => {
+                        if (n && String(n).trim() !== '' && String(n).trim().toUpperCase() !== 'SEM INSPETOR') {
+                            inspectorNamesSet.add(String(n).trim());
+                        }
+                    });
+                    updateInspectorDatalist();
+                }
+            } catch (err) {
+                console.warn('Cache de inspetores inválido:', err);
+            }
+        }
+
+        function saveInspectorNamesToCache() {
+            try {
+                localStorage.setItem(INSPECTOR_CACHE_KEY, JSON.stringify(Array.from(inspectorNamesSet)));
+            } catch (err) {
+                // Ignora falha de quota
+            }
+        }
+
+        async function loadInspectorNames() {
+            // Lê apenas os últimos N dias para economizar leituras do Firestore.
+            try {
+                const limitDate = new Date();
+                limitDate.setDate(limitDate.getDate() - INSPECTOR_LOOKBACK_DAYS);
+                const minDateStr = limitDate.toISOString().split('T')[0];
+
+                const snapshot = await db.collection(COLLECTION_NAME)
+                    .where(firebase.firestore.FieldPath.documentId(), '>=', minDateStr)
+                    .get();
+
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.inspectors) {
+                    if (data && data.inspectors) {
                         Object.keys(data.inspectors).forEach(name => {
-                            if (name && name.trim() !== 'SEM INSPETOR') {
-                                inspectorNamesSet.add(name.trim());
+                            const trimmed = String(name).trim();
+                            if (trimmed && trimmed.toUpperCase() !== 'SEM INSPETOR') {
+                                inspectorNamesSet.add(trimmed);
                             }
                         });
                     }
                 });
                 updateInspectorDatalist();
+                saveInspectorNamesToCache();
             } catch (error) {
                 console.error('Erro ao carregar nomes de inspetores:', error);
             }
@@ -1228,23 +1363,29 @@
             if (!datalist) return;
             datalist.innerHTML = '';
             const sortedNames = Array.from(inspectorNamesSet).sort((a, b) => a.localeCompare(b));
+            const fragment = document.createDocumentFragment();
             sortedNames.forEach(name => {
                 const option = document.createElement('option');
                 option.value = name;
-                datalist.appendChild(option);
+                fragment.appendChild(option);
             });
+            datalist.appendChild(fragment);
         }
 
         function addInspectorNameToSet(name) {
-            if (name && name.trim() !== '' && name.trim() !== 'SEM INSPETOR') {
-                const trimmed = name.trim();
-                if (!inspectorNamesSet.has(trimmed)) {
-                    inspectorNamesSet.add(trimmed);
-                    updateInspectorDatalist();
-                }
+            if (!name) return;
+            const trimmed = String(name).trim();
+            if (trimmed === '' || trimmed.toUpperCase() === 'SEM INSPETOR') return;
+            if (!inspectorNamesSet.has(trimmed)) {
+                inspectorNamesSet.add(trimmed);
+                updateInspectorDatalist();
+                saveInspectorNamesToCache();
             }
         }
 
+        /* ============================================================
+           CARTÃO DE MÁQUINA
+           ============================================================ */
         function addMachineCard(machineData = null) {
             const container = document.getElementById('machines-container');
             const cardId = `machine-${++machineCounter}`;
@@ -1259,7 +1400,7 @@
             const tolMin = machineData ? (machineData.tolMin || '23,51') : '23,51';
             const tolMid = machineData ? (machineData.tolMid || '24,51') : '24,51';
             const tolMax = machineData ? (machineData.tolMax || '25,11') : '25,11';
-            const cavityVal = machineData ? (machineData.cavity || 10) : 10;
+            const cavityVal = machineData ? (parseInt(machineData.cavity) || 10) : 10;
             const cycleVal = machineData ? (machineData.cycle || '') : '';
             const collaboratorVal = machineData ? (machineData.collaborator || '') : '';
             const timeM1 = machineData ? (machineData.timeM1 || '14:00') : '14:00';
@@ -1286,33 +1427,27 @@
                 htmlRows += `
                     <tr class="data-row" style="display: ${display};">
                         <td><strong>${i + 1}</strong></td>
-                        <td><input type="number" step="any" class="m1-val" value="${v1}" placeholder="-"></td>
-                        <td><input type="number" step="any" class="m3-val" value="${v3}" placeholder="-"></td>
-                        <td><input type="number" step="any" class="m4-val" value="${v4}" placeholder="-"></td>
+                        <td><input type="number" step="any" inputmode="decimal" class="m1-val" value="${escapeHtml(v1)}" placeholder="-"></td>
+                        <td><input type="number" step="any" inputmode="decimal" class="m3-val" value="${escapeHtml(v3)}" placeholder="-"></td>
+                        <td><input type="number" step="any" inputmode="decimal" class="m4-val" value="${escapeHtml(v4)}" placeholder="-"></td>
                     </tr>
                 `;
             }
 
-            // Definir o valor selecionado do select (TAMPA, BASE, NENHUM ou POTE /C TAMPA)
             let typeValue = 'TAMPA';
             if (productType && productType.trim() !== '') {
                 const upper = productType.toUpperCase();
-                if (upper === 'BASE') {
-                    typeValue = 'BASE';
-                } else if (upper === 'NENHUM') {
-                    typeValue = 'NENHUM';
-                } else if (upper === 'POTE /C TAMPA') {
-                    typeValue = 'POTE /C TAMPA';
-                } else {
-                    typeValue = 'TAMPA';
-                }
+                if (upper === 'BASE') typeValue = 'BASE';
+                else if (upper === 'NENHUM') typeValue = 'NENHUM';
+                else if (upper === 'POTE /C TAMPA') typeValue = 'POTE /C TAMPA';
+                else typeValue = 'TAMPA';
             }
 
             const cardHTML = `
                 <div class="machine-card" id="${cardId}">
                     <div class="card-header-row">
                         <span class="card-number">Máquina #${machineCounter}</span>
-                        <button class="remove-btn" onclick="removeMachine('${cardId}')">✖ Remover</button>
+                        <button type="button" class="remove-btn" onclick="removeMachine('${cardId}')">✖ Remover</button>
                     </div>
                     <div class="form-header">
                         <div class="input-group">
@@ -1329,7 +1464,7 @@
                         </div>
                         <div class="input-group">
                             <label>🏷️ Tipo</label>
-                            <select class="product-type-select" style="width:100%; padding:8px 10px; border-radius:5px; font-weight:700; text-transform:uppercase; background:#f0edf7; border:1.5px solid #3e2970; color:#241245; cursor:pointer; font-size:13px;" onchange="hasUnsavedChanges = true;">
+                            <select class="product-type-select" style="width:100%; padding:8px 10px; border-radius:5px; font-weight:700; text-transform:uppercase; background:#f0edf7; border:1.5px solid #3e2970; color:#241245; cursor:pointer; font-size:13px;">
                                 <option value="TAMPA" ${typeValue === 'TAMPA' ? 'selected' : ''}>TAMPA</option>
                                 <option value="BASE" ${typeValue === 'BASE' ? 'selected' : ''}>BASE</option>
                                 <option value="POTE /C TAMPA" ${typeValue === 'POTE /C TAMPA' ? 'selected' : ''}>POTE /C TAMPA</option>
@@ -1353,7 +1488,7 @@
                         </div>
                         <div class="input-group">
                             <label>🔢 Cavidade (QTD)</label>
-                            <input type="number" class="cavity-input" value="${cavityVal}" placeholder="Ex: 5">
+                            <input type="number" class="cavity-input" value="${cavityVal}" min="1" max="10" placeholder="Ex: 5">
                         </div>
                         <div class="input-group">
                             <label>⚡ Ciclo (Veloc.)</label>
@@ -1376,9 +1511,9 @@
                     </div>
                     <div class="schedule-row">
                         <span class="schedule-label">🕐 Horários das Pesagens:</span>
-                        <div class="schedule-item"><span>M1:</span><input type="time" class="time-m1" value="${timeM1}"></div>
-                        <div class="schedule-item"><span>M3:</span><input type="time" class="time-m3" value="${timeM3}"></div>
-                        <div class="schedule-item"><span>M4:</span><input type="time" class="time-m4" value="${timeM4}"></div>
+                        <div class="schedule-item"><span>M1:</span><input type="time" class="time-m1" value="${escapeHtml(timeM1)}"></div>
+                        <div class="schedule-item"><span>M3:</span><input type="time" class="time-m3" value="${escapeHtml(timeM3)}"></div>
+                        <div class="schedule-item"><span>M4:</span><input type="time" class="time-m4" value="${escapeHtml(timeM4)}"></div>
                     </div>
                     <div class="tolerance-row">
                         <div class="tolerance-box tolerance-min">🔻 Mín: <input type="text" class="tol-min" value="${escapeHtml(tolMin)}"></div>
@@ -1390,9 +1525,9 @@
                             <thead>
                                 <tr>
                                     <th style="width: 45px;">QTD</th>
-                                    <th>M1-<span class="time-label-m1">${timeM1}</span></th>
-                                    <th>M3-<span class="time-label-m3">${timeM3}</span></th>
-                                    <th>M4-<span class="time-label-m4">${timeM4}</span></th>
+                                    <th>M1-<span class="time-label-m1">${escapeHtml(timeM1)}</span></th>
+                                    <th>M3-<span class="time-label-m3">${escapeHtml(timeM3)}</span></th>
+                                    <th>M4-<span class="time-label-m4">${escapeHtml(timeM4)}</span></th>
                                 </tr>
                             </thead>
                             <tbody>${htmlRows}</tbody>
@@ -1408,31 +1543,32 @@
 
             container.insertAdjacentHTML('beforeend', cardHTML);
             const cardElement = document.getElementById(cardId);
+            if (!cardElement) return;
+
+            const markDirty = () => { hasUnsavedChanges = true; };
+
             cardElement.querySelectorAll('.data-row .m1-val, .data-row .m3-val, .data-row .m4-val').forEach(input => {
-                input.addEventListener('input', () => { updateStats(cardId);
-                    hasUnsavedChanges = true; });
+                input.addEventListener('input', () => { updateStats(cardId); markDirty(); });
             });
-            cardElement.querySelector('.cavity-input').addEventListener('input', () => { handleCavityChange(cardId);
-                hasUnsavedChanges = true; });
-            cardElement.querySelector('.time-m1').addEventListener('change', () => updateTimeLabels(cardId));
-            cardElement.querySelector('.time-m3').addEventListener('change', () => updateTimeLabels(cardId));
-            cardElement.querySelector('.time-m4').addEventListener('change', () => updateTimeLabels(cardId));
-            cardElement.querySelector('.motivo-ausencia').addEventListener('input', () => { hasUnsavedChanges = true; });
-            cardElement.querySelector('.problema').addEventListener('input', () => { hasUnsavedChanges = true; });
-            cardElement.querySelector('.tol-min').addEventListener('input', () => { updateStats(cardId); hasUnsavedChanges = true; });
-            cardElement.querySelector('.tol-mid').addEventListener('input', () => { updateStats(cardId); hasUnsavedChanges = true; });
-            cardElement.querySelector('.tol-max').addEventListener('input', () => { updateStats(cardId); hasUnsavedChanges = true; });
-            const inspectorInput = cardElement.querySelector('.inspector');
-            if (inspectorInput) {
-                inspectorInput.addEventListener('blur', function() { addInspectorNameToSet(this.value); });
-            }
-            // Listener para o select de tipo
-            const typeSelect = cardElement.querySelector('.product-type-select');
-            if (typeSelect) {
-                typeSelect.addEventListener('change', function() {
-                    hasUnsavedChanges = true;
-                });
-            }
+            cardElement.querySelector('.cavity-input').addEventListener('input', () => { handleCavityChange(cardId); markDirty(); });
+            cardElement.querySelector('.time-m1').addEventListener('change', () => { updateTimeLabels(cardId); markDirty(); });
+            cardElement.querySelector('.time-m3').addEventListener('change', () => { updateTimeLabels(cardId); markDirty(); });
+            cardElement.querySelector('.time-m4').addEventListener('change', () => { updateTimeLabels(cardId); markDirty(); });
+            cardElement.querySelector('.motivo-ausencia').addEventListener('input', markDirty);
+            cardElement.querySelector('.problema').addEventListener('input', markDirty);
+            cardElement.querySelector('.tol-min').addEventListener('input', () => { updateStats(cardId); markDirty(); });
+            cardElement.querySelector('.tol-mid').addEventListener('input', () => { updateStats(cardId); markDirty(); });
+            cardElement.querySelector('.tol-max').addEventListener('input', () => { updateStats(cardId); markDirty(); });
+            cardElement.querySelector('.inspector').addEventListener('blur', function() { addInspectorNameToSet(this.value); });
+            cardElement.querySelector('.inspector').addEventListener('input', markDirty);
+            cardElement.querySelector('.machine-name').addEventListener('input', markDirty);
+            cardElement.querySelector('.product-code').addEventListener('input', markDirty);
+            cardElement.querySelector('.product-type-select').addEventListener('change', markDirty);
+            cardElement.querySelector('.turn').addEventListener('change', markDirty);
+            cardElement.querySelector('.status').addEventListener('change', markDirty);
+            cardElement.querySelector('.cycle-input').addEventListener('input', markDirty);
+            cardElement.querySelector('.collaborator-input').addEventListener('input', markDirty);
+
             handleCavityChange(cardId);
             updateStats(cardId);
             hasUnsavedChanges = true;
@@ -1441,39 +1577,52 @@
         function removeMachine(id) {
             if (confirm('Tem certeza que deseja remover esta máquina da lista atual?')) {
                 const card = document.getElementById(id);
-                if (card) { card.remove();
-                    hasUnsavedChanges = true; }
+                if (card) {
+                    card.remove();
+                    hasUnsavedChanges = true;
+                }
             }
         }
 
         function updateTimeLabels(cardId) {
             const card = document.getElementById(cardId);
             if (!card) return;
-            const timeM1 = card.querySelector('.time-m1').value || '14:00';
-            const timeM3 = card.querySelector('.time-m3').value || '18:00';
-            const timeM4 = card.querySelector('.time-m4').value || '20:30';
-            card.querySelector('.time-label-m1').textContent = timeM1;
-            card.querySelector('.time-label-m3').textContent = timeM3;
-            card.querySelector('.time-label-m4').textContent = timeM4;
-            hasUnsavedChanges = true;
+            const timeM1El = card.querySelector('.time-m1');
+            const timeM3El = card.querySelector('.time-m3');
+            const timeM4El = card.querySelector('.time-m4');
+            const timeM1 = (timeM1El && timeM1El.value) || '14:00';
+            const timeM3 = (timeM3El && timeM3El.value) || '18:00';
+            const timeM4 = (timeM4El && timeM4El.value) || '20:30';
+            const l1 = card.querySelector('.time-label-m1');
+            const l3 = card.querySelector('.time-label-m3');
+            const l4 = card.querySelector('.time-label-m4');
+            if (l1) l1.textContent = timeM1;
+            if (l3) l3.textContent = timeM3;
+            if (l4) l4.textContent = timeM4;
         }
 
         function handleCavityChange(cardId) {
             const card = document.getElementById(cardId);
             if (!card) return;
             const cavityInput = card.querySelector('.cavity-input');
-            let cavity = parseInt(cavityInput.value);
-            if (isNaN(cavity)) return;
+            if (!cavityInput) return;
+            let cavity = parseInt(cavityInput.value, 10);
+            if (isNaN(cavity)) cavity = 10;
             if (cavity < 1) cavity = 1;
+            if (cavity > 10) cavity = 10;
             cavityInput.value = cavity;
             const rows = card.querySelectorAll('.data-row');
             rows.forEach((row, index) => {
-                if (index < cavity) row.style.display = '';
-                else {
+                if (index < cavity) {
+                    row.style.display = '';
+                } else {
                     row.style.display = 'none';
-                    row.querySelector('.m1-val').value = '';
-                    row.querySelector('.m3-val').value = '';
-                    row.querySelector('.m4-val').value = '';
+                    const i1 = row.querySelector('.m1-val');
+                    const i3 = row.querySelector('.m3-val');
+                    const i4 = row.querySelector('.m4-val');
+                    if (i1) i1.value = '';
+                    if (i3) i3.value = '';
+                    if (i4) i4.value = '';
                 }
             });
             updateStats(cardId);
@@ -1482,33 +1631,29 @@
         function classifyWeight(cardId) {
             const card = document.getElementById(cardId);
             if (!card) return;
-            const tolMinRaw = card.querySelector('.tol-min').value.replace(',', '.');
-            const tolMaxRaw = card.querySelector('.tol-max').value.replace(',', '.');
-            const tolMin = parseFloat(tolMinRaw);
-            const tolMax = parseFloat(tolMaxRaw);
+            const minEl = card.querySelector('.tol-min');
+            const maxEl = card.querySelector('.tol-max');
+            if (!minEl || !maxEl) return;
+            const tolMin = parseFloat(String(minEl.value).replace(',', '.'));
+            const tolMax = parseFloat(String(maxEl.value).replace(',', '.'));
             if (isNaN(tolMin) || isNaN(tolMax)) return;
             const rows = card.querySelectorAll('.data-row');
             rows.forEach(row => {
                 if (row.style.display === 'none') return;
                 ['m1', 'm3', 'm4'].forEach(prefix => {
-                    const input = row.querySelector(`.${prefix}-val`);
+                    const input = row.querySelector('.' + prefix + '-val');
                     if (!input) return;
-                    const valRaw = input.value.replace(',', '.');
+                    const valRaw = String(input.value).replace(',', '.');
                     const val = parseFloat(valRaw);
                     input.classList.remove('weight-ok', 'weight-min', 'weight-low', 'weight-high');
                     if (valRaw.trim() === '' || isNaN(val)) {
                         input.style.backgroundColor = '';
                         return;
                     }
-                    if (val < tolMin) {
-                        input.classList.add('weight-low');
-                    } else if (val === tolMin) {
-                        input.classList.add('weight-min');
-                    } else if (val <= tolMax) {
-                        input.classList.add('weight-ok');
-                    } else {
-                        input.classList.add('weight-high');
-                    }
+                    if (val < tolMin) input.classList.add('weight-low');
+                    else if (val === tolMin) input.classList.add('weight-min');
+                    else if (val <= tolMax) input.classList.add('weight-ok');
+                    else input.classList.add('weight-high');
                 });
             });
         }
@@ -1517,25 +1662,30 @@
             const card = document.getElementById(cardId);
             if (!card) return;
             const rows = card.querySelectorAll('.data-row');
-            const m1Values = [],
-                m3Values = [],
-                m4Values = [];
+            const m1Values = [], m3Values = [], m4Values = [];
             rows.forEach(row => {
                 if (row.style.display !== 'none') {
-                    const v1 = parseFloat(row.querySelector('.m1-val').value.replace(',', '.'));
-                    const v3 = parseFloat(row.querySelector('.m3-val').value.replace(',', '.'));
-                    const v4 = parseFloat(row.querySelector('.m4-val').value.replace(',', '.'));
-                    if (!isNaN(v1) && row.querySelector('.m1-val').value.trim() !== '') m1Values.push(v1);
-                    if (!isNaN(v3) && row.querySelector('.m3-val').value.trim() !== '') m3Values.push(v3);
-                    if (!isNaN(v4) && row.querySelector('.m4-val').value.trim() !== '') m4Values.push(v4);
+                    const e1 = row.querySelector('.m1-val');
+                    const e3 = row.querySelector('.m3-val');
+                    const e4 = row.querySelector('.m4-val');
+                    const v1 = parseFloat(String(e1.value).replace(',', '.'));
+                    const v3 = parseFloat(String(e3.value).replace(',', '.'));
+                    const v4 = parseFloat(String(e4.value).replace(',', '.'));
+                    if (!isNaN(v1) && e1.value.trim() !== '') m1Values.push(v1);
+                    if (!isNaN(v3) && e3.value.trim() !== '') m3Values.push(v3);
+                    if (!isNaN(v4) && e4.value.trim() !== '') m4Values.push(v4);
                 }
             });
-            const calc = (arr) => arr.length === 0 ? { min: 0, avg: 0, max: 0 } : { min: Math.min(...arr), avg: arr
-                    .reduce((a, b) => a + b, 0) / arr.length, max: Math.max(...arr) };
+            const calc = (arr) => arr.length === 0
+                ? { min: 0, avg: 0, max: 0 }
+                : { min: Math.min(...arr), avg: arr.reduce((a, b) => a + b, 0) / arr.length, max: Math.max(...arr) };
             const setEl = (suffix, m) => {
-                document.getElementById(`${cardId}-min-${suffix}`).textContent = m.min.toFixed(2).replace('.', ',');
-                document.getElementById(`${cardId}-avg-${suffix}`).textContent = m.avg.toFixed(2).replace('.', ',');
-                document.getElementById(`${cardId}-max-${suffix}`).textContent = m.max.toFixed(2).replace('.', ',');
+                const mn = document.getElementById(`${cardId}-min-${suffix}`);
+                const av = document.getElementById(`${cardId}-avg-${suffix}`);
+                const mx = document.getElementById(`${cardId}-max-${suffix}`);
+                if (mn) mn.textContent = m.min.toFixed(2).replace('.', ',');
+                if (av) av.textContent = m.avg.toFixed(2).replace('.', ',');
+                if (mx) mx.textContent = m.max.toFixed(2).replace('.', ',');
             };
             setEl('m1', calc(m1Values));
             setEl('m3', calc(m3Values));
@@ -1543,6 +1693,9 @@
             classifyWeight(cardId);
         }
 
+        /* ============================================================
+           COLETA DE DADOS DO FORMULÁRIO
+           ============================================================ */
         function collectFormData() {
             const cards = document.querySelectorAll('.machine-card');
             const machines = [];
@@ -1551,13 +1704,13 @@
                 const productTypeSelect = card.querySelector('.product-type-select');
                 const productType = productTypeSelect ? productTypeSelect.value : 'TAMPA';
                 const machineData = {
-                    machine: card.querySelector('.machine-name').value,
-                    inspector: card.querySelector('.inspector').value,
-                    product: card.querySelector('.product-code').value,
+                    machine: card.querySelector('.machine-name').value.trim(),
+                    inspector: card.querySelector('.inspector').value.trim(),
+                    product: card.querySelector('.product-code').value.trim(),
                     productType: productType,
                     turn: card.querySelector('.turn').value,
                     status: card.querySelector('.status').value,
-                    cavity: parseInt(card.querySelector('.cavity-input').value) || 10,
+                    cavity: parseInt(card.querySelector('.cavity-input').value, 10) || 10,
                     cycle: card.querySelector('.cycle-input').value,
                     collaborator: card.querySelector('.collaborator-input').value,
                     timeM1: card.querySelector('.time-m1').value || '14:00',
@@ -1571,27 +1724,23 @@
                     totalAverage: 0,
                     rows: []
                 };
-                let totalSum = 0,
-                    totalCount = 0;
+                let totalSum = 0, totalCount = 0;
                 rows.forEach(row => {
                     if (row.style.display !== 'none') {
-                        const m1Raw = row.querySelector('.m1-val').value.replace(',', '.');
-                        const m3Raw = row.querySelector('.m3-val').value.replace(',', '.');
-                        const m4Raw = row.querySelector('.m4-val').value.replace(',', '.');
-                        const m1 = parseFloat(m1Raw),
-                            m3 = parseFloat(m3Raw),
-                            m4 = parseFloat(m4Raw);
+                        const m1Raw = String(row.querySelector('.m1-val').value).replace(',', '.');
+                        const m3Raw = String(row.querySelector('.m3-val').value).replace(',', '.');
+                        const m4Raw = String(row.querySelector('.m4-val').value).replace(',', '.');
+                        const m1 = parseFloat(m1Raw);
+                        const m3 = parseFloat(m3Raw);
+                        const m4 = parseFloat(m4Raw);
                         const rowData = {
                             m1: (!isNaN(m1) && m1Raw.trim() !== '') ? m1 : '',
                             m3: (!isNaN(m3) && m3Raw.trim() !== '') ? m3 : '',
                             m4: (!isNaN(m4) && m4Raw.trim() !== '') ? m4 : ''
                         };
-                        if (!isNaN(m1) && m1Raw.trim() !== '') { totalSum += m1;
-                            totalCount++; }
-                        if (!isNaN(m3) && m3Raw.trim() !== '') { totalSum += m3;
-                            totalCount++; }
-                        if (!isNaN(m4) && m4Raw.trim() !== '') { totalSum += m4;
-                            totalCount++; }
+                        if (!isNaN(m1) && m1Raw.trim() !== '') { totalSum += m1; totalCount++; }
+                        if (!isNaN(m3) && m3Raw.trim() !== '') { totalSum += m3; totalCount++; }
+                        if (!isNaN(m4) && m4Raw.trim() !== '') { totalSum += m4; totalCount++; }
                         machineData.rows.push(rowData);
                     }
                 });
@@ -1602,48 +1751,68 @@
         }
 
         function mergeMachineArrays(existingArr, newArr) {
-            const merged = [...existingArr];
+            const merged = Array.isArray(existingArr) ? [...existingArr] : [];
             newArr.forEach(newMachine => {
                 const idx = merged.findIndex(m => m.machine === newMachine.machine);
-                if (idx !== -1) {
-                    merged[idx] = newMachine;
-                } else {
-                    merged.push(newMachine);
-                }
+                if (idx !== -1) merged[idx] = newMachine;
+                else merged.push(newMachine);
             });
             return merged;
         }
 
-        async function saveDailyData() {
-            const date = document.getElementById('selected-date').value;
-            const machines = collectFormData();
-            if (machines.length === 0) { alert('Adicione pelo menos uma máquina antes de salvar.'); return; }
-            machines.forEach(m => addInspectorNameToSet(m.inspector));
-
-            const newDateData = { inspectors: {} };
+        function groupMachinesByInspectorAndProduct(machines) {
+            const grouped = { inspectors: {} };
             machines.forEach(m => {
                 const inspKey = m.inspector.trim() || 'SEM INSPETOR';
                 const prodKey = m.product.trim() || 'SEM PRODUTO';
-                if (!newDateData.inspectors[inspKey]) newDateData.inspectors[inspKey] = { products: {} };
-                if (!newDateData.inspectors[inspKey].products[prodKey]) newDateData.inspectors[inspKey]
-                    .products[prodKey] = [];
-                newDateData.inspectors[inspKey].products[prodKey].push(m);
+                if (!grouped.inspectors[inspKey]) grouped.inspectors[inspKey] = { products: {} };
+                if (!grouped.inspectors[inspKey].products[prodKey]) grouped.inspectors[inspKey].products[prodKey] = [];
+                grouped.inspectors[inspKey].products[prodKey].push(m);
             });
+            return grouped;
+        }
+
+        /* ============================================================
+           SALVAR / EDITAR
+           ============================================================ */
+        async function saveDailyData() {
+            if (isSaving) return;
+            const date = document.getElementById('selected-date').value;
+            if (!date) { alert('Selecione uma data antes de salvar.'); return; }
+            const machines = collectFormData();
+            if (machines.length === 0) { alert('Adicione pelo menos uma máquina antes de salvar.'); return; }
+            const invalid = machines.filter(m => !m.machine);
+            if (invalid.length > 0) {
+                alert('⚠️ Preencha o campo "Máquina" em todos os cartões antes de salvar.');
+                return;
+            }
+
+            machines.forEach(m => addInspectorNameToSet(m.inspector));
+
+            const newDateData = groupMachinesByInspectorAndProduct(machines);
+
+            const btn = document.getElementById('btn-save-daily');
+            const originalText = btn ? btn.textContent : '';
+            isSaving = true;
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Salvando...'; }
+            showLoading('Salvando dados no Firebase...');
 
             try {
                 const docRef = db.collection(COLLECTION_NAME).doc(date);
                 const docSnap = await docRef.get();
                 let finalData = { inspectors: {} };
                 if (docSnap.exists) {
-                    finalData = docSnap.data();
+                    finalData = docSnap.data() || { inspectors: {} };
                     if (!finalData.inspectors) finalData.inspectors = {};
                 }
 
                 for (const inspKey in newDateData.inspectors) {
                     if (!finalData.inspectors[inspKey]) finalData.inspectors[inspKey] = { products: {} };
+                    if (!finalData.inspectors[inspKey].products) finalData.inspectors[inspKey].products = {};
                     for (const prodKey in newDateData.inspectors[inspKey].products) {
-                        if (!finalData.inspectors[inspKey].products[prodKey]) finalData.inspectors[inspKey].products[
-                            prodKey] = [];
+                        if (!finalData.inspectors[inspKey].products[prodKey]) {
+                            finalData.inspectors[inspKey].products[prodKey] = [];
+                        }
                         finalData.inspectors[inspKey].products[prodKey] = mergeMachineArrays(
                             finalData.inspectors[inspKey].products[prodKey],
                             newDateData.inspectors[inspKey].products[prodKey]
@@ -1653,78 +1822,108 @@
 
                 await docRef.set(finalData);
                 hasUnsavedChanges = false;
+
+                const hdi = document.getElementById('history-date-input');
+                if (hdi) hdi.value = date;
+
                 alert(`✅ Dados da data ${date} salvos/atualizados com sucesso!`);
-                document.getElementById('history-date-input').value = date;
-                await loadInspectorNames();
-                loadHistory();
+                await loadHistory();
             } catch (error) {
                 console.error('Erro ao salvar no Firebase:', error);
-                alert('❌ Erro ao salvar no Firebase. Verifique se as regras permitem acesso à coleção "historico".');
+                alert('❌ Erro ao salvar no Firebase.\n' + (error && error.message ? error.message : '') +
+                      '\n\nVerifique a conexão e as regras da coleção "historico".');
+            } finally {
+                isSaving = false;
+                hideLoading();
+                if (btn) { btn.disabled = false; btn.textContent = originalText; }
             }
         }
 
         async function saveEdits() {
+            if (isSaving) return;
             if (!loadedDate) {
                 alert('Nenhuma edição carregada. Use "Carregar dados para editar" no histórico primeiro.');
                 return;
             }
-            if (!confirm(
-                    `⚠️ Isso atualizará os dados da data ${loadedDate} com as informações atuais do formulário. Outros inspetores/produtos não presentes no formulário serão preservados. Deseja continuar?`
-                    )) return;
+            if (!confirm(`⚠️ Isso atualizará os dados da data ${loadedDate} com as informações atuais do formulário. Inspetores/produtos que não aparecem no formulário serão preservados. Deseja continuar?`)) return;
 
             const machines = collectFormData();
             if (machines.length === 0) { alert('Adicione pelo menos uma máquina antes de salvar.'); return; }
+            const invalid = machines.filter(m => !m.machine);
+            if (invalid.length > 0) {
+                alert('⚠️ Preencha o campo "Máquina" em todos os cartões antes de salvar.');
+                return;
+            }
             machines.forEach(m => addInspectorNameToSet(m.inspector));
 
-            const newDateData = { inspectors: {} };
-            machines.forEach(m => {
-                const inspKey = m.inspector.trim() || 'SEM INSPETOR';
-                const prodKey = m.product.trim() || 'SEM PRODUTO';
-                if (!newDateData.inspectors[inspKey]) newDateData.inspectors[inspKey] = { products: {} };
-                if (!newDateData.inspectors[inspKey].products[prodKey]) newDateData.inspectors[inspKey]
-                    .products[prodKey] = [];
-                newDateData.inspectors[inspKey].products[prodKey].push(m);
-            });
+            const newDateData = groupMachinesByInspectorAndProduct(machines);
+
+            const btn = document.getElementById('btn-save-edits');
+            const originalText = btn ? btn.textContent : '';
+            isSaving = true;
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Salvando...'; }
+            showLoading('Salvando alterações...');
 
             try {
                 const docRef = db.collection(COLLECTION_NAME).doc(loadedDate);
                 const docSnap = await docRef.get();
                 let finalData = { inspectors: {} };
                 if (docSnap.exists) {
-                    finalData = docSnap.data();
+                    finalData = docSnap.data() || { inspectors: {} };
                     if (!finalData.inspectors) finalData.inspectors = {};
                 }
 
                 for (const inspKey in newDateData.inspectors) {
                     if (!finalData.inspectors[inspKey]) finalData.inspectors[inspKey] = { products: {} };
+                    if (!finalData.inspectors[inspKey].products) finalData.inspectors[inspKey].products = {};
                     for (const prodKey in newDateData.inspectors[inspKey].products) {
-                        finalData.inspectors[inspKey].products[prodKey] = newDateData.inspectors[inspKey].products[
-                            prodKey];
+                        finalData.inspectors[inspKey].products[prodKey] = newDateData.inspectors[inspKey].products[prodKey];
                     }
                 }
 
                 await docRef.set(finalData);
                 hasUnsavedChanges = false;
+
+                const hdi = document.getElementById('history-date-input');
+                if (hdi) hdi.value = loadedDate;
+
                 alert(`✅ Alterações salvas com sucesso para ${loadedDate}!`);
-                document.getElementById('history-date-input').value = loadedDate;
-                await loadInspectorNames();
-                loadHistory();
+                await loadHistory();
             } catch (error) {
                 console.error('Erro ao salvar alterações:', error);
-                alert('❌ Erro ao salvar alterações no Firebase.');
+                alert('❌ Erro ao salvar alterações no Firebase.\n' + (error && error.message ? error.message : ''));
+            } finally {
+                isSaving = false;
+                hideLoading();
+                if (btn) { btn.disabled = false; btn.textContent = originalText; }
             }
         }
 
+        /* ============================================================
+           RESET / LIMPAR
+           ============================================================ */
         function resetForm() {
-            if (hasUnsavedChanges && document.querySelectorAll('.machine-card').length > 0) {
-                if (confirm(
-                        '⚠️ Existem dados não salvos no formulário. Deseja salvá-los antes de iniciar uma nova inspeção?'
-                        )) {
-                    saveDailyData().then(() => clearForm());
+            const cards = document.querySelectorAll('.machine-card');
+            if (hasUnsavedChanges && cards.length > 0) {
+                const salvarAntes = confirm(
+                    '⚠️ Existem dados NÃO SALVOS no formulário.\n\n' +
+                    'OK = Salvar e depois iniciar uma nova inspeção\n' +
+                    'Cancelar = Descartar as alterações e iniciar uma nova inspeção'
+                );
+                if (salvarAntes) {
+                    if (loadedDate) {
+                        saveEdits().then(() => clearForm()).catch(() => {});
+                    } else {
+                        saveDailyData().then(() => clearForm()).catch(() => {});
+                    }
                     return;
+                } else {
+                    if (!confirm('Tem certeza que deseja DESCARTAR os dados não salvos?')) return;
                 }
+            } else {
+                if (!confirm('Isso limpará todos os dados do formulário. Deseja continuar?')) return;
             }
-            if (confirm('Isso limpará todos os dados do formulário. Deseja continuar?')) clearForm();
+            clearForm();
         }
 
         function clearForm() {
@@ -1732,46 +1931,61 @@
             machineCounter = 0;
             loadedDate = null;
             hasUnsavedChanges = false;
-            document.getElementById('selected-date').disabled = false;
-            document.getElementById('selected-date').value = today;
-            document.getElementById('btn-save-daily').style.display = 'inline-flex';
-            document.getElementById('btn-save-edits').style.display = 'none';
+            const sd = document.getElementById('selected-date');
+            if (sd) {
+                sd.disabled = false;
+                sd.value = today;
+            }
+            const saveDaily = document.getElementById('btn-save-daily');
+            const saveEdits = document.getElementById('btn-save-edits');
+            if (saveDaily) saveDaily.style.display = 'inline-flex';
+            if (saveEdits) saveEdits.style.display = 'none';
             addMachineCard();
-            document.getElementById('history-results').innerHTML =
-                '<p style="color: #888; text-align: center; padding: 20px;">Selecione uma data e clique em consultar para ver o histórico.</p>';
-            document.getElementById('history-section').classList.remove('visible');
+            const hr = document.getElementById('history-results');
+            if (hr) hr.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Selecione uma data e clique em consultar para ver o histórico.</p>';
+            const hs = document.getElementById('history-section');
+            if (hs) hs.classList.remove('visible');
         }
 
+        /* ============================================================
+           HISTÓRICO
+           ============================================================ */
         function toggleHistory() {
-            document.getElementById('history-section').classList.contains('visible') ? hideHistory() : showHistory();
+            const hs = document.getElementById('history-section');
+            if (hs && hs.classList.contains('visible')) hideHistory();
+            else showHistory();
         }
 
         function showHistory() {
-            document.getElementById('history-section').classList.add('visible');
-            document.getElementById('history-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const hs = document.getElementById('history-section');
+            if (!hs) return;
+            hs.classList.add('visible');
+            hs.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function hideHistory() {
-            document.getElementById('history-section').classList.remove('visible');
+            const hs = document.getElementById('history-section');
+            if (hs) hs.classList.remove('visible');
         }
 
         async function loadHistory() {
             const date = document.getElementById('history-date-input').value;
+            if (!date) { alert('Selecione uma data para consultar.'); return; }
             const resultsDiv = document.getElementById('history-results');
             const historySection = document.getElementById('history-section');
-            resultsDiv.innerHTML = '';
+            if (!resultsDiv || !historySection) return;
+            resultsDiv.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">🔄 Carregando...</p>';
             try {
                 const docSnap = await db.collection(COLLECTION_NAME).doc(date).get();
+                resultsDiv.innerHTML = '';
                 if (!docSnap.exists) {
-                    resultsDiv.innerHTML =
-                        `<p style="color: #888; text-align: center; padding: 20px;">📭 Nenhum dado encontrado para a data <strong>${date}</strong>.</p>`;
+                    resultsDiv.innerHTML = `<p style="color: #888; text-align: center; padding: 20px;">📭 Nenhum dado encontrado para a data <strong>${escapeHtml(date)}</strong>.</p>`;
                     historySection.classList.add('visible');
                     return;
                 }
                 const dateData = docSnap.data();
-                if (!dateData.inspectors) {
-                    resultsDiv.innerHTML =
-                        `<p style="color: #888; text-align: center; padding: 20px;">📭 Nenhum dado encontrado para a data <strong>${date}</strong>.</p>`;
+                if (!dateData || !dateData.inspectors) {
+                    resultsDiv.innerHTML = `<p style="color: #888; text-align: center; padding: 20px;">📭 Nenhum dado encontrado para a data <strong>${escapeHtml(date)}</strong>.</p>`;
                     historySection.classList.add('visible');
                     return;
                 }
@@ -1780,41 +1994,47 @@
                 title.style.marginBottom = '12px';
                 title.style.color = '#241245';
                 resultsDiv.appendChild(title);
+
                 const inspectors = dateData.inspectors;
                 const inspectorNames = Object.keys(inspectors).sort();
                 if (inspectorNames.length === 0) {
-                    resultsDiv.innerHTML +=
-                        `<p style="color: #888; text-align: center; padding: 20px;">📭 Nenhum dado encontrado.</p>`;
+                    resultsDiv.innerHTML += `<p style="color: #888; text-align: center; padding: 20px;">📭 Nenhum dado encontrado.</p>`;
                     historySection.classList.add('visible');
                     return;
                 }
                 inspectorNames.forEach(inspName => {
+                    const inspData = inspectors[inspName] || {};
+                    const products = inspData.products || {};
                     const groupDiv = document.createElement('div');
                     groupDiv.className = 'inspector-group';
                     let totalMachinesInsp = 0;
-                    const products = inspectors[inspName].products;
-                    Object.values(products).forEach(arr => { totalMachinesInsp += arr.length; });
+                    Object.values(products).forEach(arr => { if (Array.isArray(arr)) totalMachinesInsp += arr.length; });
+
                     const headerGroup = document.createElement('div');
                     headerGroup.className = 'inspector-title';
                     const encInsp = escapeAttr(inspName);
                     headerGroup.innerHTML =
-                        `<span>👤 ${inspName} <span class="badge">${totalMachinesInsp} máquina(s)</span></span>
-                        <button class="btn-load-inspector" onclick="loadInspectorToForm('${date}', '${encInsp}')">📥 Carregar este inspetor</button>`;
+                        `<span>👤 ${escapeHtml(inspName)} <span class="badge">${totalMachinesInsp} máquina(s)</span></span>
+                        <button type="button" class="btn-load-inspector" onclick="loadInspectorToForm('${escapeHtml(date)}', '${encInsp}')">📥 Carregar este inspetor</button>`;
                     groupDiv.appendChild(headerGroup);
+
                     const productKeys = Object.keys(products).sort();
                     productKeys.forEach(prodKey => {
+                        const arr = products[prodKey];
+                        if (!Array.isArray(arr)) return;
                         const prodSubDiv = document.createElement('div');
                         prodSubDiv.className = 'product-subgroup';
                         const prodTitle = document.createElement('div');
                         prodTitle.className = 'product-title';
                         prodTitle.textContent = `📦 ${prodKey}`;
                         prodSubDiv.appendChild(prodTitle);
-                        products[prodKey].forEach((m, machineIndex) => {
+
+                        arr.forEach((m, machineIndex) => {
                             const itemDiv = document.createElement('div');
                             itemDiv.className = 'history-item';
-                            const avgDisplay = (m.totalAverage && m.totalAverage > 0) ? (typeof m
-                                .totalAverage === 'number' ? m.totalAverage.toFixed(3).replace(
-                                    '.', ',') : m.totalAverage) : '—';
+                            const avgDisplay = (m.totalAverage && m.totalAverage > 0)
+                                ? (typeof m.totalAverage === 'number' ? m.totalAverage.toFixed(3).replace('.', ',') : m.totalAverage)
+                                : '—';
                             const encProd = escapeAttr(prodKey);
                             let problemaHtml = '';
                             if (m.problema) {
@@ -1828,7 +2048,7 @@
                             itemDiv.innerHTML = `
                                 <div class="item-content">
                                     <strong>🏭 Máquina:</strong> ${escapeHtml(m.machine)}<br>
-                                    <small>🔄 Turno: ${escapeHtml(m.turn)} | 🔢 Cavidade: ${m.cavity} | ⚡ Ciclo: ${escapeHtml(m.cycle || '-')} | 🧑 Colaborador: ${escapeHtml(m.collaborator || '-')} | 🏷️ Tipo: ${escapeHtml(productType)}</small><br>
+                                    <small>🔄 Turno: ${escapeHtml(m.turn || '-')} | 🔢 Cavidade: ${escapeHtml(m.cavity != null ? m.cavity : '-')} | ⚡ Ciclo: ${escapeHtml(m.cycle || '-')} | 🧑 Colaborador: ${escapeHtml(m.collaborator || '-')} | 🏷️ Tipo: ${escapeHtml(productType)}</small><br>
                                     <small>🕐 Horários: M1=${escapeHtml(m.timeM1 || '14:00')} | M3=${escapeHtml(m.timeM3 || '18:00')} | M4=${escapeHtml(m.timeM4 || '20:30')}</small>
                                     ${problemaHtml}
                                     ${motivoHtml}
@@ -1836,8 +2056,8 @@
                                 <div class="item-actions">
                                     <span style="font-size:12px;color:#888;">Média Geral:</span>
                                     <span style="font-size:18px;font-weight:700;color:#3e2970;">${avgDisplay}</span>
-                                    <span style="font-size:11px;color:${m.status==='APROVADO'?'#28a745':'#dc3545'};font-weight:600;">${escapeHtml(m.status)}</span>
-                                    <button class="btn-delete-item" onclick="deleteHistoryItem('${date}', '${encInsp}', '${encProd}', ${machineIndex})">🗑️ Excluir</button>
+                                    <span style="font-size:11px;color:${m.status==='APROVADO'?'#28a745':'#dc3545'};font-weight:600;">${escapeHtml(m.status || '')}</span>
+                                    <button type="button" class="btn-delete-item" onclick="deleteHistoryItem('${escapeHtml(date)}', '${encInsp}', '${encProd}', ${machineIndex})">🗑️ Excluir</button>
                                 </div>`;
                             prodSubDiv.appendChild(itemDiv);
                         });
@@ -1845,39 +2065,47 @@
                     });
                     resultsDiv.appendChild(groupDiv);
                 });
-                const loadFormBtn = document.createElement('button');
-                loadFormBtn.className = 'btn btn-success';
-                loadFormBtn.textContent = '🔄 Carregar todos os dados para editar';
-                loadFormBtn.style.marginTop = '16px';
-                loadFormBtn.onclick = () => loadDataToForm(date);
+
                 const btnDiv = document.createElement('div');
                 btnDiv.style.textAlign = 'center';
                 btnDiv.style.marginTop = '10px';
+                const loadFormBtn = document.createElement('button');
+                loadFormBtn.type = 'button';
+                loadFormBtn.className = 'btn btn-success';
+                loadFormBtn.textContent = '🔄 Carregar todos os dados para editar';
+                loadFormBtn.onclick = () => loadDataToForm(date);
                 btnDiv.appendChild(loadFormBtn);
                 resultsDiv.appendChild(btnDiv);
+
                 historySection.classList.add('visible');
                 historySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             } catch (error) {
                 console.error('Erro ao carregar histórico:', error);
-                resultsDiv.innerHTML =
-                    `<p style="color: #dc3545; text-align: center; padding: 20px;">❌ Erro ao carregar dados do Firebase.</p>`;
+                resultsDiv.innerHTML = `<p style="color: #dc3545; text-align: center; padding: 20px;">❌ Erro ao carregar dados do Firebase.</p>`;
                 historySection.classList.add('visible');
             }
         }
 
-        async function deleteHistoryItem(date, inspName, prodKey, machineIndex) {
-            inspName = decodeURIComponent(inspName);
-            prodKey = decodeURIComponent(prodKey);
+        async function deleteHistoryItem(date, inspNameEnc, prodKeyEnc, machineIndex) {
+            const inspName = decodeURIComponent(inspNameEnc);
+            const prodKey = decodeURIComponent(prodKeyEnc);
             const senha = prompt('🔒 Digite a senha para excluir este item:');
             if (senha !== SENHA_EXCLUSAO) { alert('❌ Senha incorreta!'); return; }
-            if (!confirm(`⚠️ Excluir máquina do histórico?\nData: ${date}\nInspetor: ${inspName}\nProduto: ${prodKey}`))
-                return;
+            if (!confirm(`⚠️ Excluir máquina do histórico?\nData: ${date}\nInspetor: ${inspName}\nProduto: ${prodKey}`)) return;
+
+            showLoading('Excluindo...');
             try {
                 const docRef = db.collection(COLLECTION_NAME).doc(date);
                 const docSnap = await docRef.get();
                 if (!docSnap.exists) { alert('❌ Documento não encontrado.'); return; }
                 const data = docSnap.data();
+                if (!data.inspectors || !data.inspectors[inspName] || !data.inspectors[inspName].products || !data.inspectors[inspName].products[prodKey]) {
+                    alert('❌ Item não encontrado.'); return;
+                }
                 const machinesArray = data.inspectors[inspName].products[prodKey];
+                if (machineIndex < 0 || machineIndex >= machinesArray.length) {
+                    alert('❌ Item não encontrado.'); return;
+                }
                 machinesArray.splice(machineIndex, 1);
                 if (machinesArray.length === 0) {
                     delete data.inspectors[inspName].products[prodKey];
@@ -1886,105 +2114,141 @@
                         if (Object.keys(data.inspectors).length === 0) {
                             await docRef.delete();
                             alert('✅ Item excluído e documento removido.');
-                        } else {
-                            await docRef.set(data);
-                            alert('✅ Item excluído.');
+                            await loadHistory();
+                            return;
                         }
-                    } else {
-                        await docRef.set(data);
-                        alert('✅ Item excluído.');
                     }
-                } else {
-                    await docRef.set(data);
-                    alert('✅ Item excluído.');
                 }
-                await loadInspectorNames();
-                loadHistory();
-            } catch (error) { console.error(error);
-                alert('❌ Erro ao excluir.'); }
+                await docRef.set(data);
+                alert('✅ Item excluído.');
+                await loadHistory();
+            } catch (error) {
+                console.error('Erro ao excluir:', error);
+                alert('❌ Erro ao excluir.');
+            } finally {
+                hideLoading();
+            }
         }
 
         async function loadDataToForm(date) {
+            showLoading('Carregando dados...');
             try {
                 const docSnap = await db.collection(COLLECTION_NAME).doc(date).get();
                 if (!docSnap.exists) { alert('Data não encontrada.'); return; }
                 const dateData = docSnap.data();
-                let machines = [];
+                if (!dateData || !dateData.inspectors) { alert('Nenhuma máquina encontrada.'); return; }
+                const machines = [];
                 Object.keys(dateData.inspectors).forEach(inspName => {
-                    Object.keys(dateData.inspectors[inspName].products).forEach(prodKey => {
-                        dateData.inspectors[inspName].products[prodKey].forEach(m => machines.push(m));
+                    const inspObj = dateData.inspectors[inspName];
+                    if (!inspObj || !inspObj.products) return;
+                    Object.keys(inspObj.products).forEach(prodKey => {
+                        const arr = inspObj.products[prodKey];
+                        if (Array.isArray(arr)) arr.forEach(m => machines.push(m));
                     });
                 });
                 if (machines.length === 0) { alert('Nenhuma máquina encontrada.'); return; }
+
                 document.getElementById('machines-container').innerHTML = '';
                 machineCounter = 0;
                 loadedDate = date;
-                document.getElementById('selected-date').value = date;
-                document.getElementById('selected-date').disabled = false;
-                document.getElementById('btn-save-daily').style.display = 'none';
-                document.getElementById('btn-save-edits').style.display = 'inline-flex';
+                const sd = document.getElementById('selected-date');
+                if (sd) { sd.value = date; sd.disabled = false; }
+                const saveDaily = document.getElementById('btn-save-daily');
+                const saveEdits = document.getElementById('btn-save-edits');
+                if (saveDaily) saveDaily.style.display = 'none';
+                if (saveEdits) saveEdits.style.display = 'inline-flex';
                 machines.forEach(m => addMachineCard(m));
                 hasUnsavedChanges = false;
                 document.getElementById('history-results').innerHTML =
                     `<p style="color:#28a745;text-align:center;padding:20px;">✅ ${machines.length} máquina(s) carregada(s) para edição.</p>`;
                 document.getElementById('machines-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } catch (error) { console.error(error);
-                alert('❌ Erro ao carregar.'); }
+            } catch (error) {
+                console.error('Erro ao carregar para edição:', error);
+                alert('❌ Erro ao carregar.');
+            } finally {
+                hideLoading();
+            }
         }
 
         async function loadInspectorToForm(date, inspNameEnc) {
             const inspName = decodeURIComponent(inspNameEnc);
+            showLoading('Carregando dados do inspetor...');
             try {
                 const docSnap = await db.collection(COLLECTION_NAME).doc(date).get();
                 if (!docSnap.exists) { alert('Data não encontrada.'); return; }
                 const dateData = docSnap.data();
-                if (!dateData.inspectors[inspName]) { alert('Inspetor não encontrado.'); return; }
-                let machines = [];
-                Object.keys(dateData.inspectors[inspName].products).forEach(prodKey => {
-                    dateData.inspectors[inspName].products[prodKey].forEach(m => machines.push(m));
-                });
+                if (!dateData.inspectors || !dateData.inspectors[inspName]) { alert('Inspetor não encontrado.'); return; }
+                const inspObj = dateData.inspectors[inspName];
+                const machines = [];
+                if (inspObj.products) {
+                    Object.keys(inspObj.products).forEach(prodKey => {
+                        const arr = inspObj.products[prodKey];
+                        if (Array.isArray(arr)) arr.forEach(m => machines.push(m));
+                    });
+                }
                 if (machines.length === 0) { alert('Nenhuma máquina para este inspetor.'); return; }
+
                 document.getElementById('machines-container').innerHTML = '';
                 machineCounter = 0;
                 loadedDate = date;
-                document.getElementById('selected-date').value = date;
-                document.getElementById('selected-date').disabled = false;
-                document.getElementById('btn-save-daily').style.display = 'none';
-                document.getElementById('btn-save-edits').style.display = 'inline-flex';
+                const sd = document.getElementById('selected-date');
+                if (sd) { sd.value = date; sd.disabled = false; }
+                const saveDaily = document.getElementById('btn-save-daily');
+                const saveEdits = document.getElementById('btn-save-edits');
+                if (saveDaily) saveDaily.style.display = 'none';
+                if (saveEdits) saveEdits.style.display = 'inline-flex';
                 machines.forEach(m => addMachineCard(m));
                 hasUnsavedChanges = false;
                 document.getElementById('history-results').innerHTML =
-                    `<p style="color:#28a745;text-align:center;padding:20px;">✅ ${machines.length} máquina(s) do inspetor "${inspName}" carregada(s).</p>`;
+                    `<p style="color:#28a745;text-align:center;padding:20px;">✅ ${machines.length} máquina(s) do inspetor "${escapeHtml(inspName)}" carregada(s).</p>`;
                 document.getElementById('machines-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } catch (error) { console.error(error);
-                alert('❌ Erro ao carregar.'); }
+            } catch (error) {
+                console.error('Erro ao carregar inspetor:', error);
+                alert('❌ Erro ao carregar.');
+            } finally {
+                hideLoading();
+            }
         }
 
         async function clearHistory() {
             const senha = prompt('🔒 Digite a senha para limpar TODA a base:');
             if (senha !== SENHA_EXCLUSAO) { alert('❌ Senha incorreta!'); return; }
-            if (confirm('⚠️ Apagar TODO o histórico de TODAS as datas?')) {
-                try {
-                    const snapshot = await db.collection(COLLECTION_NAME).get();
-                    if (snapshot.empty) {
-                        document.getElementById('history-results').innerHTML =
-                            '<p style="color:#888;text-align:center;">📭 Nenhum dado para limpar.</p>';
-                        document.getElementById('history-section').classList.add('visible');
-                        return;
-                    }
-                    const batch = db.batch();
-                    snapshot.forEach(doc => batch.delete(doc.ref));
-                    await batch.commit();
+            if (!confirm('⚠️ Apagar TODO o histórico de TODAS as datas?')) return;
+
+            showLoading('Limpando base...');
+            try {
+                const snapshot = await db.collection(COLLECTION_NAME).get();
+                if (snapshot.empty) {
                     document.getElementById('history-results').innerHTML =
-                        `<p style="color:#888;text-align:center;">🗑️ Histórico limpo (${snapshot.size} registros).</p>`;
+                        '<p style="color:#888;text-align:center;">📭 Nenhum dado para limpar.</p>';
                     document.getElementById('history-section').classList.add('visible');
-                    await loadInspectorNames();
-                } catch (error) { console.error(error);
-                    alert('❌ Erro ao limpar.'); }
+                    return;
+                }
+                // Firestore batch tem limite de 500 operações
+                const docs = snapshot.docs;
+                const CHUNK = 400;
+                for (let i = 0; i < docs.length; i += CHUNK) {
+                    const batch = db.batch();
+                    docs.slice(i, i + CHUNK).forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                }
+                document.getElementById('history-results').innerHTML =
+                    `<p style="color:#888;text-align:center;">🗑️ Histórico limpo (${docs.length} registros).</p>`;
+                document.getElementById('history-section').classList.add('visible');
+                inspectorNamesSet.clear();
+                saveInspectorNamesToCache();
+                updateInspectorDatalist();
+            } catch (error) {
+                console.error('Erro ao limpar:', error);
+                alert('❌ Erro ao limpar.');
+            } finally {
+                hideLoading();
             }
         }
 
-        // ============ RELATÓRIO DOS PESOS ATUAIS EM TELA CHEIA ============
+        /* ============================================================
+           RELATÓRIO EM TELA CHEIA (DADOS ATUAIS)
+           ============================================================ */
         function openCurrentDataReport() {
             const machines = collectFormData();
             if (machines.length === 0) {
@@ -1997,7 +2261,7 @@
                     <div class="fullscreen-report-modal">
                         <div class="fullscreen-report-header">
                             <h2>📊 RELATÓRIO DE PESOS ATUAIS</h2>
-                            <button class="close-fullscreen" onclick="closeCurrentDataReport()" title="Fechar">✕</button>
+                            <button type="button" class="close-fullscreen" onclick="closeCurrentDataReport()" title="Fechar">✕</button>
                         </div>
                         <div class="report-content-area">
                             <div style="text-align:center; margin-bottom:20px;">
@@ -2005,7 +2269,7 @@
                             </div>`;
 
             let totalMeasurements = 0;
-            let allValues = [];
+            const allValues = [];
             machines.forEach(m => {
                 m.rows.forEach(r => {
                     [r.m1, r.m3, r.m4].forEach(v => {
@@ -2016,10 +2280,9 @@
                     });
                 });
             });
-            const overallAvg = allValues.length > 0 ? allValues.reduce((a,b)=>a+b,0)/allValues.length : 0;
+            const overallAvg = allValues.length > 0 ? allValues.reduce((a, b) => a + b, 0) / allValues.length : 0;
             const approved = machines.filter(m => m.status === 'APROVADO').length;
             const rejected = machines.filter(m => m.status === 'REPROVADO').length;
-
             const uniqueProducts = [...new Set(machines.map(m => m.product).filter(p => p && p.trim() !== ''))];
 
             html += `<div class="dash-summary-cards">
@@ -2027,8 +2290,8 @@
                 <div class="dash-card success-border"><div class="dash-icon">✅</div><div class="dash-value">${approved}</div><div class="dash-label">Aprovadas</div></div>
                 <div class="dash-card danger-border"><div class="dash-icon">❌</div><div class="dash-value">${rejected}</div><div class="dash-label">Reprovadas</div></div>
                 <div class="dash-card accent-border"><div class="dash-icon">📐</div><div class="dash-value">${totalMeasurements}</div><div class="dash-label">Medições</div></div>
-                <div class="dash-card info-border"><div class="dash-icon">📈</div><div class="dash-value">${overallAvg.toFixed(3).replace('.',',')}</div><div class="dash-label">Média Geral</div></div>
-                <div class="dash-card warning-border"><div class="dash-icon">📦</div><div class="dash-value">${uniqueProducts.length}</div><div class="dash-label">Produtos Únicos</div></div>
+                <div class="dash-card warning-border"><div class="dash-icon">📈</div><div class="dash-value">${overallAvg.toFixed(3).replace('.',',')}</div><div class="dash-label">Média Geral</div></div>
+                <div class="dash-card info-border"><div class="dash-icon">📦</div><div class="dash-value">${uniqueProducts.length}</div><div class="dash-label">Produtos Únicos</div></div>
             </div>`;
 
             if (uniqueProducts.length > 0) {
@@ -2049,15 +2312,10 @@
                 const tolMax = parseFloat(String(m.tolMax).replace(',', '.'));
                 let fillClass = 'success-fill';
                 if (!isNaN(tolMin) && !isNaN(tolMax) && avg > 0) {
-                    if (avg < tolMin) {
-                        fillClass = 'danger-fill';
-                    } else if (avg === tolMin) {
-                        fillClass = 'warning-fill';
-                    } else if (avg <= tolMax) {
-                        fillClass = 'success-fill';
-                    } else {
-                        fillClass = 'danger-fill';
-                    }
+                    if (avg < tolMin) fillClass = 'danger-fill';
+                    else if (avg === tolMin) fillClass = 'warning-fill';
+                    else if (avg <= tolMax) fillClass = 'success-fill';
+                    else fillClass = 'danger-fill';
                 }
                 html += `<div class="bar-chart-row">
                     <div class="bar-chart-label">${escapeHtml(m.machine || '?')}</div>
@@ -2072,14 +2330,14 @@
                 <thead><tr><th>Máquina</th><th>Inspetor</th><th>Produto</th><th>Tipo</th><th>Turno</th><th>Status</th><th>Ciclo</th><th>Colaborador</th><th>Média M1</th><th>Média M3</th><th>Média M4</th><th>Média Geral</th></tr></thead>
                 <tbody>`;
             machines.forEach(m => {
-                const avg = (arr) => arr.length > 0 ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+                const avgFn = (arr) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
                 const m1s = [], m3s = [], m4s = [];
                 m.rows.forEach(r => {
                     if (r.m1 !== '' && !isNaN(parseFloat(r.m1))) m1s.push(parseFloat(r.m1));
                     if (r.m3 !== '' && !isNaN(parseFloat(r.m3))) m3s.push(parseFloat(r.m3));
                     if (r.m4 !== '' && !isNaN(parseFloat(r.m4))) m4s.push(parseFloat(r.m4));
                 });
-                const avgM1 = avg(m1s), avgM3 = avg(m3s), avgM4 = avg(m4s);
+                const avgM1 = avgFn(m1s), avgM3 = avgFn(m3s), avgM4 = avgFn(m4s);
                 const statusClass = m.status === 'APROVADO' ? 'status-approved' : 'status-rejected';
                 const productType = m.productType || 'TAMPA';
                 html += `<tr>
@@ -2100,12 +2358,12 @@
             html += `</tbody></table></div>`;
 
             html += `<div class="dash-section-title">🔍 Detalhamento das Medições por Máquina</div>`;
-            machines.forEach((m, idx) => {
+            machines.forEach(m => {
                 html += `<div style="margin-bottom:20px;"><h4 style="color:#241245;">Máquina: ${escapeHtml(m.machine)} - Produto: ${escapeHtml(m.product)}</h4>`;
                 html += `<div class="dash-table-wrapper"><table class="detail-table">
                     <thead><tr><th>Cavidade</th><th>M1</th><th>M3</th><th>M4</th></tr></thead>
                     <tbody>`;
-                const cavityCount = m.cavity || 10;
+                const cavityCount = Math.min(m.cavity || 10, 10);
                 const minTol = parseFloat(String(m.tolMin).replace(',', '.'));
                 const maxTol = parseFloat(String(m.tolMax).replace(',', '.'));
                 for (let i = 0; i < cavityCount; i++) {
@@ -2117,7 +2375,7 @@
                     const clsM3 = getWeightColorClass(valM3, minTol, maxTol);
                     const clsM4 = getWeightColorClass(valM4, minTol, maxTol);
                     html += `<tr>
-                        <td>${i+1}</td>
+                        <td>${i + 1}</td>
                         <td class="${clsM1}">${valM1 !== '' && !isNaN(valM1) ? valM1.toFixed(3).replace('.',',') : '—'}</td>
                         <td class="${clsM3}">${valM3 !== '' && !isNaN(valM3) ? valM3.toFixed(3).replace('.',',') : '—'}</td>
                         <td class="${clsM4}">${valM4 !== '' && !isNaN(valM4) ? valM4.toFixed(3).replace('.',',') : '—'}</td>
@@ -2140,8 +2398,8 @@
             }
 
             html += `<div class="report-actions">
-                <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
-                <button class="btn btn-danger" onclick="closeCurrentDataReport()">✕ Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+                <button type="button" class="btn btn-danger" onclick="closeCurrentDataReport()">✕ Fechar</button>
             </div>`;
 
             html += `</div></div></div>`;
@@ -2152,8 +2410,6 @@
             const overlay = document.getElementById('fullscreen-report-overlay');
             if (overlay && overlay.requestFullscreen) {
                 overlay.requestFullscreen().catch(err => console.log('Fullscreen não suportado:', err));
-            } else if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(err => console.log('Fullscreen não suportado:', err));
             }
         }
 
@@ -2165,84 +2421,78 @@
             }
         }
 
-        // ============ FUNÇÕES PARA O PDF (DIÁRIO OU MENSAL) ============
+        /* ============================================================
+           PDF (DIÁRIO / MENSAL)
+           ============================================================ */
         function openPdfReportModal() {
             const modal = document.getElementById('pdf-report-modal');
-            if (modal) {
-                modal.style.display = 'flex';
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('daily-report-date').value = today;
-                const currentMonth = today.slice(0, 7);
-                document.getElementById('monthly-report-month').value = currentMonth;
-                document.querySelector('input[name="report-type"][value="daily"]').checked = true;
-                toggleReportType();
-            }
+            if (!modal) return;
+            modal.style.display = 'flex';
+            const todayStr = new Date().toISOString().split('T')[0];
+            const dailyEl = document.getElementById('daily-report-date');
+            const monthlyEl = document.getElementById('monthly-report-month');
+            if (dailyEl) dailyEl.value = todayStr;
+            if (monthlyEl) monthlyEl.value = todayStr.slice(0, 7);
+            const radio = document.querySelector('input[name="report-type"][value="daily"]');
+            if (radio) radio.checked = true;
+            toggleReportType();
         }
 
         function closePdfReportModal() {
             const modal = document.getElementById('pdf-report-modal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
+            if (modal) modal.style.display = 'none';
         }
 
         function toggleReportType() {
-            const type = document.querySelector('input[name="report-type"]:checked').value;
+            const checked = document.querySelector('input[name="report-type"]:checked');
+            if (!checked) return;
+            const type = checked.value;
             const dailyField = document.getElementById('daily-field');
             const monthlyField = document.getElementById('monthly-field');
-            if (type === 'daily') {
-                dailyField.style.display = 'block';
-                monthlyField.style.display = 'none';
-            } else {
-                dailyField.style.display = 'none';
-                monthlyField.style.display = 'block';
-            }
+            if (dailyField) dailyField.style.display = (type === 'daily') ? 'block' : 'none';
+            if (monthlyField) monthlyField.style.display = (type === 'monthly') ? 'block' : 'none';
         }
 
         async function generateReportPDF() {
-            const type = document.querySelector('input[name="report-type"]:checked').value;
-            let startDate, endDate, label;
-
-            if (type === 'daily') {
-                const date = document.getElementById('daily-report-date').value;
-                if (!date) {
-                    alert('Selecione uma data.');
-                    return;
-                }
-                startDate = date;
-                endDate = date;
-                label = `Diário - ${date.split('-').reverse().join('/')}`;
-            } else {
-                const monthValue = document.getElementById('monthly-report-month').value;
-                if (!monthValue) {
-                    alert('Selecione um mês.');
-                    return;
-                }
-                const [year, month] = monthValue.split('-');
-                startDate = `${monthValue}-01`;
-                const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
-                endDate = `${monthValue}-${String(lastDay).padStart(2, '0')}`;
-                label = `Mensal - ${monthValue.replace('-', '/')}`;
-            }
-
+            const btn = document.getElementById('btn-generate-pdf');
+            const original = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Gerando...'; }
+            showLoading('Gerando PDF...');
             try {
+                const type = document.querySelector('input[name="report-type"]:checked').value;
+                let startDate, endDate, label;
+
+                if (type === 'daily') {
+                    const date = document.getElementById('daily-report-date').value;
+                    if (!date) { alert('Selecione uma data.'); return; }
+                    startDate = date;
+                    endDate = date;
+                    label = `Diário - ${date.split('-').reverse().join('/')}`;
+                } else {
+                    const monthValue = document.getElementById('monthly-report-month').value;
+                    if (!monthValue) { alert('Selecione um mês.'); return; }
+                    const [year, month] = monthValue.split('-');
+                    startDate = `${monthValue}-01`;
+                    const lastDay = new Date(parseInt(year, 10), parseInt(month, 10), 0).getDate();
+                    endDate = `${monthValue}-${String(lastDay).padStart(2, '0')}`;
+                    label = `Mensal - ${monthValue.replace('-', '/')}`;
+                }
+
                 const snapshot = await db.collection(COLLECTION_NAME)
                     .where(firebase.firestore.FieldPath.documentId(), '>=', startDate)
                     .where(firebase.firestore.FieldPath.documentId(), '<=', endDate)
                     .get();
 
                 if (snapshot.empty) {
-                    alert(`Nenhum dado encontrado para o período selecionado.`);
+                    alert('Nenhum dado encontrado para o período selecionado.');
                     return;
                 }
 
                 const reportData = [];
-                snapshot.forEach(doc => {
-                    reportData.push({ date: doc.id, data: doc.data() });
-                });
+                snapshot.forEach(doc => { reportData.push({ date: doc.id, data: doc.data() }); });
                 reportData.sort((a, b) => a.date.localeCompare(b.date));
 
-                const isMonthly = type === 'monthly';
+                const isMonthly = (type === 'monthly');
                 const reportHTML = buildReportHTML(reportData, label, isMonthly);
 
                 const tempDiv = document.createElement('div');
@@ -2257,46 +2507,47 @@
                     margin: 10,
                     filename: `Relatorio_${label.replace(/\s+/g, '_')}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2 },
+                    html2canvas: { scale: 2, useCORS: true },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
                     pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
                 };
 
                 await html2pdf().from(tempDiv).set(opt).save();
-
                 tempDiv.remove();
                 closePdfReportModal();
             } catch (error) {
                 console.error('Erro ao gerar PDF:', error);
-                alert('❌ Erro ao gerar PDF. Verifique se os dados estão acessíveis.');
+                alert('❌ Erro ao gerar PDF.\n' + (error && error.message ? error.message : ''));
+            } finally {
+                hideLoading();
+                if (btn) { btn.disabled = false; btn.textContent = original; }
             }
         }
 
         function buildReportHTML(reportData, label, isMonthly = false) {
-            if (isMonthly) {
-                return buildMonthlyReportHTML(reportData, label);
-            } else {
-                return buildDailyReportHTML(reportData, label);
-            }
+            return isMonthly ? buildMonthlyReportHTML(reportData, label) : buildDailyReportHTML(reportData, label);
         }
 
         function buildDailyReportHTML(reportData, label) {
             const allMachines = [];
             let totalMeasurements = 0;
-            let allValues = [];
-            let approvedCount = 0;
-            let rejectedCount = 0;
+            const allValues = [];
+            let approvedCount = 0, rejectedCount = 0;
             const problems = [];
             const uniqueProductsSet = new Set();
 
             reportData.forEach(day => {
                 const date = day.date;
                 const data = day.data;
-                if (!data.inspectors) return;
+                if (!data || !data.inspectors) return;
                 Object.keys(data.inspectors).forEach(inspName => {
-                    const products = data.inspectors[inspName].products;
+                    const inspObj = data.inspectors[inspName];
+                    if (!inspObj || !inspObj.products) return;
+                    const products = inspObj.products;
                     Object.keys(products).forEach(prodKey => {
-                        products[prodKey].forEach(m => {
+                        const arr = products[prodKey];
+                        if (!Array.isArray(arr)) return;
+                        arr.forEach(m => {
                             const machineName = m.machine || '?';
                             const inspector = inspName;
                             const product = prodKey;
@@ -2322,9 +2573,7 @@
                             allValues.push(...machineValues);
                             if (status === 'APROVADO') approvedCount++;
                             else rejectedCount++;
-                            if (m.problema) {
-                                problems.push({ date, machine: machineName, problema: m.problema, inspector, product });
-                            }
+                            if (m.problema) problems.push({ date, machine: machineName, problema: m.problema, inspector, product });
                             let realAvg = totalAvg;
                             if (!realAvg || isNaN(realAvg)) {
                                 realAvg = machineValues.length > 0 ? machineValues.reduce((a, b) => a + b, 0) / machineValues.length : 0;
@@ -2349,7 +2598,7 @@
                         table { page-break-inside: auto; }
                         tr { page-break-inside: avoid; }
                     </style>
-                    <h2 style="text-align:center; color: #241245;">📊 Relatório ${label}</h2>
+                    <h2 style="text-align:center; color: #241245;">📊 Relatório ${escapeHtml(label)}</h2>
                     <p style="text-align:center; color:#555;">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
                     <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;">
                         <div style="background:#f0edf7; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
@@ -2376,8 +2625,7 @@
                             <div style="font-size:24px; font-weight:bold; color:#d35400;">${uniqueProducts.length}</div>
                             <div style="font-size:11px; color:#666;">Produtos Únicos</div>
                         </div>
-                    </div>
-            `;
+                    </div>`;
 
             if (uniqueProducts.length > 0) {
                 html += `<h3 style="color:#241245; margin-top:10px;">📦 Produtos Encontrados</h3>`;
@@ -2427,7 +2675,7 @@
                 html += `<table style="width:100%; border-collapse:collapse; font-size:11px;">
                     <thead><tr style="background:#241245; color:#fff;"><th style="padding:4px; border:1px solid #ccc;">Cavidade</th><th style="padding:4px; border:1px solid #ccc;">M1</th><th style="padding:4px; border:1px solid #ccc;">M3</th><th style="padding:4px; border:1px solid #ccc;">M4</th></tr></thead>
                     <tbody>`;
-                const cavityCount = m.cavity || 10;
+                const cavityCount = Math.min(m.cavity || 10, 10);
                 for (let i = 0; i < cavityCount; i++) {
                     const r = m.rows[i] || {};
                     const valM1 = r.m1 !== '' && r.m1 !== undefined ? parseFloat(r.m1) : '';
@@ -2436,14 +2684,14 @@
                     const clsM1 = getWeightColorClass(valM1, minTol, maxTol);
                     const clsM3 = getWeightColorClass(valM3, minTol, maxTol);
                     const clsM4 = getWeightColorClass(valM4, minTol, maxTol);
-                    const bgM1 = clsM1 === 'weight-ok' ? '#d4edda' : clsM1 === 'weight-min' ? '#fff3cd' : clsM1 === 'weight-low' || clsM1 === 'weight-high' ? '#f8d7da' : 'transparent';
-                    const bgM3 = clsM3 === 'weight-ok' ? '#d4edda' : clsM3 === 'weight-min' ? '#fff3cd' : clsM3 === 'weight-low' || clsM3 === 'weight-high' ? '#f8d7da' : 'transparent';
-                    const bgM4 = clsM4 === 'weight-ok' ? '#d4edda' : clsM4 === 'weight-min' ? '#fff3cd' : clsM4 === 'weight-low' || clsM4 === 'weight-high' ? '#f8d7da' : 'transparent';
-                    const colM1 = clsM1 === 'weight-ok' ? '#155724' : clsM1 === 'weight-min' ? '#856404' : clsM1 === 'weight-low' || clsM1 === 'weight-high' ? '#721c24' : '#333';
-                    const colM3 = clsM3 === 'weight-ok' ? '#155724' : clsM3 === 'weight-min' ? '#856404' : clsM3 === 'weight-low' || clsM3 === 'weight-high' ? '#721c24' : '#333';
-                    const colM4 = clsM4 === 'weight-ok' ? '#155724' : clsM4 === 'weight-min' ? '#856404' : clsM4 === 'weight-low' || clsM4 === 'weight-high' ? '#721c24' : '#333';
+                    const bgM1 = clsM1 === 'weight-ok' ? '#d4edda' : clsM1 === 'weight-min' ? '#fff3cd' : (clsM1 === 'weight-low' || clsM1 === 'weight-high') ? '#f8d7da' : 'transparent';
+                    const bgM3 = clsM3 === 'weight-ok' ? '#d4edda' : clsM3 === 'weight-min' ? '#fff3cd' : (clsM3 === 'weight-low' || clsM3 === 'weight-high') ? '#f8d7da' : 'transparent';
+                    const bgM4 = clsM4 === 'weight-ok' ? '#d4edda' : clsM4 === 'weight-min' ? '#fff3cd' : (clsM4 === 'weight-low' || clsM4 === 'weight-high') ? '#f8d7da' : 'transparent';
+                    const colM1 = clsM1 === 'weight-ok' ? '#155724' : clsM1 === 'weight-min' ? '#856404' : (clsM1 === 'weight-low' || clsM1 === 'weight-high') ? '#721c24' : '#333';
+                    const colM3 = clsM3 === 'weight-ok' ? '#155724' : clsM3 === 'weight-min' ? '#856404' : (clsM3 === 'weight-low' || clsM3 === 'weight-high') ? '#721c24' : '#333';
+                    const colM4 = clsM4 === 'weight-ok' ? '#155724' : clsM4 === 'weight-min' ? '#856404' : (clsM4 === 'weight-low' || clsM4 === 'weight-high') ? '#721c24' : '#333';
                     html += `<tr>
-                        <td style="padding:4px; border:1px solid #ccc;">${i+1}</td>
+                        <td style="padding:4px; border:1px solid #ccc;">${i + 1}</td>
                         <td style="padding:4px; border:1px solid #ccc; background:${bgM1}; color:${colM1};">${valM1 !== '' && !isNaN(valM1) ? valM1.toFixed(3).replace('.',',') : '—'}</td>
                         <td style="padding:4px; border:1px solid #ccc; background:${bgM3}; color:${colM3};">${valM3 !== '' && !isNaN(valM3) ? valM3.toFixed(3).replace('.',',') : '—'}</td>
                         <td style="padding:4px; border:1px solid #ccc; background:${bgM4}; color:${colM4};">${valM4 !== '' && !isNaN(valM4) ? valM4.toFixed(3).replace('.',',') : '—'}</td>
@@ -2469,29 +2717,33 @@
             const dailySummary = {};
             const allProblems = [];
             const allProductsSet = new Set();
-            // NOVA VARIÁVEL PARA ARMAZENAR DADOS POR PRODUTO
             const productSummary = {};
 
             reportData.forEach(day => {
                 const date = day.date;
                 const data = day.data;
-                if (!data.inspectors) return;
+                if (!data || !data.inspectors) return;
                 if (!dailySummary[date]) {
-                    dailySummary[date] = { machines: 0, measurements: 0, values: [], approved: 0, rejected: 0, products: new Set(), details: [] };
+                    dailySummary[date] = {
+                        machines: 0, measurements: 0, values: [], approved: 0, rejected: 0,
+                        products: new Set(), details: []
+                    };
                 }
                 const summary = dailySummary[date];
                 Object.keys(data.inspectors).forEach(inspName => {
-                    const products = data.inspectors[inspName].products;
+                    const inspObj = data.inspectors[inspName];
+                    if (!inspObj || !inspObj.products) return;
+                    const products = inspObj.products;
                     Object.keys(products).forEach(prodKey => {
-                        products[prodKey].forEach(m => {
+                        const arr = products[prodKey];
+                        if (!Array.isArray(arr)) return;
+                        arr.forEach(m => {
                             summary.machines++;
                             summary.products.add(prodKey);
                             allProductsSet.add(prodKey);
                             if (m.status === 'APROVADO') summary.approved++;
                             else summary.rejected++;
                             if (m.problema) {
-                                summary.problems = summary.problems || [];
-                                summary.problems.push({ machine: m.machine, problema: m.problema, product: prodKey, inspector: inspName });
                                 allProblems.push({ date, machine: m.machine, problema: m.problema, product: prodKey, inspector: inspName });
                             }
                             const rows = m.rows || [];
@@ -2503,15 +2755,12 @@
                                     }
                                 });
                             });
-                            
-                            // COLETA DE DADOS PARA O NOVO GRÁFICO (MÉDIA POR PRODUTO)
                             if (!productSummary[prodKey]) {
                                 productSummary[prodKey] = { values: [], machines: 0, approved: 0, rejected: 0 };
                             }
                             productSummary[prodKey].machines++;
                             if (m.status === 'APROVADO') productSummary[prodKey].approved++;
                             else productSummary[prodKey].rejected++;
-                            
                             rows.forEach(r => {
                                 [r.m1, r.m3, r.m4].forEach(v => {
                                     if (v !== '' && !isNaN(parseFloat(v))) {
@@ -2519,7 +2768,6 @@
                                     }
                                 });
                             });
-                            
                             summary.details.push({
                                 machine: m.machine,
                                 product: prodKey,
@@ -2534,7 +2782,7 @@
 
             const allValues = [];
             Object.values(dailySummary).forEach(s => allValues.push(...s.values));
-            const overallAvg = allValues.length > 0 ? allValues.reduce((a,b)=>a+b,0)/allValues.length : 0;
+            const overallAvg = allValues.length > 0 ? allValues.reduce((a, b) => a + b, 0) / allValues.length : 0;
             const totalMachines = Object.values(dailySummary).reduce((acc, s) => acc + s.machines, 0);
             const totalApproved = Object.values(dailySummary).reduce((acc, s) => acc + s.approved, 0);
             const totalRejected = Object.values(dailySummary).reduce((acc, s) => acc + s.rejected, 0);
@@ -2549,7 +2797,7 @@
                         table { page-break-inside: auto; }
                         tr { page-break-inside: avoid; }
                     </style>
-                    <h2 style="text-align:center; color: #241245;">📊 Relatório ${label}</h2>
+                    <h2 style="text-align:center; color: #241245;">📊 Relatório ${escapeHtml(label)}</h2>
                     <p style="text-align:center; color:#555;">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
                     <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;">
                         <div style="background:#f0edf7; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px;">
@@ -2576,8 +2824,7 @@
                             <div style="font-size:24px; font-weight:bold; color:#d35400;">${uniqueProducts.length}</div>
                             <div style="font-size:11px; color:#666;">Produtos Únicos</div>
                         </div>
-                    </div>
-            `;
+                    </div>`;
 
             if (uniqueProducts.length > 0) {
                 html += `<h3 style="color:#241245; margin-top:10px;">📦 Produtos Encontrados no Mês</h3>`;
@@ -2588,24 +2835,23 @@
                 html += `</div>`;
             }
 
-            // GRÁFICO DE BARRAS POR PRODUTO (SUBSTITUINDO O GRÁFICO POR DIA)
             html += `<h3 style="color:#241245; margin-top:20px;">📊 Média Geral por Produto</h3>`;
             html += `<div style="margin-bottom:20px;">`;
             const sortedProducts = Object.keys(productSummary).sort();
             sortedProducts.forEach(prodKey => {
                 const s = productSummary[prodKey];
-                const prodAvg = s.values.length > 0 ? s.values.reduce((a,b)=>a+b,0)/s.values.length : 0;
+                const prodAvg = s.values.length > 0 ? s.values.reduce((a, b) => a + b, 0) / s.values.length : 0;
                 const width = prodAvg > 0 ? Math.min((prodAvg / 30) * 100, 100) : 3;
+                const fillColor = prodAvg < 23.51 ? '#dc3545' : prodAvg <= 25.11 ? '#28a745' : '#dc3545';
                 html += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
                     <div style="min-width:100px; text-align:right; font-weight:bold; font-size:11px;">${escapeHtml(prodKey)}</div>
                     <div style="flex:1; background:#e9ecef; border-radius:10px; height:20px; overflow:hidden;">
-                        <div style="height:100%; background:${prodAvg < 23.51 ? '#dc3545' : prodAvg <= 25.11 ? '#28a745' : '#dc3545'}; width:${width}%; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; font-size:10px; color:#fff; font-weight:bold;">${prodAvg ? prodAvg.toFixed(3).replace('.',',') : '—'}</div>
+                        <div style="height:100%; background:${fillColor}; width:${width}%; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; font-size:10px; color:#fff; font-weight:bold;">${prodAvg ? prodAvg.toFixed(3).replace('.',',') : '—'}</div>
                     </div>
                 </div>`;
             });
             html += `</div>`;
 
-            // Tabela resumo diário (mantida como está)
             html += `<h3 style="color:#241245; margin-top:20px;">📋 Resumo Diário</h3>`;
             html += `<table style="width:100%; border-collapse: collapse; font-size:12px; margin-bottom:20px;">
                 <thead>
@@ -2623,7 +2869,7 @@
             const sortedDates = Object.keys(dailySummary).sort();
             sortedDates.forEach(date => {
                 const s = dailySummary[date];
-                const dayAvg = s.values.length > 0 ? s.values.reduce((a,b)=>a+b,0)/s.values.length : 0;
+                const dayAvg = s.values.length > 0 ? s.values.reduce((a, b) => a + b, 0) / s.values.length : 0;
                 const productsStr = [...s.products].join(', ');
                 html += `<tr>
                     <td style="padding:5px; border:1px solid #ccc;">${date.split('-').reverse().join('/')}</td>
@@ -2637,7 +2883,6 @@
             });
             html += `</tbody></table>`;
 
-            // Detalhamento por dia e produto (mantido como está)
             html += `<h3 style="color:#241245; margin-top:20px;">🔍 Detalhamento por Dia e Produto</h3>`;
             sortedDates.forEach(date => {
                 const s = dailySummary[date];
@@ -2666,7 +2911,6 @@
                 html += `</tbody></table></div>`;
             });
 
-            // Problemas do mês (mantido como está)
             if (allProblems.length > 0) {
                 html += `<h3 style="color:#dc3545; margin-top:20px;">⚠️ Problemas Registrados no Mês</h3>`;
                 html += `<ul style="list-style:none; padding:0;">`;
@@ -2680,51 +2924,77 @@
             return html;
         }
 
-        // ============ FUNÇÕES ANTIGAS MANTIDAS PARA COMPATIBILIDADE ============
-        function openMonthlyReport() {
-            openPdfReportModal();
-        }
-        function generateMonthlyPDF() {
-            generateReportPDF();
-        }
+        /* ============================================================
+           COMPATIBILIDADE COM FUNÇÕES ANTIGAS
+           ============================================================ */
+        function openMonthlyReport() { openPdfReportModal(); }
+        function generateMonthlyPDF() { generateReportPDF(); }
 
+        /* ============================================================
+           EVENTOS GLOBAIS
+           ============================================================ */
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('fullscreen-report-overlay')) {
-                closeCurrentDataReport();
-            }
             if (e.key === 'Escape') {
-                closePdfReportModal();
+                const overlay = document.getElementById('fullscreen-report-overlay');
+                if (overlay) {
+                    closeCurrentDataReport();
+                    return;
+                }
+                const pdfModal = document.getElementById('pdf-report-modal');
+                if (pdfModal && pdfModal.style.display === 'flex') {
+                    closePdfReportModal();
+                }
             }
-        });
-
-        document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 const target = e.target;
-                if (target && target.classList && (target.classList.contains('m1-val') || target.classList.contains('m3-val') || target.classList.contains('m4-val'))) {
+                if (target && target.classList &&
+                    (target.classList.contains('m1-val') || target.classList.contains('m3-val') || target.classList.contains('m4-val'))) {
                     e.preventDefault();
                     const currentRow = target.closest('tr');
                     if (!currentRow) return;
-                    const allRows = Array.from(currentRow.parentElement.querySelectorAll('tr.data-row')).filter(row => row.style.display !== 'none');
+                    const tbody = currentRow.parentElement;
+                    if (!tbody) return;
+                    const allRows = Array.from(tbody.querySelectorAll('tr.data-row')).filter(row => row.style.display !== 'none');
                     const currentIndex = allRows.indexOf(currentRow);
                     if (currentIndex === -1) return;
-                    const columnClass = target.classList.contains('m1-val') ? 'm1-val' : (target.classList.contains('m3-val') ? 'm3-val' : 'm4-val');
+                    const columnClass = target.classList.contains('m1-val') ? 'm1-val' :
+                                       (target.classList.contains('m3-val') ? 'm3-val' : 'm4-val');
                     const nextRow = allRows[currentIndex + 1];
                     if (nextRow) {
                         const nextInput = nextRow.querySelector('.' + columnClass);
-                        if (nextInput) nextInput.focus();
+                        if (nextInput) { nextInput.focus(); nextInput.select && nextInput.select(); }
                     }
                 }
             }
         });
 
-        window.onload = function() {
+        // Prevenir perda de dados ao fechar/atualizar
+        window.addEventListener('beforeunload', function(e) {
+            if (hasUnsavedChanges && document.querySelectorAll('.machine-card').length > 0) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        });
+
+        // Inicialização
+        window.addEventListener('load', function() {
+            setDateForInputs();
             addMachineCard();
-            document.getElementById('history-section').classList.remove('visible');
-            document.getElementById('btn-save-edits').style.display = 'none';
-            document.getElementById('btn-save-daily').style.display = 'inline-flex';
-            document.getElementById('selected-date').disabled = false;
+            const hs = document.getElementById('history-section');
+            if (hs) hs.classList.remove('visible');
+            const se = document.getElementById('btn-save-edits');
+            const sd = document.getElementById('btn-save-daily');
+            const sdInput = document.getElementById('selected-date');
+            if (se) se.style.display = 'none';
+            if (sd) sd.style.display = 'inline-flex';
+            if (sdInput) sdInput.disabled = false;
+
+            // Primeiro carrega do cache local (instantâneo)
+            loadInspectorNamesFromCache();
+            // Depois atualiza em background (últimos 90 dias)
             loadInspectorNames();
-        };
+        });
     </script>
 </body>
 </html>
