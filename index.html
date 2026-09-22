@@ -1234,7 +1234,6 @@
         const db = firebase.firestore();
 
         // Habilita cache local do Firestore para economizar leituras no plano Spark.
-        // Se a persistência falhar (navegador sem suporte / múltiplas abas), o sistema continua funcionando normalmente.
         db.enablePersistence({ synchronizeTabs: true }).catch(err => {
             if (err && err.code) console.warn('Cache offline não habilitado:', err.code);
         });
@@ -1243,6 +1242,35 @@
         const SENHA_EXCLUSAO = "130499";
         const INSPECTOR_CACHE_KEY = 'dr_inspector_names_v1';
         const INSPECTOR_LOOKBACK_DAYS = 90;
+
+        /* ============================================================
+           CONFIGURAÇÃO TEXTMEBOT (WHATSAPP)
+           ============================================================ */
+        const TEXTMEBOT_API_KEY = 'JVfKd6SFjnHd';
+        const TEXTMEBOT_NUMBER = '553599922851'; // Código do país (55) + DDD + número
+
+        // Guarda referência da última imagem para evitar garbage collection
+        let _ultimaNotificacaoImg = null;
+
+        /**
+         * Envia uma notificação via WhatsApp usando a API do TextMeBot.
+         * Usa a técnica do objeto Image() para evitar bloqueios de CORS no navegador.
+         * @param {string} mensagem - Texto da mensagem (suporta *negrito* e _itálico_)
+         */
+        function enviarNotificacaoWhatsApp(mensagem) {
+            try {
+                if (!mensagem || String(mensagem).trim() === '') return;
+                const textoCodificado = encodeURIComponent(String(mensagem));
+                const url = `https://api.textmebot.com/send.php?recipient=${TEXTMEBOT_NUMBER}&apikey=${TEXTMEBOT_API_KEY}&text=${textoCodificado}`;
+                const img = new Image();
+                img.onload = () => console.log('📱 TextMeBot: notificação enviada com sucesso.');
+                img.onerror = () => console.warn('📱 TextMeBot: resposta não carregada como imagem (isso é normal). O envio foi solicitado.');
+                img.src = url;
+                _ultimaNotificacaoImg = img;
+            } catch (err) {
+                console.error('❌ Erro ao enviar notificação via TextMeBot:', err);
+            }
+        }
 
         /* ============================================================
            ESTADO GLOBAL
@@ -1300,6 +1328,19 @@
             if (hd) hd.value = today;
         }
 
+        function formatDateBR(dateStr) {
+            if (!dateStr || typeof dateStr !== 'string') return '';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        function agoraBR() {
+            const d = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} às ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
         /* ============================================================
            DATALIST DE INSPETORES (com cache local para economizar leituras)
            ============================================================ */
@@ -1330,7 +1371,6 @@
         }
 
         async function loadInspectorNames() {
-            // Lê apenas os últimos N dias para economizar leituras do Firestore.
             try {
                 const limitDate = new Date();
                 limitDate.setDate(limitDate.getDate() - INSPECTOR_LOOKBACK_DAYS);
@@ -1565,7 +1605,35 @@
             cardElement.querySelector('.product-code').addEventListener('input', markDirty);
             cardElement.querySelector('.product-type-select').addEventListener('change', markDirty);
             cardElement.querySelector('.turn').addEventListener('change', markDirty);
-            cardElement.querySelector('.status').addEventListener('change', markDirty);
+
+            // ============ NOTIFICAÇÃO WHATSAPP: STATUS REPROVADO ============
+            // Evita notificações duplicadas quando o usuário alterna o status.
+            let jaNotificouReprovado = (status === 'REPROVADO');
+            cardElement.querySelector('.status').addEventListener('change', function() {
+                markDirty();
+                if (this.value === 'REPROVADO' && !jaNotificouReprovado) {
+                    jaNotificouReprovado = true;
+                    const machineName = cardElement.querySelector('.machine-name').value.trim() || 'sem nome';
+                    const insp = cardElement.querySelector('.inspector').value.trim() || 'sem inspetor';
+                    const prod = cardElement.querySelector('.product-code').value.trim() || 'sem produto';
+                    const turno = cardElement.querySelector('.turn').value || '-';
+                    const msg =
+                        `🚨 *MÁQUINA REPROVADA*\n` +
+                        `━━━━━━━━━━━━━━━\n` +
+                        `🏭 *Máquina:* ${machineName}\n` +
+                        `👤 *Inspetor:* ${insp}\n` +
+                        `📦 *Produto:* ${prod}\n` +
+                        `🔄 *Turno:* ${turno}\n` +
+                        `🕐 *Horário:* ${agoraBR()}\n` +
+                        `━━━━━━━━━━━━━━━\n` +
+                        `⚠️ Verifique imediatamente!`;
+                    enviarNotificacaoWhatsApp(msg);
+                } else if (this.value === 'APROVADO') {
+                    jaNotificouReprovado = false;
+                }
+            });
+            // ================================================================
+
             cardElement.querySelector('.cycle-input').addEventListener('input', markDirty);
             cardElement.querySelector('.collaborator-input').addEventListener('input', markDirty);
 
@@ -1826,6 +1894,42 @@
                 const hdi = document.getElementById('history-date-input');
                 if (hdi) hdi.value = date;
 
+                // ============ NOTIFICAÇÃO WHATSAPP: SAVE DIÁRIO ============
+                const totalMedicoes = machines.reduce((acc, m) => {
+                    return acc + m.rows.reduce((a, r) => {
+                        let c = 0;
+                        if (r.m1 !== '' && !isNaN(parseFloat(r.m1))) c++;
+                        if (r.m3 !== '' && !isNaN(parseFloat(r.m3))) c++;
+                        if (r.m4 !== '' && !isNaN(parseFloat(r.m4))) c++;
+                        return a + c;
+                    }, 0);
+                }, 0);
+                const aprovadas = machines.filter(m => m.status === 'APROVADO').length;
+                const reprovadas = machines.filter(m => m.status === 'REPROVADO').length;
+                const comProblema = machines.filter(m => m.problema && m.problema.trim() !== '');
+                const inspetores = [...new Set(machines.map(m => m.inspector).filter(Boolean))];
+
+                let msg = `✅ *INSPEÇÃO SALVA*\n`;
+                msg += `━━━━━━━━━━━━━━━\n`;
+                msg += `📅 *Data:* ${formatDateBR(date)}\n`;
+                msg += `🕐 *Horário:* ${agoraBR()}\n`;
+                msg += `🏭 *Máquinas:* ${machines.length}\n`;
+                msg += `📐 *Medições:* ${totalMedicoes}\n`;
+                msg += `✅ *Aprovadas:* ${aprovadas}\n`;
+                if (reprovadas > 0) msg += `❌ *Reprovadas:* ${reprovadas}\n`;
+                if (inspetores.length > 0) msg += `👤 *Inspetor(es):* ${inspetores.join(', ')}\n`;
+                if (comProblema.length > 0) {
+                    msg += `━━━━━━━━━━━━━━━\n`;
+                    msg += `⚠️ *Problemas relatados:*\n`;
+                    comProblema.forEach(m => {
+                        msg += `• ${m.machine}: ${m.problema}\n`;
+                    });
+                }
+                msg += `━━━━━━━━━━━━━━━\n`;
+                msg += `💾 _Sistema Dona Rita Embalagens_`;
+                enviarNotificacaoWhatsApp(msg);
+                // ============================================================
+
                 alert(`✅ Dados da data ${date} salvos/atualizados com sucesso!`);
                 await loadHistory();
             } catch (error) {
@@ -1886,6 +1990,32 @@
 
                 const hdi = document.getElementById('history-date-input');
                 if (hdi) hdi.value = loadedDate;
+
+                // ============ NOTIFICAÇÃO WHATSAPP: EDIÇÃO ============
+                const totalMedicoes = machines.reduce((acc, m) => {
+                    return acc + m.rows.reduce((a, r) => {
+                        let c = 0;
+                        if (r.m1 !== '' && !isNaN(parseFloat(r.m1))) c++;
+                        if (r.m3 !== '' && !isNaN(parseFloat(r.m3))) c++;
+                        if (r.m4 !== '' && !isNaN(parseFloat(r.m4))) c++;
+                        return a + c;
+                    }, 0);
+                }, 0);
+                const aprovadas = machines.filter(m => m.status === 'APROVADO').length;
+                const reprovadas = machines.filter(m => m.status === 'REPROVADO').length;
+
+                let msg = `✏️ *ALTERAÇÕES SALVAS*\n`;
+                msg += `━━━━━━━━━━━━━━━\n`;
+                msg += `📅 *Data editada:* ${formatDateBR(loadedDate)}\n`;
+                msg += `🕐 *Horário:* ${agoraBR()}\n`;
+                msg += `🏭 *Máquinas:* ${machines.length}\n`;
+                msg += `📐 *Medições:* ${totalMedicoes}\n`;
+                msg += `✅ *Aprovadas:* ${aprovadas}\n`;
+                if (reprovadas > 0) msg += `❌ *Reprovadas:* ${reprovadas}\n`;
+                msg += `━━━━━━━━━━━━━━━\n`;
+                msg += `💾 _Sistema Dona Rita Embalagens_`;
+                enviarNotificacaoWhatsApp(msg);
+                // =====================================================
 
                 alert(`✅ Alterações salvas com sucesso para ${loadedDate}!`);
                 await loadHistory();
@@ -2106,20 +2236,37 @@
                 if (machineIndex < 0 || machineIndex >= machinesArray.length) {
                     alert('❌ Item não encontrado.'); return;
                 }
+                const removedMachine = machinesArray[machineIndex];
                 machinesArray.splice(machineIndex, 1);
+                let docRemovido = false;
                 if (machinesArray.length === 0) {
                     delete data.inspectors[inspName].products[prodKey];
                     if (Object.keys(data.inspectors[inspName].products).length === 0) {
                         delete data.inspectors[inspName];
                         if (Object.keys(data.inspectors).length === 0) {
                             await docRef.delete();
-                            alert('✅ Item excluído e documento removido.');
-                            await loadHistory();
-                            return;
+                            docRemovido = true;
                         }
                     }
                 }
-                await docRef.set(data);
+                if (!docRemovido) {
+                    await docRef.set(data);
+                }
+
+                // ============ NOTIFICAÇÃO WHATSAPP: EXCLUSÃO ============
+                const machineName = (removedMachine && removedMachine.machine) ? removedMachine.machine : '?';
+                let msg = `🗑️ *ITEM EXCLUÍDO DO HISTÓRICO*\n`;
+                msg += `━━━━━━━━━━━━━━━\n`;
+                msg += `📅 *Data:* ${formatDateBR(date)}\n`;
+                msg += `👤 *Inspetor:* ${inspName}\n`;
+                msg += `📦 *Produto:* ${prodKey}\n`;
+                msg += `🏭 *Máquina:* ${machineName}\n`;
+                msg += `🕐 *Horário:* ${agoraBR()}\n`;
+                msg += `━━━━━━━━━━━━━━━\n`;
+                msg += `💾 _Sistema Dona Rita Embalagens_`;
+                enviarNotificacaoWhatsApp(msg);
+                // ======================================================
+
                 alert('✅ Item excluído.');
                 await loadHistory();
             } catch (error) {
@@ -2224,7 +2371,6 @@
                     document.getElementById('history-section').classList.add('visible');
                     return;
                 }
-                // Firestore batch tem limite de 500 operações
                 const docs = snapshot.docs;
                 const CHUNK = 400;
                 for (let i = 0; i < docs.length; i += CHUNK) {
@@ -2238,6 +2384,16 @@
                 inspectorNamesSet.clear();
                 saveInspectorNamesToCache();
                 updateInspectorDatalist();
+
+                // ============ NOTIFICAÇÃO WHATSAPP: LIMPAR BASE ============
+                let msg = `🧹 *BASE DE DADOS LIMPA*\n`;
+                msg += `━━━━━━━━━━━━━━━\n`;
+                msg += `🗑️ *Registros apagados:* ${docs.length}\n`;
+                msg += `🕐 *Horário:* ${agoraBR()}\n`;
+                msg += `━━━━━━━━━━━━━━━\n`;
+                msg += `💾 _Sistema Dona Rita Embalagens_`;
+                enviarNotificacaoWhatsApp(msg);
+                // =========================================================
             } catch (error) {
                 console.error('Erro ao limpar:', error);
                 alert('❌ Erro ao limpar.');
