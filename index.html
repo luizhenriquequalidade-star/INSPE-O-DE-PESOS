@@ -1046,6 +1046,7 @@
             <small>Preencha os dados abaixo para cada máquina</small>
         </div>
         <div class="toolbar-buttons">
+            <button type="button" class="btn btn-outline" onclick="openConfigModal()">⚙️ Config. Produtos</button>
             <button type="button" class="btn btn-outline" onclick="resetForm()">🆕 Nova Inspeção</button>
             <button type="button" class="btn btn-accent" onclick="openCurrentDataReport()">📊 RELATORIO</button>
             <button type="button" class="btn btn-warning" onclick="openPdfReportModal()">📅 PDF MENSAL</button>
@@ -1057,111 +1058,7 @@
     </div>
 
     <datalist id="inspector-list"></datalist>
-    <datalist id="product-list">
-        <option value="DA 08"></option>
-        <option value="D 540"></option>
-        <option value="D 560"></option>
-        <option value="D 630"></option>
-        <option value="D 640"></option>
-        <option value="D 645"></option>
-        <option value="D 650"></option>
-        <option value="D 681"></option>
-        <option value="D 695 BR"></option>
-        <option value="D 695 CR"></option>
-        <option value="D 695 PR"></option>
-        <option value="D 730"></option>
-        <option value="D 731"></option>
-        <option value="D 732"></option>
-        <option value="D 742P"></option>
-        <option value="D 742R"></option>
-        <option value="D 750P"></option>
-        <option value="D 750R"></option>
-        <option value="D 771P"></option>
-        <option value="D 771R"></option>
-        <option value="D30 R BR"></option>
-        <option value="D30 R PR"></option>
-        <option value="D32 H PR"></option>
-        <option value="D32 NYB PR"></option>
-        <option value="D32 NY PR"></option>
-        <option value="D32 RA BR"></option>
-        <option value="D32 RA PR"></option>
-        <option value="D32 RB BR"></option>
-        <option value="D32 RB PR"></option>
-        <option value="D32 R BR"></option>
-        <option value="D32 R PR"></option>
-        <option value="D35 RA BR"></option>
-        <option value="D35 RA PR"></option>
-        <option value="D35 RB BR"></option>
-        <option value="D35 RB PR"></option>
-        <option value="D37 RA BR"></option>
-        <option value="D37 RA PR"></option>
-        <option value="D37 RB BR"></option>
-        <option value="D37 RB PR"></option>
-        <option value="D38 R BR"></option>
-        <option value="D38 R PR"></option>
-        <option value="D40 R BR"></option>
-        <option value="D40 R PR"></option>
-        <option value="D50 NYA PR"></option>
-        <option value="D50 NYB PR"></option>
-        <option value="D50 NY PR"></option>
-        <option value="D50 RA BR"></option>
-        <option value="D50 RA PR"></option>
-        <option value="D50 RB BR"></option>
-        <option value="D50 RB PR"></option>
-        <option value="D50 R BR"></option>
-        <option value="D50 R PR"></option>
-        <option value="D56 RA BR"></option>
-        <option value="D56 RA PR"></option>
-        <option value="D56 RB BR"></option>
-        <option value="D56 RB PR"></option>
-        <option value="D56 R BR"></option>
-        <option value="D56 R PR"></option>
-        <option value="D60 RA BR"></option>
-        <option value="D60 RA PR"></option>
-        <option value="D60 RB BR"></option>
-        <option value="D60 RB PR"></option>
-        <option value="D60 R BR"></option>
-        <option value="D60 R PR"></option>
-        <option value="D62 R BR"></option>
-        <option value="D62 R PR"></option>
-        <option value="D63 RA BR"></option>
-        <option value="D63 RA PR"></option>
-        <option value="D63 R BR"></option>
-        <option value="D63 R PR"></option>
-        <option value="D64 R BR"></option>
-        <option value="D64 R PR"></option>
-        <option value="D65 RB BR"></option>
-        <option value="D65 RB PR"></option>
-        <option value="D70 RB BR"></option>
-        <option value="D70 RB PR"></option>
-        <option value="D70 R BR"></option>
-        <option value="D70 R PR"></option>
-        <option value="D78 RB BR"></option>
-        <option value="D78 R BR"></option>
-        <option value="D78 R PR"></option>
-        <option value="D80 RA BR"></option>
-        <option value="D80 RA PR"></option>
-        <option value="D80 RB BR"></option>
-        <option value="D80 RB PR"></option>
-        <option value="DA 10"></option>
-        <option value="DA 12"></option>
-        <option value="DA 13"></option>
-        <option value="DA 14"></option>
-        <option value="DA 15"></option>
-        <option value="DA 16"></option>
-        <option value="DA 17"></option>
-        <option value="DA 18"></option>
-        <option value="DA 20"></option>
-        <option value="DA 88"></option>
-        <option value="DA 90"></option>
-        <option value="DA 91"></option>
-        <option value="DA 92"></option>
-        <option value="DA 94"></option>
-        <option value="D32 ATN BR"></option>
-        <option value="D32 ATN PR"></option>
-        <option value="D34"></option>
-        <option value="D34P"></option>
-    </datalist>
+    <datalist id="product-list"></datalist>
 
     <div id="machines-container"></div>
 
@@ -1210,6 +1107,36 @@
         </div>
     </div>
 
+    <!-- MODAL DE CONFIGURAÇÃO DE PRODUTOS -->
+    <div id="config-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99998; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:30px; border-radius:12px; width:850px; max-width:95vw; box-shadow:0 10px 40px rgba(0,0,0,0.3); display:flex; flex-direction:column; max-height: 90vh;">
+            <h3 style="color:#241245; margin-bottom:15px; text-align:center;">⚙️ Configuração de Produtos</h3>
+            <p style="color:#555; margin-bottom:15px; font-size:14px; line-height:1.5; text-align:center;">
+                Cole os <strong>Nomes</strong> na caixa da esquerda e as <strong>Tolerâncias</strong> (Mín, Ideal, Máx) na caixa da direita.<br>
+                Certifique-se de que cada linha corresponde ao mesmo produto.
+            </p>
+            
+            <div style="display:flex; gap:15px; height:350px; margin-bottom:20px;">
+                <div style="flex:1; display:flex; flex-direction:column;">
+                    <label style="font-weight:700; margin-bottom:5px; font-size:12px; color:#3e2970;">Nomes dos Produtos (1 por linha)</label>
+                    <textarea id="config-names-ta" style="flex:1; padding:10px; border:1.5px solid #ccc; border-radius:6px; font-family:monospace; font-size:12px; resize:none;" placeholder="G64 MINI TAMPA ROMA&#10;G650 BASE ROMA DOCE QUADRADO"></textarea>
+                </div>
+                <div style="flex:1; display:flex; flex-direction:column;">
+                    <label style="font-weight:700; margin-bottom:5px; font-size:12px; color:#3e2970;">Tolerâncias: Mín [TAB] Ideal [TAB] Máx</label>
+                    <textarea id="config-tols-ta" style="flex:1; padding:10px; border:1.5px solid #ccc; border-radius:6px; font-family:monospace; font-size:12px; resize:none;" placeholder="11.85	12.50	13.13&#10;3.83	3.95	4.03"></textarea>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn btn-danger" onclick="clearProductConfig()">🗑️ Limpar Lista</button>
+                <div style="display:flex; gap:10px;">
+                    <button type="button" class="btn btn-outline" onclick="closeConfigModal()">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="saveProductConfig()">💾 Salvar Lista</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="global-loading">
         <div class="loading-box">
             <div class="spinner"></div>
@@ -1233,7 +1160,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Habilita cache local do Firestore para economizar leituras no plano Spark.
         db.enablePersistence({ synchronizeTabs: true }).catch(err => {
             if (err && err.code) console.warn('Cache offline não habilitado:', err.code);
         });
@@ -1242,21 +1168,18 @@
         const SENHA_EXCLUSAO = "130499";
         const INSPECTOR_CACHE_KEY = 'dr_inspector_names_v1';
         const INSPECTOR_LOOKBACK_DAYS = 90;
+        const PRODUCT_CONFIG_KEY = 'dr_product_config_v1';
+
+        let productConfig = {};
 
         /* ============================================================
            CONFIGURAÇÃO TEXTMEBOT (WHATSAPP)
            ============================================================ */
         const TEXTMEBOT_API_KEY = 'JVfKd6SFjnHd';
-        const TEXTMEBOT_NUMBER = '553599922851'; // Código do país (55) + DDD + número
+        const TEXTMEBOT_NUMBER = '553599922851';
 
-        // Guarda referência da última imagem para evitar garbage collection
         let _ultimaNotificacaoImg = null;
 
-        /**
-         * Envia uma notificação via WhatsApp usando a API do TextMeBot.
-         * Usa a técnica do objeto Image() para evitar bloqueios de CORS no navegador.
-         * @param {string} mensagem - Texto da mensagem (suporta *negrito* e _itálico_)
-         */
         function enviarNotificacaoWhatsApp(mensagem) {
             try {
                 if (!mensagem || String(mensagem).trim() === '') return;
@@ -1342,7 +1265,7 @@
         }
 
         /* ============================================================
-           DATALIST DE INSPETORES (com cache local para economizar leituras)
+           DATALIST DE INSPETORES
            ============================================================ */
         function loadInspectorNamesFromCache() {
             try {
@@ -1365,9 +1288,7 @@
         function saveInspectorNamesToCache() {
             try {
                 localStorage.setItem(INSPECTOR_CACHE_KEY, JSON.stringify(Array.from(inspectorNamesSet)));
-            } catch (err) {
-                // Ignora falha de quota
-            }
+            } catch (err) {}
         }
 
         async function loadInspectorNames() {
@@ -1420,6 +1341,151 @@
                 inspectorNamesSet.add(trimmed);
                 updateInspectorDatalist();
                 saveInspectorNamesToCache();
+            }
+        }
+
+        /* ============================================================
+           CONFIGURAÇÃO DE PRODUTOS (DINÂMICA)
+           ============================================================ */
+        function loadProductConfig() {
+            try {
+                const raw = localStorage.getItem(PRODUCT_CONFIG_KEY);
+                if (raw) {
+                    productConfig = JSON.parse(raw);
+                }
+            } catch (err) {
+                console.warn('Erro ao carregar config de produtos:', err);
+            }
+            updateProductDatalist();
+        }
+
+        function updateProductDatalist() {
+            const datalist = document.getElementById('product-list');
+            if (!datalist) return;
+            datalist.innerHTML = '';
+            Object.keys(productConfig).sort().forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+        }
+
+        function openConfigModal() {
+            const senha = prompt('🔒 Digite a senha para acessar a configuração de produtos:');
+            if (senha !== '20362881') {
+                alert('❌ Senha incorreta!');
+                return;
+            }
+
+            const modal = document.getElementById('config-modal');
+            const namesTa = document.getElementById('config-names-ta');
+            const tolsTa = document.getElementById('config-tols-ta');
+            
+            let namesText = '';
+            let tolsText = '';
+            
+            Object.keys(productConfig).forEach(name => {
+                const c = productConfig[name];
+                namesText += `${name}\n`;
+                tolsText += `${c.min.toFixed(2)}\t${c.ideal.toFixed(2)}\t${c.max.toFixed(2)}\n`;
+            });
+            
+            namesTa.value = namesText.trim();
+            tolsTa.value = tolsText.trim();
+            modal.style.display = 'flex';
+        }
+
+        function closeConfigModal() {
+            document.getElementById('config-modal').style.display = 'none';
+        }
+
+        function clearProductConfig() {
+            if (!confirm('Tem certeza que deseja apagar toda a lista de produtos configurados?')) return;
+            productConfig = {};
+            localStorage.removeItem(PRODUCT_CONFIG_KEY);
+            updateProductDatalist();
+            document.getElementById('config-names-ta').value = '';
+            document.getElementById('config-tols-ta').value = '';
+            alert('Lista de produtos limpa.');
+        }
+
+        function saveProductConfig() {
+            const namesText = document.getElementById('config-names-ta').value;
+            const tolsText = document.getElementById('config-tols-ta').value;
+
+            const namesLines = namesText.split('\n').map(l => l.trim()).filter(l => l !== '');
+            const tolsLines = tolsText.split('\n').map(l => l.trim()).filter(l => l !== '');
+
+            if (namesLines.length !== tolsLines.length) {
+                alert(`⚠️ A quantidade de nomes (${namesLines.length}) não bate com a quantidade de tolerâncias (${tolsLines.length}). Verifique se colou tudo certinho.`);
+                return;
+            }
+
+            if (namesLines.length === 0) {
+                alert('Nenhum dado para salvar.');
+                return;
+            }
+
+            const newConfig = {};
+
+            for (let i = 0; i < namesLines.length; i++) {
+                let name = namesLines[i].toUpperCase();
+                if (name.startsWith('ITEM') || name.startsWith('NOME') || name.startsWith('PRODUTO')) continue;
+
+                let line = tolsLines[i];
+                let parts = line.split('\t').map(p => p.trim());
+                if (parts.length < 3) parts = line.split(';').map(p => p.trim());
+                if (parts.length < 3) parts = line.split(',').map(p => p.trim());
+                if (parts.length < 3) parts = line.split(/\s+/).map(p => p.trim());
+
+                if (parts.length >= 3) {
+                    const minStr = parts[0].replace(',', '.');
+                    let idealStr = parts[1].replace(',', '.');
+                    let maxStr = parts[2].replace(',', '.');
+
+                    const min = parseFloat(minStr);
+                    const ideal = parseFloat(idealStr);
+                    const max = parseFloat(maxStr);
+
+                    if (!isNaN(min) && !isNaN(ideal) && !isNaN(max)) {
+                        newConfig[name] = { min: min, ideal: ideal, max: max };
+                    } else {
+                        console.warn(`Erro ao processar linha ${i+1}: ${line}`);
+                    }
+                }
+            }
+
+            if (Object.keys(newConfig).length === 0) {
+                alert('Nenhum produto válido encontrado. Verifique o formato e os separadores.');
+                return;
+            }
+
+            productConfig = newConfig;
+            localStorage.setItem(PRODUCT_CONFIG_KEY, JSON.stringify(productConfig));
+            updateProductDatalist();
+            closeConfigModal();
+            alert(`✅ ${Object.keys(productConfig).length} produtos configurados com sucesso!`);
+        }
+
+        function applyProductConfig(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            const prodInput = card.querySelector('.product-code');
+            const prodName = prodInput.value.trim().toUpperCase();
+            if (!prodName) return;
+
+            const config = productConfig[prodName];
+            if (config) {
+                const minInput = card.querySelector('.tol-min');
+                const midInput = card.querySelector('.tol-mid');
+                const maxInput = card.querySelector('.tol-max');
+
+                minInput.value = config.min.toFixed(2).replace('.', ',');
+                midInput.value = config.ideal.toFixed(2).replace('.', ',');
+                maxInput.value = config.max.toFixed(2).replace('.', ',');
+
+                updateStats(cardId);
+                hasUnsavedChanges = true;
             }
         }
 
@@ -1602,12 +1668,17 @@
             cardElement.querySelector('.inspector').addEventListener('blur', function() { addInspectorNameToSet(this.value); });
             cardElement.querySelector('.inspector').addEventListener('input', markDirty);
             cardElement.querySelector('.machine-name').addEventListener('input', markDirty);
+            
+            // --- LÓGICA DE AUTO-PREENCHIMENTO DO PRODUTO ---
             cardElement.querySelector('.product-code').addEventListener('input', markDirty);
+            cardElement.querySelector('.product-code').addEventListener('change', function() {
+                applyProductConfig(cardId);
+            });
+            // ----------------------------------------------
+
             cardElement.querySelector('.product-type-select').addEventListener('change', markDirty);
             cardElement.querySelector('.turn').addEventListener('change', markDirty);
 
-            // ============ NOTIFICAÇÃO WHATSAPP: STATUS REPROVADO ============
-            // Evita notificações duplicadas quando o usuário alterna o status.
             let jaNotificouReprovado = (status === 'REPROVADO');
             cardElement.querySelector('.status').addEventListener('change', function() {
                 markDirty();
@@ -1632,7 +1703,6 @@
                     jaNotificouReprovado = false;
                 }
             });
-            // ================================================================
 
             cardElement.querySelector('.cycle-input').addEventListener('input', markDirty);
             cardElement.querySelector('.collaborator-input').addEventListener('input', markDirty);
@@ -1894,7 +1964,6 @@
                 const hdi = document.getElementById('history-date-input');
                 if (hdi) hdi.value = date;
 
-                // ============ NOTIFICAÇÃO WHATSAPP: SAVE DIÁRIO ============
                 const totalMedicoes = machines.reduce((acc, m) => {
                     return acc + m.rows.reduce((a, r) => {
                         let c = 0;
@@ -1928,7 +1997,6 @@
                 msg += `━━━━━━━━━━━━━━━\n`;
                 msg += `💾 _Sistema Dona Rita Embalagens_`;
                 enviarNotificacaoWhatsApp(msg);
-                // ============================================================
 
                 alert(`✅ Dados da data ${date} salvos/atualizados com sucesso!`);
                 await loadHistory();
@@ -1991,7 +2059,6 @@
                 const hdi = document.getElementById('history-date-input');
                 if (hdi) hdi.value = loadedDate;
 
-                // ============ NOTIFICAÇÃO WHATSAPP: EDIÇÃO ============
                 const totalMedicoes = machines.reduce((acc, m) => {
                     return acc + m.rows.reduce((a, r) => {
                         let c = 0;
@@ -2015,7 +2082,6 @@
                 msg += `━━━━━━━━━━━━━━━\n`;
                 msg += `💾 _Sistema Dona Rita Embalagens_`;
                 enviarNotificacaoWhatsApp(msg);
-                // =====================================================
 
                 alert(`✅ Alterações salvas com sucesso para ${loadedDate}!`);
                 await loadHistory();
@@ -2253,7 +2319,6 @@
                     await docRef.set(data);
                 }
 
-                // ============ NOTIFICAÇÃO WHATSAPP: EXCLUSÃO ============
                 const machineName = (removedMachine && removedMachine.machine) ? removedMachine.machine : '?';
                 let msg = `🗑️ *ITEM EXCLUÍDO DO HISTÓRICO*\n`;
                 msg += `━━━━━━━━━━━━━━━\n`;
@@ -2265,7 +2330,6 @@
                 msg += `━━━━━━━━━━━━━━━\n`;
                 msg += `💾 _Sistema Dona Rita Embalagens_`;
                 enviarNotificacaoWhatsApp(msg);
-                // ======================================================
 
                 alert('✅ Item excluído.');
                 await loadHistory();
@@ -2385,7 +2449,6 @@
                 saveInspectorNamesToCache();
                 updateInspectorDatalist();
 
-                // ============ NOTIFICAÇÃO WHATSAPP: LIMPAR BASE ============
                 let msg = `🧹 *BASE DE DADOS LIMPA*\n`;
                 msg += `━━━━━━━━━━━━━━━\n`;
                 msg += `🗑️ *Registros apagados:* ${docs.length}\n`;
@@ -2393,7 +2456,6 @@
                 msg += `━━━━━━━━━━━━━━━\n`;
                 msg += `💾 _Sistema Dona Rita Embalagens_`;
                 enviarNotificacaoWhatsApp(msg);
-                // =========================================================
             } catch (error) {
                 console.error('Erro ao limpar:', error);
                 alert('❌ Erro ao limpar.');
@@ -3100,6 +3162,10 @@
                 if (pdfModal && pdfModal.style.display === 'flex') {
                     closePdfReportModal();
                 }
+                const configModal = document.getElementById('config-modal');
+                if (configModal && configModal.style.display === 'flex') {
+                    closeConfigModal();
+                }
             }
             if (e.key === 'Enter') {
                 const target = e.target;
@@ -3124,7 +3190,6 @@
             }
         });
 
-        // Prevenir perda de dados ao fechar/atualizar
         window.addEventListener('beforeunload', function(e) {
             if (hasUnsavedChanges && document.querySelectorAll('.machine-card').length > 0) {
                 e.preventDefault();
@@ -3133,7 +3198,6 @@
             }
         });
 
-        // Inicialização
         window.addEventListener('load', function() {
             setDateForInputs();
             addMachineCard();
@@ -3146,10 +3210,11 @@
             if (sd) sd.style.display = 'inline-flex';
             if (sdInput) sdInput.disabled = false;
 
-            // Primeiro carrega do cache local (instantâneo)
             loadInspectorNamesFromCache();
-            // Depois atualiza em background (últimos 90 dias)
             loadInspectorNames();
+            
+            // Inicializa a lista de produtos dinâmica
+            loadProductConfig();
         });
     </script>
 </body>
