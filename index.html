@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Inspeção - Dona Rita Embalagens</title>
+    
+    <!-- CONFIGURAÇÃO PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icone.png">
+    <link rel="apple-touch-icon" href="icone.png">
+    <meta name="theme-color" content="#241245">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1147,7 +1154,7 @@
 
     <script>
         /* ============================================================
-           PWA INSTALLATION LOGIC & MANIFEST
+           PWA INSTALLATION LOGIC (LINKING TO EXTERNAL FILES)
            ============================================================ */
         let deferredPrompt;
         const installBtn = document.getElementById('btn-install-pwa');
@@ -1175,6 +1182,8 @@
                     }
                     deferredPrompt = null;
                 });
+            } else {
+                alert("Para instalar no iPhone: toque em 'Compartilhar' e depois em 'Adicionar à Tela de Início'.");
             }
         }
 
@@ -1183,38 +1192,13 @@
             deferredPrompt = null;
         });
 
-        // Cria o Manifest dinamicamente apontando para icone.png
-        const manifestData = {
-            name: "Dona Rita Embalagens",
-            short_name: "Dona Rita",
-            start_url: window.location.href,
-            display: "standalone",
-            background_color: "#f4f6f9",
-            theme_color: "#241245",
-            icons: [
-                { src: "icone.png", sizes: "192x192", type: "image/png" },
-                { src: "icone.png", sizes: "512x512", type: "image/png" }
-            ]
-        };
-        const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
-        const manifestURL = URL.createObjectURL(manifestBlob);
-        const link = document.createElement('link');
-        link.rel = 'manifest';
-        link.href = manifestURL;
-        document.head.appendChild(link);
-
-        // Registra o Service Worker (necessário para o prompt de instalação)
+        // Registra o Service Worker usando o arquivo externo sw.js
         if ('serviceWorker' in navigator) {
-            const swCode = `
-                self.addEventListener('install', (e) => self.skipWaiting());
-                self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
-                self.addEventListener('fetch', (e) => {
-                    e.respondWith(fetch(e.request).catch(() => new Response('Offline')));
-                });
-            `;
-            const swBlob = new Blob([swCode], { type: 'application/javascript' });
-            const swUrl = URL.createObjectURL(swBlob);
-            navigator.serviceWorker.register(swUrl).catch(err => console.warn('Service Worker inline falhou (comum em file://)', err));
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => console.log('Service Worker registrado:', registration.scope))
+                    .catch(err => console.warn('Falha ao registrar Service Worker. Verifique se está em HTTPS ou localhost.', err));
+            });
         }
 
         /* ============================================================
