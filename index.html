@@ -511,10 +511,30 @@
         .stat-row .avg-val {
             color: #1e7e34;
             font-size: 13px;
+            transition: all 0.2s;
         }
         .stat-row .max-val {
             color: #a61e1e;
         }
+
+        /* ANIMAÇÕES DE PISCAR PARA A MÉDIA */
+        @keyframes blink-red {
+            0%, 100% { background-color: #f8d7da; color: #721c24; }
+            50% { background-color: #dc3545; color: white; }
+        }
+        @keyframes blink-yellow {
+            0%, 100% { background-color: #fff3cd; color: #856404; }
+            50% { background-color: #ffc107; color: #000; }
+        }
+        .blink-danger {
+            animation: blink-red 1s infinite;
+            border-radius: 4px;
+        }
+        .blink-warning {
+            animation: blink-yellow 1s infinite;
+            border-radius: 4px;
+        }
+
         #history-section {
             background: var(--card-bg);
             padding: 20px 24px;
@@ -981,6 +1001,31 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        /* ESTILOS PARA O TOAST (ALERTA FLUTUANTE) */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            animation: fadeSlideIn 0.3s ease;
+        }
+        .toast.warning { background-color: #f0ad4e; }
+        .toast.danger { background-color: #dc3545; }
+        
         @media (max-width: 768px) {
             .header-info {
                 flex-direction: column;
@@ -1020,6 +1065,11 @@
             .bar-chart-label {
                 min-width: 60px;
                 font-size: 10px;
+            }
+            #toast-container {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
             }
         }
         @media (max-width: 480px) {
@@ -1152,6 +1202,9 @@
         </div>
     </div>
 
+    <!-- CONTAINER DE ALERTAS FLUTUANTES -->
+    <div id="toast-container"></div>
+
     <script>
         /* ============================================================
            PWA INSTALLATION LOGIC (LINKING TO EXTERNAL FILES)
@@ -1159,7 +1212,6 @@
         let deferredPrompt;
         const installBtn = document.getElementById('btn-install-pwa');
 
-        // Checa se já está instalado (Standalone mode)
         if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
             if (installBtn) installBtn.style.display = 'none';
         }
@@ -1192,7 +1244,6 @@
             deferredPrompt = null;
         });
 
-        // Registra o Service Worker usando o arquivo externo sw.js
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
@@ -1298,6 +1349,26 @@
         function hideLoading() {
             const el = document.getElementById('global-loading');
             if (el) el.classList.remove('visible');
+        }
+
+        // --- FUNÇÃO PARA CRIAR ALERTAS FLUTUANTES (TOASTS) ---
+        function showToast(message, type = 'warning') {
+            let toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toast-container';
+                document.body.appendChild(toastContainer);
+            }
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `${type === 'warning' ? '⚠️' : '🚨'} ${message}`;
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
         }
 
         function setDateForInputs() {
@@ -1710,7 +1781,29 @@
             const markDirty = () => { hasUnsavedChanges = true; };
 
             cardElement.querySelectorAll('.data-row .m1-val, .data-row .m3-val, .data-row .m4-val').forEach(input => {
+                // Atualiza a cor em tempo real
                 input.addEventListener('input', () => { updateStats(cardId); markDirty(); });
+                
+                // Dispara o alerta apenas quando o usuário termina de digitar (blur)
+                input.addEventListener('blur', function() {
+                    const val = parseFloat(String(this.value).replace(',', '.'));
+                    if (isNaN(val)) return;
+                    
+                    const minEl = cardElement.querySelector('.tol-min');
+                    const midEl = cardElement.querySelector('.tol-mid');
+                    const maxEl = cardElement.querySelector('.tol-max');
+                    if (!minEl || !midEl || !maxEl) return;
+                    
+                    const tolMin = parseFloat(String(minEl.value).replace(',', '.'));
+                    const tolMid = parseFloat(String(midEl.value).replace(',', '.'));
+                    const tolMax = parseFloat(String(maxEl.value).replace(',', '.'));
+                    
+                    if (val > tolMid && val <= tolMax) {
+                        showToast(`Peso ${val.toFixed(2).replace('.',',')} está ACIMA DO IDEAL (${tolMid.toFixed(2).replace('.',',')})!`, 'warning');
+                    } else if (val > tolMax) {
+                        showToast(`Peso ${val.toFixed(2).replace('.',',')} está ACIMA DA MÁXIMA (${tolMax.toFixed(2).replace('.',',')})!`, 'danger');
+                    }
+                });
             });
             cardElement.querySelector('.cavity-input').addEventListener('input', () => { handleCavityChange(cardId); markDirty(); });
             cardElement.querySelector('.time-m1').addEventListener('change', () => { updateTimeLabels(cardId); markDirty(); });
@@ -1725,12 +1818,10 @@
             cardElement.querySelector('.inspector').addEventListener('input', markDirty);
             cardElement.querySelector('.machine-name').addEventListener('input', markDirty);
             
-            // --- LÓGICA DE AUTO-PREENCHIMENTO DO PRODUTO ---
             cardElement.querySelector('.product-code').addEventListener('input', markDirty);
             cardElement.querySelector('.product-code').addEventListener('change', function() {
                 applyProductConfig(cardId);
             });
-            // ----------------------------------------------
 
             cardElement.querySelector('.product-type-select').addEventListener('change', markDirty);
             cardElement.querySelector('.turn').addEventListener('change', markDirty);
@@ -1822,15 +1913,21 @@
             updateStats(cardId);
         }
 
+        // --- FUNÇÃO ATUALIZADA PARA APLICAR AS CORES CONFORME O IDEAL ---
         function classifyWeight(cardId) {
             const card = document.getElementById(cardId);
             if (!card) return;
             const minEl = card.querySelector('.tol-min');
+            const midEl = card.querySelector('.tol-mid');
             const maxEl = card.querySelector('.tol-max');
-            if (!minEl || !maxEl) return;
+            if (!minEl || !maxEl || !midEl) return;
+            
             const tolMin = parseFloat(String(minEl.value).replace(',', '.'));
+            const tolMid = parseFloat(String(midEl.value).replace(',', '.'));
             const tolMax = parseFloat(String(maxEl.value).replace(',', '.'));
-            if (isNaN(tolMin) || isNaN(tolMax)) return;
+            
+            if (isNaN(tolMin) || isNaN(tolMax) || isNaN(tolMid)) return;
+            
             const rows = card.querySelectorAll('.data-row');
             rows.forEach(row => {
                 if (row.style.display === 'none') return;
@@ -1840,21 +1937,43 @@
                     const valRaw = String(input.value).replace(',', '.');
                     const val = parseFloat(valRaw);
                     input.classList.remove('weight-ok', 'weight-min', 'weight-low', 'weight-high');
+                    
                     if (valRaw.trim() === '' || isNaN(val)) {
                         input.style.backgroundColor = '';
+                        input.removeAttribute('title');
                         return;
                     }
-                    if (val < tolMin) input.classList.add('weight-low');
-                    else if (val === tolMin) input.classList.add('weight-min');
-                    else if (val <= tolMax) input.classList.add('weight-ok');
-                    else input.classList.add('weight-high');
+                    
+                    // REGRA DE NEGÓCIO DE CORES:
+                    if (val < tolMin) {
+                        input.classList.add('weight-low'); // VERMELHO (Abaixo da Mínima)
+                        input.title = 'Abaixo da Mínima';
+                    } else if (val <= tolMid) {
+                        input.classList.add('weight-ok'); // VERDE (Dentro do Ideal)
+                        input.title = 'Dentro do Ideal';
+                    } else if (val <= tolMax) {
+                        input.classList.add('weight-min'); // AMARELO (Acima do Ideal)
+                        input.title = 'Acima do Ideal';
+                    } else {
+                        input.classList.add('weight-high'); // VERMELHO (Acima da Máxima)
+                        input.title = 'Acima da Máxima';
+                    }
                 });
             });
         }
 
+        // --- FUNÇÃO ATUALIZADA PARA ADICIONAR O EFEITO PISCANTE NA MÉDIA ---
         function updateStats(cardId) {
             const card = document.getElementById(cardId);
             if (!card) return;
+            
+            const minEl = card.querySelector('.tol-min');
+            const midEl = card.querySelector('.tol-mid');
+            const maxEl = card.querySelector('.tol-max');
+            
+            const tolMid = minEl && midEl && maxEl ? parseFloat(String(midEl.value).replace(',', '.')) : NaN;
+            const tolMax = minEl && midEl && maxEl ? parseFloat(String(maxEl.value).replace(',', '.')) : NaN;
+
             const rows = card.querySelectorAll('.data-row');
             const m1Values = [], m3Values = [], m4Values = [];
             rows.forEach(row => {
@@ -1870,15 +1989,30 @@
                     if (!isNaN(v4) && e4.value.trim() !== '') m4Values.push(v4);
                 }
             });
+            
             const calc = (arr) => arr.length === 0
-                ? { min: 0, avg: 0, max: 0 }
-                : { min: Math.min(...arr), avg: arr.reduce((a, b) => a + b, 0) / arr.length, max: Math.max(...arr) };
+                ? { min: 0, avg: 0, max: 0, count: 0 }
+                : { min: Math.min(...arr), avg: arr.reduce((a, b) => a + b, 0) / arr.length, max: Math.max(...arr), count: arr.length };
+            
             const setEl = (suffix, m) => {
                 const mn = document.getElementById(`${cardId}-min-${suffix}`);
                 const av = document.getElementById(`${cardId}-avg-${suffix}`);
                 const mx = document.getElementById(`${cardId}-max-${suffix}`);
                 if (mn) mn.textContent = m.min.toFixed(2).replace('.', ',');
-                if (av) av.textContent = m.avg.toFixed(2).replace('.', ',');
+                if (av) {
+                    av.textContent = m.avg.toFixed(2).replace('.', ',');
+                    // Limpa as classes de piscar antes de recalcular
+                    av.classList.remove('blink-danger', 'blink-warning');
+                    
+                    // Só pisca se houver valores digitados (count > 0)
+                    if (m.count > 0) {
+                        if (!isNaN(tolMax) && m.avg > tolMax) {
+                            av.classList.add('blink-danger');
+                        } else if (!isNaN(tolMid) && m.avg > tolMid) {
+                            av.classList.add('blink-warning');
+                        }
+                    }
+                }
                 if (mx) mx.textContent = m.max.toFixed(2).replace('.', ',');
             };
             setEl('m1', calc(m1Values));
@@ -3269,7 +3403,6 @@
             loadInspectorNamesFromCache();
             loadInspectorNames();
             
-            // Inicializa a lista de produtos dinâmica
             loadProductConfig();
         });
     </script>
